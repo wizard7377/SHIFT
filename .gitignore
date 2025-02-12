@@ -1,5 +1,5 @@
 .stack-work/
 *~
-paper/
-!*.tex
-!*.bib
+paper/**
+!paper/**.tex
+!paper/**.bib

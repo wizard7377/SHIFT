@@ -1,0 +1,63 @@
+name:                FITS
+version:             0.1.0.0
+github:              "githubuser/FITS"
+license:             BSD-3-Clause
+author:              "Asher Frost"
+maintainer:          "example@example.com"
+copyright:           "2025 Asher Frost"
+
+extra-source-files:
+- README.md
+- CHANGELOG.md
+extra-doc-files:
+- docs/*
+- paper/*
+
+language: GHC2021
+description:         Please see the README on GitHub at <https://github.com/githubuser/FITS#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- QuickCheck
+- mtl
+- megaparsec
+
+ghc-options:
+- -Wall
+- -Wcompat
+- -Widentities
+- -Wincomplete-record-updates
+- -Wincomplete-uni-patterns
+- -Wmissing-export-lists
+- -Wmissing-home-modules
+- -Wpartial-fields
+- -Wredundant-constraints
+
+library:
+  source-dirs: src
+  exposed-modules:
+  - Fir
+  - Sift 
+  - Lift
+
+executables:
+  FITS-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - FITS
+
+tests:
+  FITS-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - FITS
