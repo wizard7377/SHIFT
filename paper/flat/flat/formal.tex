@@ -1,0 +1,158 @@
+\section{Formal Overview}
+
+As mentioned before, \this is very much derived from a combination of formal logic, type theory, and Prolog (logic programing), and thus parts of each of these systems will make its way into this system.
+
+Indeed, terms are essentially a slightly modified version of Prolog syntax.
+A "term" in \this is either a functor or a atom. 
+An atom consists of a sequences of symbols that form words of a formal lexicon.
+Essentially, an atom is a primitive, some example of these are $person$, $2$, and $+=$.
+
+A functor on the other hand is a sequence of terms paraterized over an action.
+Unlike in Prolog, where terms are usually notated with applicative notation, for instance, where $f(x)$ is $f$ applied to $x$, in \this we instead use the more modern curried notation where $f(x)$ would instead be written $f x$. 
+Again, unlike in Prolog, instance of this expression being viewed as a "functor with paramters" it is instead viewed in Lisp style of a term that contains $f$ and $x$.
+
+This is perhaps the largest deperature from Prolog, rather than functions being considered functors, syntatic constructions as viewed as functors. For this reason, I will use the term "syntactic functor" to describe these.
+
+Of these, there are only four, $\lamed$ (for introducing variables), $\fapply$ (introduces computation), $:$ (the subtype and \verb|:-| equivalent), and $()$ (which is used for pure expressions).
+Among these, all of them but $()$ has an arity of 2 ($()$ has a variable arity).
+\subsection{Well Formed Terms and Universes}
+The most general type that exists is the universe of types.
+Every single type (and by extension term) is a subtype of it, so long as it is well formed.
+I will notate it here \yud, instead of the usual alternatives of $\ast$, \verb|Type|, and $\mathcal{U}$, all of which it is isomorphic to.
+
+Like these other versions, the statements "$p$ is well formed", "$p$ is true", and "$p$ is a subtype of \yud".
+This forms one of the core axioms of \this, namely 
+\begin{axiom}[Constructability]\label{univ}
+	For some proposition $\alpha$, it is provable if and only if it is well formed and is a member of \yud
+\end{axiom}
+stated as a symbolic formula
+\begin{prooftree}
+	\hypo{\alpha}
+	\infer1{\alpha : \yud}
+\end{prooftree}
+and
+\begin{prooftree}
+	\hypo{\alpha : \yud}
+	\infer1{\alpha}
+\end{prooftree}.
+\footnote{Note that all (major) axioms, theorems, and even lemmas will be notated as both a symbolic formulae and in natural language.}
+
+\medspace %This space is just to cramped by default
+
+This is arguably the most important rule in \this. 
+Fortunately, it also just so happens to be among the simplest.
+Anything that is part of \yud can be lifted to a logical statement, and any logical statement may be lowered into \yud.
+
+\subsection{Transitivity}
+
+Transitivity appears everywhere in mathmatics.
+At the elementary level, it allows us to do complex manipulations by saying that if we can prove two things equal to a given term, then they must be equal.
+
+It also appears in logic, for instance, from $A \to B$ and $B \to C$ it follows that $A \to C$. 
+A bit more topically, if $A$ is a \emph{subset} of $B$, and $B$ is a \emph{subset} of $C$, then it follows that $A$ is a \emph{subset} of $C$.
+
+The same logic applies in Flat Type Theory, with the axiom:
+\begin{axiom}[Transitivity]\label{tran}
+	$\alpha$ is a subtype of $\beta$, and $\beta$ is a subtype $\gamma$ then $\alpha$ is a subtype of $\gamma$ ($\alpha : \beta \mand \beta : \gamma \bip \alpha : \gamma$)
+\end{axiom}
+\begin{prooftree}
+	\hypo{\alpha : \beta}
+	\hypo{\beta : \gamma}
+	\infer2{\alpha : \gamma}
+\end{prooftree}
+
+This relationship, although it exists between \emph{types} is other type theories, does not extend to elements.
+However, because in \this types and elements are the same thing, it is a perfectly valid argument that $0 : \nat$, $\nat : \mathbb{Z}$ therefore $0 : \mathbb{Z}$.
+
+\todo{All of these need to be better explained}
+\subsubsection{Simple Proofs as Types}
+We can actually prove many interesting things with just these two theorems\footnote{Granted, we can't deal with formal definition of variables in types, but we will get to that}.
+Perhaps the most interesting is that with just these two rules we can prove \this's equivalent to \emph{modus ponens}, that is, we can prove logical implication 
+\begin{them}[Modus Ponens]
+	If $\alpha$ is a subtype of $\beta$, and $\beta$ is true, then $\alpha$ is true
+\end{them}
+
+\begin{prooftree}
+	\hypo{\alpha : \beta}
+	\hypo{\beta}
+	\infer2{\alpha}
+\end{prooftree}
+\begin{proof}
+	First, by \ref{univ}, we can transform $\beta$ into $\beta : \yud$.
+	Then, by \ref{tran} (with \yud as $\gamma$) we get 
+	\begin{prooftree}
+		\hypo{\alpha : \beta}
+		\hypo{\beta : \yud}
+		\infer2{\alpha : \yud}
+	\end{prooftree}
+	applying our two hypothesis, we get 
+	\begin{prooftree}
+		\infer0{\alpha : \yud}
+	\end{prooftree}
+	or just $\alpha : \yud$, then, again applying \ref{univ} (this time the other rule), we get $\alpha$
+\end{proof}
+
+\subsection{Lamed Quantifier}
+
+\this ultimitly does not have a "for all" quantifier or a $\lambda$ abstraction.
+Instead, it has the \lamed quantifier or abstraction that basically seeks to be a "middle ground" between these two.
+
+This is possible because of the fact that as often explefied by dependent type theory, the notion of "for all" and functional application are quite related \needcite.
+Together with the notion of a $\lambda$ abstraction and the idea of answer set programming, we can say that whenever we say "for all", "for given", and "for some", we always mean that we are introducing a variable.
+
+Specifically, this introduces what are known as \emph{holes} in the statement, which must be filled in consistently later.
+So, essentially, when we say that $\forall x \forall y (A \wedge B) \equiv \he_A \mand \he_B)$, where the \he terms are any given terms (the holes), we mean that this statement is actually the infinite set of statements where each specific instance of \he has been replaced by some other term.\footnote{For anyone who is confused by this and does know Prolog, this is just a scoped variable}
+
+We write this here as \lamed, both out of homage to $\lambda$ and due to the fact it means "for" in Hebrew \needcite.
+One important part of this is that \lamed is itself scoped over any outer \lamed.
+That is to say, if we have a statement of the form $\lamed x (x + \lamed x (2*x))$, rather than failing to match $0 + (2*1)$ because of the expansion $(0 + \lamed x (2*0))$, it instead becomes $(0 + \lamed 0 (2*0))$, and then $(0 + (2*1))$, this may look a little strange, but it allows us to omit the occurs check.
+
+So, for instance, while if $\phi (\alpha) \equiv ([\alpha] : \yud)$ then $\phi(0)$ does not match, say, $\phi(1)$, $\lamed 0 \phi(0)$ does indeed match $\phi(1)$, as in the latter case $0$ is not acting as a value, but rather as a \emph{hole}
+
+\subsubsection{Lamed Definition}
+The way \lamed is defined is quite nice, it is
+\begin{axiom}[Specialization]\label{spec}
+	If \lamed bounds a term $\alpha$ over the term $\phi(\alpha)$, then $\phi(\beta)$ will always be a subtype (of said term) ($\phi(\beta) : \lamed\alpha\phi(\alpha)$)
+\end{axiom}
+
+That is, if a statement is parametized over some term, that term in the statement is free.
+
+One important part of this is that this is just as expressive as the metalogical terms of $\alpha$...$\omega$, as can be seen by that fact that in the above definition, $\beta$ is free.
+
+
+
+\begin{rem}
+	The statement $\lamed \alpha \phi(\alpha)$ corresponds to the meta logical statement $\forall \beta \phi (\beta)$
+\end{rem}
+\subsection{Types of Typing}
+
+There are two more important diffrences between this and regular type theory.
+The first of these is probably the most important out of any of the rules.
+It is the ability of statements of the form $\alpha : \beta$ to be used \emph{as types}.
+While not exactly an axiom (the statement $(\alpha : \beta)$ is indeed a set of symbols forming a term, which, without restriction is a type in \this) I shall, for it's distinction, be notated as one
+
+\begin{axiom}
+	One term being the set of another term is itself a term, that is, if $\mathcal{WFT}$ denotates something being a Well-Formed Type then $\wft (\alpha) \mand \wft (\beta) \proves \wft (\alpha : \beta)$
+\end{axiom}
+At first, this may not seem very useful, however, when combined with our notions from before, it is insanely powerful, and by itself captures the idea of dependent types.
+
+How, exactly, does this allow for dependent types?
+Let us consider the classical example of a function, $f$, that takes some natural number (those being $\nat$) and returns a zero vector of that size, which I shall write $V(n)$. 
+In regular type theory, we might notate this $\Pi_{x:\nat} V(x)$, that is the dependent function type of $\nat$ to $V$.
+
+However, the part $x : \nat$ part of the $\Pi_{\fbox{$x:\nat$}}V(x)$ looks remarkebly like a simple subtyping statement.
+However, because classical type theories lacks a way to talk about using a given element as a type, we cannot, for example, write the constrained version $x:\nat \Longrightarrow f : (x \to V(x))$, as $x$ is not a type, and therefore cannot appear in a function type.
+
+In \this, however, we can reason about this perfectly well, because as the name suggests, there is no distinction made between types and objects. 
+Then, applying our rules of application from before, we know that if we want a statement equivalent to $\alpha \Rightarrow \beta$ we instead use $\beta : \alpha$, and we can transform the above to $(x \to V(x)) : (x : \nat)$.
+
+One final thing to do is to mark $x$ as a hole (for indeed, it would rather defeat the point if $x$ was known) with the \lamed operator, and we get $\lamed x(f : ((x \to V(x)) : (x : \nat)))$.
+This is a valid type in \this, and this allows us to do so many more interesting things.
+
+\subsubsection{Fully Dependent Types}
+
+Because of the complete removal of distinction between subtype statements, elements, types, and kinds, we open up the possibility of having any two of these things interacting with any other of these things.
+Indeed, this is the \emph{flat} part of \this, as everything can be said to be on the same level, without regard for dependence and rank.
+
+Dependent sum types are just as easy as dependent product types.
+If we have $\Sigma_{x:A} B(x)$ in classical type theory, in \this, we have $\lamed x (((x,B(x))) : (x : A))$

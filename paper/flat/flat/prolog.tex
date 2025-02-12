@@ -1,0 +1,21 @@
+\section{Flat Type Theory from the Perspective of Prolog}
+
+The Prolog programming language is a language that can be considered the "low level" of mathematically founded programming languages.
+In the same way that a language like C is low level because it interacts closely with the hardware, a language like Prolog is low level because it works with closely with fundamental theorems.
+
+While Flat Type Theory is a type theory, it actually bears more resemblence to Prolog in this way.
+It focuses less on higher level concepts such as classes, and focuses more on lower level concepts, such as implication
+
+The main difference between Prolog and Flat Type Theory is that Flat Type Theory uses higher order logic by default.
+That is to say, a clause may always be used as a term and vice versa.
+In addition, instead of a depth first search, \this uses a breadth first search, that is, it reasons one level at a time.
+
+These two changes fix a number of problems in standard Prolog. 
+In particular, the second one fixes Prolog's problem of having the order that statements are given as a core part of the language, and removing the need for the dreaded \verb|!| (cut) operator. \cite{swipl}
+The first change is just a matter of modernizing the Prolog syntax. 
+Indeed, second order predicates are \emph{already} included in most Prolog implementations, simply using functor syntax \cite{flach2022simply}.
+
+The first part of this we will go into more in \ref{mecha}.
+The second part of this is that \verb|:| (\this 's equivalent to \verb|:-|) can be used to construct terms in addition to clauses.
+
+So, for instance, while the Prolog term \verb|(Cold(Person,Day) :- Wet(Day)) :- Winter(Day)| is invalid, the Flat equivalent is a perfectly valid term \emph{and} clause.

@@ -1,0 +1,63 @@
+\part{Flat Type Theory}
+
+A quick note before I delve into Flat Type Theory.
+Here, I will reference "metavariables", "metalogic", and certain symbols.
+These are statements that underline how the system works, and are written in natural language or symbolically.
+
+All symbolic metalogic statements should just be understood as a shorthand for the given statement in natural language, and neither can be formalized.
+
+Because I will use certain symbols for convience, I shall note them all here in advance.
+
+The lowercase (minuscule) Greek Letters, $\alpha$...$\omega$, excluding $\phi$ (and for reasons of simplicty $\lambda$ is also not used), repersent "metavariables", that is, any sequence of symbols that acts as a single value.
+Each of these metavariables is scoped over the expression, so when, say $\alpha$ is used in the statements $\alpha : \yud$ and $\alpha : \alpha$, these refer to different $\alpha$s.
+Each instance of these must be the same as any other occurence in scope, but may be the same as some over metavariable.
+
+That is to say, the metavariables are bindings from lowercase Greek letters to sequences of symbols, with that binding being pure but not neccaisarlly unique.
+
+As mentioned before, the letter $\phi$ is special.
+It denotates a given $\lambda$ on a given term to a given expression, that is, it is a given bounded expression.
+For instance, we might have $\phi(\_) \equiv \_ + \_$, where for instance $\phi(1) = 1 + 1$.
+In the case mutiple are needed, they shall be differentiated by subscript, $\phi_0$, $\phi_1$ etc..
+
+The operator $\mand$ shall be read as "and", that is, if in some sense the statement to the left is true, and in the same sense the statement to the right is true, then the whole statement is true.
+
+Finally, $\proves$ shall be read as "proves", that is if whatever to the left in some sense true, then whatever is to the right must also be in that same sense true.
+For utility, $\dashv$ is defined as "is proven by", such that $\alpha \proves \beta$ is equivalent to $\beta \dashv \alpha$, and $\alpha \bip \beta$ expands to the statements $\alpha \proves \beta$ and $\beta \proves \alpha$ (this is meant to just be the symbols $\proves$ and $\dashv$ overlaid on top of each other)
+
+\todo{This is mostly fine, just needs to be a little longer}
+
+%\input{flat/logic.tex}
+%\input{flat/prolog.tex}
+%\input{flat/tie.tex}
+%\input{flat/formal.tex}
+%\input{flat/covar.tex}
+
+\input{ftt/intro.tex}
+\input{ftt/reason.tex}
+\input{ftt/formal.tex}
+
+\section{Evaluation and Side Effects}
+One very important part of this is the relationship between evaluation and subtyping.
+That is, we have established that $1+1$ is a type, but what does it contain?
+
+It contains anything that it evaluates to!
+For instance, $1+1$ evaluates to $2$, therefore $2 : 1+1$
+
+Why is this useful?
+Consider the square root function, $\sqrt{x}$. We would \emph{like} to say that $\sqrt{4} = 2$, but this is not true, as $\sqrt{4}$ is also $-2$.
+We might say that the square root of $4$ has two possible interpreations, that of $2$ and $-2$.
+And just as we say that because the collection of things refered to by the natural numbers is more specific than the integers, we say that $2 : \sqrt{4}$. 
+
+\subsection{Function Types}
+We've already seen function types, but what do these actually mean?
+That is, if we have a function $f : A \to B$, what can be said about this?
+
+Well, it is rather simple, if $f : A \to B$, then for any $x$ is a subtype of $A$, then $f(x) : B$.
+
+One very interesting thing about functions are there variance, that is, what the generality of $A$ and $B$ have on $A \to B$.
+While many things are either covariant and contravariant, very few are both.
+However, the function is, it is contravariant over $A$ and covariant over $B$, that is $(C : A) \Rightarrow (A \to B) : (C \to B)$ and $(B : C) \Rightarrow (A \to B) : (A \to C)$ 
+
+The usage of $\Rightarrow$ here is entierly for the purpose of ease of reading. 
+It is just a notation of $A : B$ (from $B \Rightarrow A$), so that these are more readable.
+Another notation is $A[x]$, which is equivalent to $x : A$

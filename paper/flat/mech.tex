@@ -1,0 +1,204 @@
+
+\part{Mechanics of Proof}
+
+\section{Notational Conveniences}
+In the previous section, only the symbol $:$ was used to denote subtyping.
+However, because statements like $\lamed n \lamed m ((((n+m) : \nat) : (m : \nat)) : (n : \nat))$ are both a pain to read and write, I will intrdoce two main notational conviences.
+
+The first is the index notation, which is of the form $\alpha [ \beta ]$, which is just another way of writing $\beta : \alpha$.
+In additional, for things that are acting as propositions, the notations of $\alpha \Rightarrow \beta$ and $\beta \Leftarrow \alpha$ both just are equivalent to $\beta : \alpha$.
+Note that $\Rightarrow$ is right associate, and $\Leftarrow$ is left associative, that is, $\alpha \Rightarrow \beta \Rightarrow \gamma$ is $(\gamma : \beta) : \alpha$ and not $\gamma : (\beta : \alpha)$.
+
+To show how much nicer these can make statements, the earlier statement may be rewritten as $\lamed n \lamed m (\nat [n] \Rightarrow \nat [m] \Rightarrow ((n+m) : \nat))$
+\section{Proofs as Graphs}
+
+For those who happen to have a background in eletrical engineering, a diagram such as this will likely look quite familiar to you:
+
+\missingfigure{A simple circuit}
+
+Per as a matter of fact, \todo{Im not doing this now}
+
+\begin{tikzpicture}
+	
+	\node (N) [state] {$\mathbb{N}$} ;
+	\node (0) [state,right=of N] {$0$} ;
+	\node (g0) [and,below left=of N] {};
+	\node (l0) [var,left=of g0] {$n$} ;
+	\node (g1) [and,right=of g0] {} ;
+	\node (s0) [state,below=of g0] {$n$} ;
+	\node (s1) [state,below=of g1] {$(S n)$} ;
+	\graph[use existing nodes] {
+		N -> 0;
+		N -> g1 -> s1 ;
+		{N, l0} -> g0 -> s0 ; 
+	} ;
+\end{tikzpicture}
+\section{Proof Algorithms}
+\label{mecha}
+\todo{Make a name for app}
+Generally, any proof algorithm is some sort of method, that given a list of statements known to be true, and a statement desired to be proven, and it terminates or does not terminate depending on if the statement is true.
+
+In \this, steps in proofs (what might be called tactics in a language like Coq) take two forms, expansion-reduction and application.
+Expansion-reduction steps, as implied by the name, are pairs of methods to convert one term into another.
+There are two pairs of these, namely $\alpha : \alpha \bip \uni$, that is reflexivity, and constructability, $\alpha \bip \alpha : \uni$.
+
+Where it gets more interesting is with the application steps. 
+These we have also seen, and they are $\alpha : \beta \mand \beta : \gamma \bip \alpha : \gamma$, that is transitivity, and $\phi(\beta) : \lamed\alpha\phi(\alpha)$, that is specialization.
+Note that while specialization may look like it only takes one argument, it actually takes two, and the reason for that we shall see shortly.
+
+Broadly, there are two diffrent ways to go about proving a certain theorem that I will discuss, the generative approach, and the deductive approach.
+The difference between them, roughly, is that the generative approach simply tries applying what it knows until it gets an answer, while the deductive takes something it knows and tries to find a \emph{path} from the given to the goal.
+
+
+\subsection{Generation}
+
+The generative approach is probably the most obvious: it brute force tries every combination of statements, gets all the things generated, and then repeats until it finds a solution.
+This, needless to say, is quite inefficent (a simple proof such as the fact that $((S 0) : \nat)$ may take 1000's of statements being generated).
+The benefit to this inefficiency is simplicity and elegance, it isn't all that hard to understand how it is used.
+
+For instance, the expansion-reduction step looks at the current system, and applies any of the expansion reduction rules once (note that both rules in a pair might be applied, for instance, $\top : \yud$ generates both $(\top : \uni) : \uni$ and $\top$)
+
+After that, it simply tries to apply each pair of statements in the system to transitivity.
+So, for instance, if $\apps$ is one of these, then $\apps (0 : \nat,\nat : \uni)$ is $0 : \uni$.
+In the case that $\apps$ fails, it simply returns its first argument as the result.
+After this is done, every pairwise application of $\apps$ is simply added to the system.
+If the goal is now a part of the system, the system terminates (i.e, it succeeds), however if it is not, then the process repeats until it terminates (if it does)
+
+\subsection{Lamed and Computability}
+The Lamed rule \ref{spec} is a bit special, because it can't be implemented directly as a simplification rule, despite the fact it only takes one arguement.
+
+If we tried, we would have to generate the statement $\phi(\beta)$, which contains a metavariable, which is unworkable, as this would mean that it generates not one statement but a infinite set, which would cause the system to hang.
+We \emph{could} then write this in terms of Lamed, namely $\lamed\alpha\phi(\alpha)$, but this has the opposite problem, it requires an infinite number of inputs.
+
+The way we can fix this problem is by forcing \lamed to have more context, that is, specializing the free variable.
+For this reason, for each of our existing rules, we have to generate a version of that rule that instead of using a regular statement instead uses \lamed with some context.
+
+So, for instance, we change $\apps (\alpha : \beta,\beta : \gamma) \goesto \alpha : \gamma$ to $\apps ' (\alpha : \beta, \lamed\delta(\delta : \gamma)) \goesto \alpha : \gamma$.
+
+Because the generation rules just use any expression, they are kept as is.
+
+\subsection{Deduction}
+A much faster way to do this is to instead use a more intelligent search algorithm.
+Using the fact that proofs can be regarded as graphs, one can consider it the the generative approach was like trying every path in a maze only from the start, and stopping only when one reaches the finish, while the deductive approach tries to "connect" a path from the exit (the goal) to the entrance(s) (the given(s)).
+
+As anyone who's done a maze can tell you, it is much more efficent to do the latter.
+The cost of this efficency, then is that this method is much more complex.
+
+\missingfigure{A proof "maze"}
+While expansion-reduction pairs simply fliped (to figure out what expands to something else, one simply has to reduce it, and vice versa), the application rule is changed drammatically.
+
+\subsubsection{Proof State}
+
+The first part of this that makes it more complex is that while application when generating something only needs to consider things of the form $\alpha : \beta$, we must consider more when using deduction.
+
+For instance, consider the statement $(\alpha : \gamma) : \beta$. 
+If we only reason one level at a time, this is \emph{not} a valid way to prove $\alpha$, as it is not of the form $\alpha : \beta$. We have to go one level down, which greatly complicates things.
+Because for the above proof we need not only to prove $\beta$ but also to prove $\gamma$, the reverse application function, $\apps_-$ needs to return the \emph{list} of statements that must \emph{all} be true, $\gamma$ and $\beta$.
+Because in this section this concept will come up many times, I shall specially notate it as $\prereq(A,B)$, where $A$ is the statement desired to be proved and $B$ is the given prerequisite, with it returning a list of required statements that must be true\footnote{This symbol is the Hebrew letter Qof \qof }. 
+
+However, we cannot \emph{just} flatten these lists, as these lists state the things that \emph{all} must be true, not \emph{any} that must be true (unlike with the constructive method)
+
+\subsubsection{Goals and Hypotheses}
+
+\todo{This section needs so many citations}
+Ultimately, the solution for these problems is to use the Coq notion of goals and hypotheses.
+Namely, the system state, instead of being just a simple list of proven statements, shall instead by a list of statements combined with their prerequisites.
+That is, it's type will be $\dalet \mapsto \{ [ \dalet ] \}$, that is, it is a map from a term to a set of all possible prerequisites of that term\footnote{Not to be repetive, but $T_0 \mapsto T_1$ is not the function type $T_0 \to T_1$, but rather the type of the map itself (similar to the Rust type \verb|HashMap|)}.
+
+Likewise, instead of the goal being one 
+For instance, if we have $(\alpha \wedge \beta : \beta) : \alpha$ and $\gamma \vee \delta : \gamma$ as well as $\gamma \vee \delta : \delta$ this would get transformed into 
+\begin{math}
+	\alpha \wedge \beta \mapsto \{ [\alpha,\beta] \} \\
+	\gamma \vee \delta \mapsto \{ [\gamma], [\delta] \}
+\end{math}
+
+\section{Proofs as Parsing Tasks}
+\todo{This was copy pasted from it's original place, make it coherent}
+\todo{Write about how proofs use modified EBNF}
+Proofs actually bear quite a close relationship with parsing \needcite.
+For instance, let's take a look at the grammar:
+\begin{align}
+	\nat 	\gto& + n m & \wherein{m,n}{\nat} \\
+			\gor& - n m & \wherein{m,n}{\nat} \\
+			\gor& * n m & \wherein{m,n}{\nat} \\
+			\gor& \div n m & \wherein{m,n}{\nat}
+\end{align}
+this looks remarkbly similar to 
+\begin{align}
+	((n + m) : \nat) \Leftarrow &\nat [m] \Leftarrow \nat [n] \\
+	((n - m) : \nat) \Leftarrow &\nat [m] \Leftarrow \nat [n] \\
+	((n * m) : \nat) \Leftarrow &\nat [m] \Leftarrow \nat [n] \\
+	((n \div m) : \nat) \Leftarrow &\nat [m] \Leftarrow \nat [n]
+\end{align}
+\footnote{Yes, only addition and multiplication are closed under the naturals, but this is an example}
+
+They look quite similar!
+Per as a matter of fact, we can generalize this "isomorphism" to any proof and a corresponding parse.
+
+How do we do this?
+Let's start with a deductive proof and a top-down grammar.
+These are both similar in the fact that they take one thing (either a fact or a symbol), and breaking it down into other things (either it's prerequisites or components)
+
+That is, in the same way that we were able to form a natural number in the above grammar, we could form \footnote{or, at least, prove the existence of} the type of natural numbers by certain statements.
+That is, when a grammar has the symbols $[a,+,b]$ as input, it is roughly equivalent to a logic having the statement $[a+b]$ as a proven statement.
+
+Then, hypothesis are just the expected tokens of the parse!
+
+\subsection{Limited Proofs as LL Parsing}
+To start, let us first consider a LL grammar as a stack of parsed terms, and the input remaining to be parsed.
+That is, the current state of the parser is simply of the form $([T],I)$, where $I$ is the input and $T$ is the type of parsed tokens.
+
+So, for instnace, the parser from before would be defined as follows
+\missingfigure{parser psuedocode}
+\llparseA
+
+This is a simple LL(1) parser. 
+While in this simple case a LL(1) parser is sufficent, in many cases the value of $k$ needs to be higher or even unparseable no matter the $k$.
+
+\subsection{General Proofs as GLL Parsing}
+To solve this, GLR was created, which could handle any language (even ambigous ones)\cite{glrtomita}.
+After this, an equivalent for LL parsers was created GLL, that is, a version that could handle any language, including those that contained ambiguity\cite{gllparse}.
+
+While they both diverge in terms of the underlying parsing mechanism, the "generalized" part remains the same.
+Namely, for instance, in our parser from before:
+\llparseA
+
+We keep track of where we are using the line of execution.
+That is to say, instead of explicitly giving the remainder of the parse, we let the control flow do this for us. 
+\missingfigure{need to show example}
+
+The key difference between LL(k) parsers and GLL parsers\footnote{As well as LR(k) and GLR} parsers is that this is not done.
+Instead, we have an explicit state (which here just is a stack\footnote{It's actually a queue}), notated \pst, which contains the list of rules yet to be parsed.
+For instance, if we were to show an (abbreviated) version of the above parser for the expression $2 + 3$:
+\missingfigure{The parser example, showing eating and generation}
+
+So, for instance, instead of the parser looking as it did it instead looks like this:
+\missingfigure{an infix parser}
+
+This is now a GLL parser!
+Note that this is not the only change needed to fix the above parser.
+For instance, we now need a "eater" function, that takes one value off the stack and goes to it's appropriate generator.
+
+\subsection{Proof Grammars}
+
+In essence, what we've been doing is not all that different from a proof.
+Indeed, we use that similarity to use common algorithm to use proof instead.
+
+This relation is that a parser takes in some input tokens, $\pin$, and some things still needed to be parsed, $\pst$, and results in either a given parse of the tokens, $\prs$ or fails, removing itself from consideration.
+This is quite similar to the notion of a logic taking in some language, $\mathcal{L}$, taking in all the proof attempts made and all their unproven requirements, $\pro$, and given either returning the proof or not terminating.
+
+Indeed, if we have some proof function $\pi$, we might say $\pi (\lang,\mathcal{S},\pro) \cong \textrm{parse}(\pin,\pst,\prs)$.
+Per as a matter of fact, Prolog, with Definite Clause Grammars (DCGs) already uses the notion of "grammars as logics"\cite{swipl}
+
+However, there are a couple differences between a parser of text and a provers of propositions.
+Principally for all logics, because the state is unordered in a proof (that is, hypotheses are not order dependent).
+Specifically for \this, each "statement" may have more than one "rule" for the parser.
+For instance, the statement $\lameds x y z in ((x = z) : (x = y)) : (y = z)$
+
+\section{Computational Rules}
+
+So far, while we have been talking about ways to prove things, we have not yet listed the specific rules that allow us to generate one type from another.
+This is necessary for SIFT (as well as any other potential system based of \this) as we need well defined rules to work with (similar to the $\alpha$ and $\beta$ reductions of typed lambda calculus)\needcite.
+
+For these, I shall introduce two new notations so that these may be more easily translated to computer programs.
+The first is $\Phi$ (and $\Phi_0,\Phi_1,\Phi_2...$ when more then one is needed) as well as the replacement notation $\Phi [A \goesto B]$

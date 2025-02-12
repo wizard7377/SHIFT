@@ -1,0 +1,42 @@
+\part{Flat Types Automated Proof System (FLAPS)}
+
+So far, while we have covered the abstract part's of the theorem prover, in this part, I am going to lay out the plans for the Flat Types Automated Proof System, or FLAPS
+
+FLAPS consists of a number of parts, including be not limited to
+
+\todo{an introduction}
+
+
+\begin{tikzpicture}
+	\graph[nodes={draw,state}] {
+		nat/$\mathbb{N}$ -> {
+			a0/""[and=270] -> ns0/$n_0$,
+			a1/""[and=270] -> sns0/$S n_0$
+		},
+		nv0/$n_0$[var] -> a0 -> a1
+	} ;
+\end{tikzpicture}
+\begin{tikzpicture}
+	
+	\node (N) [state] {$\mathbb{N}$} ;
+	\node (uni) [yes,above=of N] {$\type$} ;
+	\node (0) [state, above right=of N] {$0$} ;
+	\node (x) [var, below=of N] {$x$} ;
+	\node (natn) [state, right=of x] {$x$} ;
+	\node (y) [var, left=of N] {$y$} ;
+	\node (naty) [state, below=of y] {$y$} ;
+	\node (a0) [and, right=of N] {} ;
+	\node (sn) [state, right=of a0] {$S x$} ;
+	\node (p0) [state, right=of natn] {$x + 0$} ;
+	\node (a1) [and, below=of x] {} ;
+	\node (sadd) [state, below=of a1] {$S(x + y)$} ;
+	\node (rsadd) [state, below=of sadd] {$x + (S y)$} ;
+	\node (N2) [portal, left=of sadd] {$\nat$} ;
+	\graph[use existing nodes] {
+		uni -> N -> {0, x, a0 -> sn, y -> naty -> a1},
+		x -> natn -> {a0, a1},
+		a1 -> sadd -> rsadd,
+		N2 -> sadd,
+		natn -> p0
+	} ;
+\end{tikzpicture}
