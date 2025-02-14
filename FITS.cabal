@@ -12,7 +12,7 @@ bug-reports:    https://github.com/githubuser/FITS/issues
 author:         Asher Frost
 maintainer:     example@example.com
 copyright:      2025 Asher Frost
-license:        BSD-3-Clause
+license:        BSD-2-Clause
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
@@ -23,12 +23,24 @@ source-repository head
   type: git
   location: https://github.com/githubuser/FITS
 
+flag dev
+  manual: False
+  default: False
+
 library
   exposed-modules:
       Fir
       Sift
       Lift
+      Extra
   other-modules:
+      Fir.Base
+      Fir.Instances
+      Fir.Parser
+      Fir.Unify
+      Sift.Base
+      Sift.Monad
+      Sift.Types
       Paths_FITS
   autogen-modules:
       Paths_FITS
@@ -41,6 +53,8 @@ library
     , megaparsec
     , mtl
   default-language: GHC2021
+  if flag(dev)
+    ghc-options: -fdefer-typed-holes
 
 executable FITS-exe
   main-is: Main.hs
@@ -58,6 +72,8 @@ executable FITS-exe
     , megaparsec
     , mtl
   default-language: GHC2021
+  if flag(dev)
+    ghc-options: -fdefer-typed-holes
 
 test-suite FITS-test
   type: exitcode-stdio-1.0
@@ -76,3 +92,5 @@ test-suite FITS-test
     , megaparsec
     , mtl
   default-language: GHC2021
+  if flag(dev)
+    ghc-options: -fdefer-typed-holes

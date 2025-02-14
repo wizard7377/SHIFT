@@ -1,11 +1,15 @@
-name:                FITS
+name:                SHIFT
 version:             0.1.0.0
-github:              "githubuser/FITS"
-license:             BSD-3-Clause
+github:              "githubuser/SHIFT"
+license:             BSD-2-Clause
 author:              "Asher Frost"
 maintainer:          "example@example.com"
 copyright:           "2025 Asher Frost"
 
+flags: 
+  dev: 
+    default: false 
+    manual: false
 extra-source-files:
 - README.md
 - CHANGELOG.md
@@ -14,7 +18,7 @@ extra-doc-files:
 - paper/*
 
 language: GHC2021
-description:         Please see the README on GitHub at <https://github.com/githubuser/FITS#readme>
+description:         Please see the README on GitHub at <https://github.com/githubuser/SHIFT#readme>
 
 dependencies:
 - base >= 4.7 && < 5
@@ -33,15 +37,21 @@ ghc-options:
 - -Wpartial-fields
 - -Wredundant-constraints
 
+when:
+  condition: flag(dev)
+  ghc-options:
+    -fdefer-typed-holes
+
 library:
   source-dirs: src
   exposed-modules:
-  - Fir
+  - Rift
   - Sift 
   - Lift
+  - Extra
 
 executables:
-  FITS-exe:
+  SHIFT-exe:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
@@ -49,10 +59,10 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - FITS
+    - SHIFT
 
 tests:
-  FITS-test:
+  SHIFT-test:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
@@ -60,4 +70,4 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - FITS
+    - SHIFT

@@ -4,3 +4,7 @@ paper/flat/**
 !paper/flat/**/
 !paper/flat/**/*.tex
 !paper/flat/**/*.bib
+paper/**
+!paper/**/
+!paper/**/*.tex
+!paper/**/*.bib

@@ -1,5 +1,16 @@
 \section{An Overview of Flat Type Theory}
 
-Before looking at \emph{Flat} Type Theory, let us first take a look at Classical Type Theory and Prolog.
-Let us take the axiom in Peano Arithmetic $a = b \vdash S(a) = S(b)$, that is, the successesor function is one-to-one.
-If we were to write this in Classical Type Theory (giving it the name  \verb|seq|), we might write it as $seq :: a = b \to S(a) = S(b)$ 
+Before looking at \this, it is important to understand Hierarchal Type Theory as well as Prolog's answer set theory.
+To start, let us look at how we repersent the statement "for any natural numbers $A$ and $B$, if $A$ is greater then or equal to $B$, then the succesor to $A$ must be greater then or equal to the successor for $B$".
+We might write this is a simple logic as $\forall (A : \nat) \forall (B : \nat) (A = B \proves S(A) = S(B))$.
+
+When representing this in Hierarchal Type Theory\footnote{With the name "sgeq"}, we might write it as $\seq :: \fdt{A : \nat} \fdt{B : \nat} A \geq B \to S(A) \geq S(B)$, where $\Pi$ denotates dependent function types.
+The notion behind this is that if there exists a mapping (namely sgeq) from the statement $A \geq B$ to $S(A) \geq S(B)$, thence we know that if we have a given statement of the form $A \geq B$, because $\seq$ is a complete mapping from $A \geq B$ to $S(A) \geq S(B)$, we will get a valid argument.
+
+However in Prolog, we would instead write it like this: \verb|S(A) >= S(B) :- A >= B, nat(B), nat(A).|
+While at first glance these might seem disimilar, if I write the set theoretic equivalent to the type-theoretical version, using $\phi_S$ to mean "the proposition that determines if something is in $S$", then we could instead write it as $\forall A \forall B (S(A) \geq S(B) \leftarrow A \geq B \leftarrow \phi_\nat (B) \leftarrow \phi_\nat (A)) $)
+
+\begin{math}
+	\mathtt{app} :: \pdt{f :: A \to B} \fdt{a :: A} B \\
+	(::) :: \fdt{a::A} A
+\end{math}
