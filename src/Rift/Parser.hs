@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE BlockArguments #-}
 
-module Rift.Parser where
+module Rift.Parser(readTerm) where
 import Text.Megaparsec(ParsecT, choice, noneOf, MonadParsec (notFollowedBy, try), many, some, single, oneOf,parseTest,anySingle)
 import Text.Megaparsec
 import Text.Megaparsec.Char.Lexer(lexeme)
@@ -24,7 +24,7 @@ letters = ['a'..'z'] ++ ['A'..'Z']
 specialChars :: [Char]
 specialChars = "():?*!{}<>[]"
 otherChar :: Char -> Bool
-otherChar v = not (elem v numbers || elem v letters || elem v specialChars)
+otherChar v = not (elem v numbers || elem v letters || elem v specialChars || v == ' ')
 
 
 glyphP :: Parser
@@ -94,6 +94,7 @@ pterm =
     ]
 
 
+-- |Note that lists are `()`, rules `{}`, and lameds `<>[]`
 readTerm :: String -> Maybe (Term String)
 readTerm = parseMaybe pterm
 

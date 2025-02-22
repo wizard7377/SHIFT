@@ -1,68 +1,63 @@
+{-# LANGUAGE BlockArguments #-}
 module Rift.Unify(
-    collectWith,collectUnify,trivialUnify,
-    Unify(..),
-    trivial,absurd,atomic,oneOf,bothOf
+    (@=),(@?),goodUnify,
+    Binding, Binding',Bindings
 ) where
 
 import Rift.Base
+
 import Test.QuickCheck (collect)
 import Data.List (intersect,union)
+import Extra.Choice
+import Extra.List (forEach)
+import Debug.Trace
 
-data Unification a =
-    Trivial
-    | Absurd
-    | Atomic a a
-    | OneOf (Unification a) (Unification a)
-    | BothOf (Unification a) (Unification a)
+-- |The type of a binding, just a tuple with the from @(from,to)@
+type Binding' a b = (a,b)
+-- |The type of a homogenues binding
+type Binding a = Binding' a a
+-- |A list of homogenuos bindings
+type Bindings a = [Binding a]
 
--- |Optimzing constructors for unification
-trivial = Trivial
-absurd = Absurd
-atomic = Atomic
-oneOf t0 t1 =
-    case (t0,t1) of
-        (Trivial,_) -> Trivial
-        (_,Trivial) -> Trivial
-        (Absurd,Absurd) -> Absurd
-        (_,_) -> OneOf t0 t1
-bothOf t0 t1 =
-    case (t0,t1) of
-        (Absurd,_) -> Absurd
-        (_,Absurd) -> Absurd
-        (Trivial,Trivial) -> Trivial
-        (_,_) -> BothOf t0 t1
+{-|Collect the corresponding nodes on each tree, where it stops descending whenever the function is true
 
-
--- |Collect all possible solutions to the unification that only bind the first argument 
-collectWith ::
-    -- |The variable to search for bindings for 
-    Eq a => (a -> Bool) ->
-    -- |The unification to search
-    Unification a ->
-    -- |The result, note that the list is a sum (ie, or) of unifications, so the longer the list the more possibilites there are, with an empty list denotating that the variable is free. 
-    -- Note that `Just []` `Nothing` have completly different meanings, with `Just []` meaning that the variable is free, while `Nothing` means that it is inconsistently bound 
-    Maybe [a]
-collectWith isVar term =
-    case term of
-        Trivial -> Just []
-        Absurd -> Nothing
-        Atomic t0 t1 -> if isVar t0 then Just [t1] else Nothing
-        OneOf u0 u1 -> case (collectWith isVar u0, collectWith isVar u1) of {
-            (Nothing,Nothing) -> Nothing ;
-            (Just l0,Just l1) -> Just $ union l0 l1 ;
-            (v,Nothing) -> v ;
-            (Nothing,v) -> v
+-}
+unify :: (Term a -> Term b -> Bool) -> Term a -> Term b -> Maybe [Binding' (Term a) (Term b)]
+unify f ta tb =
+    if f ta tb then Just [(ta,tb)] else
+        case (ta,tb) of {
+            (Atom va,Atom vb) -> Just [(ta,tb)] ;
+            (List (x:xs),List (y:ys)) -> Just [(x,y)] <> thisUnify (List xs) (List ys) ;
+            (Lamed ba ta, Lamed bb tb) -> thisUnify ba bb <> thisUnify ta tb ;
+            (Yud, Yud) -> Just [] ;
+            (Resh,Resh) -> Just [] ;
+            (Rule aa ba, Rule ab bb) -> thisUnify aa ab <> thisUnify ba bb ;
+            (Tagged _ va, Tagged _ vb) -> thisUnify va vb ;
+            (val@(He _),_) -> Just [(val,tb)] ;
+            _ -> Nothing
         }
-        BothOf u0 u1 -> case (collectWith isVar u0, collectWith isVar u1) of {
-            (Just l0,Just l1) -> Just $ intersect l0 l1 ;
-            (_,_) -> Nothing
-        }
-collectUnify :: Eq a => [a] -> Unification a -> Maybe [a]
-collectUnify l = collectWith (`elem` l)
-trivialUnify :: Eq a => Unification a -> Bool 
-trivialUnify t = case collectWith (const True) t of 
-    Just [] -> True 
-    _ -> False
-class Unify a where
-    unify :: a -> a -> Unification a
+    where thisUnify = unify f
+
+
+infix 5 @=
+(@=) :: Term a -> Term b -> Maybe [Binding' (Term a) (Term b)]
+v0 @= v1 = unify (\x y -> isFundamental x || isFundamental y) v0 v1
+infix 5 @? 
+(@?) :: Token (Term a) => Term a -> Term a -> Maybe [Binding' (Term a) (Term a)]
+v0 @? v1 = filter (\(x,y) -> x /= y) <$> unify (\x y -> isFundamental x || isFundamental y || x == y) v0 v1
+
+unique :: Token a => [a] -> Bool
+unique vals = all (\v0 -> all (\v1 -> v0 == v1) vals) vals
+lookupAll :: Token k => [(k,v)] -> k -> [v]
+lookupAll vals k = snd <$> filter (\(k2,_) -> k == k2) vals
+goodUnify :: Token (Term a) => Maybe [Binding' (Term a) (Term a)] -> Bool
+goodUnify i = case i of {
+    Nothing -> False ; 
+    Just [] -> True ;
+    Just binds -> traceShowId (all (\(k,_) -> 
+        let vals = traceShowId $ lookupAll binds k in
+            unique vals
+    ) binds) && ((all (\(k,v) -> ((k == v) || isHe k))) binds) -- TODO something im forgetting im sure
+}
+
 

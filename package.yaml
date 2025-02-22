@@ -1,6 +1,6 @@
 name:                SHIFT
 version:             0.1.0.0
-github:              "githubuser/SHIFT"
+github:              "wizard7377/SHIFT"
 license:             BSD-2-Clause
 author:              "Asher Frost"
 maintainer:          "example@example.com"
@@ -18,11 +18,15 @@ extra-doc-files:
 - paper/*
 
 language: GHC2021
+other-extensions:
+- AllowAmbiguousTypes
+- FunctionalDependencies
 description:         Please see the README on GitHub at <https://github.com/githubuser/SHIFT#readme>
 
 dependencies:
 - base >= 4.7 && < 5
 - QuickCheck
+- containers
 - mtl
 - megaparsec
 
@@ -41,6 +45,7 @@ when:
   condition: flag(dev)
   ghc-options:
     -fdefer-typed-holes
+    -fdefer-type-errors
 
 library:
   source-dirs: src

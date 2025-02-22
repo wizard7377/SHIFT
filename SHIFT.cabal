@@ -4,11 +4,11 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 
-name:           FITS
+name:           SHIFT
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/FITS#readme>
-homepage:       https://github.com/githubuser/FITS#readme
-bug-reports:    https://github.com/githubuser/FITS/issues
+description:    Please see the README on GitHub at <https://github.com/githubuser/SHIFT#readme>
+homepage:       https://github.com/wizard7377/SHIFT#readme
+bug-reports:    https://github.com/wizard7377/SHIFT/issues
 author:         Asher Frost
 maintainer:     example@example.com
 copyright:      2025 Asher Frost
@@ -18,10 +18,28 @@ build-type:     Simple
 extra-source-files:
     README.md
     CHANGELOG.md
+extra-doc-files:
+    paper/algo.tex
+    paper/citations.bib
+    paper/macros.tex
+    paper/preamble.tex
+    paper/valuedtypes.aux
+    paper/valuedtypes.bbl
+    paper/valuedtypes.bcf
+    paper/valuedtypes.blg
+    paper/valuedtypes.fdb_latexmk
+    paper/valuedtypes.fls
+    paper/valuedtypes.log
+    paper/valuedtypes.out
+    paper/valuedtypes.pdf
+    paper/valuedtypes.run.xml
+    paper/valuedtypes.synctex.gz
+    paper/valuedtypes.tdo
+    paper/valuedtypes.tex
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/FITS
+  location: https://github.com/wizard7377/SHIFT
 
 flag dev
   manual: False
@@ -29,68 +47,93 @@ flag dev
 
 library
   exposed-modules:
-      Fir
+      Rift
       Sift
       Lift
       Extra
   other-modules:
-      Fir.Base
-      Fir.Instances
-      Fir.Parser
-      Fir.Unify
+      Extra.Choice
+      Extra.Decide
+      Extra.List
+      Extra.Tree
+      Extra.Tuple
+      Rift.Base
+      Rift.Dev
+      Rift.Dev.Paeno
+      Rift.Funcs
+      Rift.Instances
+      Rift.Parser
+      Rift.Unify
       Sift.Base
+      Sift.Instances
       Sift.Monad
+      Sift.Solver
+      Sift.Solver.BasicSearch
+      Sift.Solver.BasicSearch.Tree
+      Sift.Solver.GenSearch
       Sift.Types
-      Paths_FITS
+      Paths_SHIFT
   autogen-modules:
-      Paths_FITS
+      Paths_SHIFT
   hs-source-dirs:
       src
+  other-extensions:
+      AllowAmbiguousTypes
+      FunctionalDependencies
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       QuickCheck
     , base >=4.7 && <5
+    , containers
     , megaparsec
     , mtl
   default-language: GHC2021
   if flag(dev)
-    ghc-options: -fdefer-typed-holes
+    ghc-options: -fdefer-typed-holes -fdefer-type-errors
 
-executable FITS-exe
+executable SHIFT-exe
   main-is: Main.hs
   other-modules:
-      Paths_FITS
+      Paths_SHIFT
   autogen-modules:
-      Paths_FITS
+      Paths_SHIFT
   hs-source-dirs:
       app
+  other-extensions:
+      AllowAmbiguousTypes
+      FunctionalDependencies
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      FITS
-    , QuickCheck
+      QuickCheck
+    , SHIFT
     , base >=4.7 && <5
+    , containers
     , megaparsec
     , mtl
   default-language: GHC2021
   if flag(dev)
-    ghc-options: -fdefer-typed-holes
+    ghc-options: -fdefer-typed-holes -fdefer-type-errors
 
-test-suite FITS-test
+test-suite SHIFT-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Paths_FITS
+      Paths_SHIFT
   autogen-modules:
-      Paths_FITS
+      Paths_SHIFT
   hs-source-dirs:
       test
+  other-extensions:
+      AllowAmbiguousTypes
+      FunctionalDependencies
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      FITS
-    , QuickCheck
+      QuickCheck
+    , SHIFT
     , base >=4.7 && <5
+    , containers
     , megaparsec
     , mtl
   default-language: GHC2021
   if flag(dev)
-    ghc-options: -fdefer-typed-holes
+    ghc-options: -fdefer-typed-holes -fdefer-type-errors
