@@ -1,4 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE AllowAmbiguousTypes, DeepSubsumption #-}
 module Sift.Solver.GenSearch where
 
 import Sift.Monad hiding (_depth)
@@ -8,9 +8,17 @@ import Rift
 import Extra.Choice(Choice (AllOf,AnyOf,Simple,Trivial,EmptyNode))
 import qualified Sift.Types (LogicEnv(..))
 import Sift.Types (LogicEnv)
-import Rift.Funcs (intros, introduce, unintros)
+import Rift.Funcs (intros, introduce, unintros, (@>), shrink, replace, replace')
 import Control.Monad.State
 import Control.Monad (join)
+import Data.Maybe (isJust, maybeToList)
+import Data.Traversable
+import Extra.List (forEach)
+import Data.Foldable (Foldable(..))
+import Data.List (singleton)
+import Sift (LogicResult (..))
+import Control.Monad.Identity (Identity)
+import Debug.Trace (traceShow, traceShowId)
 -- |The state of the Search monad with sentence `sen` on token `tok`
 data SearchState sen tok = SearchState {
     -- |All proven statements
@@ -32,7 +40,7 @@ instance EnterState SearchState where
   }
 
 -- |Get the list of solved terms
-getTerms :: LMGen tok [Term tok]
+getTerms :: forall sen tok. (Sentence sen tok, Token tok) => LMGen sen tok [Term tok]
 getTerms = do
   state <- get
   let sens = _sentences state
@@ -40,34 +48,89 @@ getTerms = do
   return val
 
 -- |Set the list of solved terms
-setTerms :: [Term tok] -> LMGen tok () 
-setTerms input = modify $ \s -> s {_sentences = fromTerm <$> input} 
+setTerms :: forall sen tok. (Sentence sen tok, Token tok) => [Term tok] -> LMGen sen tok ()
+setTerms input = modify $ \s -> s {_sentences = fromTerm <$> input}
 -- |Add some terms to the list of solved terms
-addTerms :: [Term tok] -> LMGen tok () 
-addTerms add = do 
+addTerms :: forall sen tok. (Sentence sen tok, Token tok) => [Term tok] -> LMGen sen tok ()
+addTerms add = do
   terms <- getTerms
   setTerms (add ++ terms)
 
+getDepth :: forall sen tok. (Sentence sen tok, Token tok) => LMGen sen tok (Maybe Int)
+getDepth = do
+  state <- get
+  let dep = _depth state
+  return dep
+setDepth :: forall sen tok. (Sentence sen tok, Token tok) => Maybe Int -> LMGen sen tok ()
+setDepth dep = modify $ \s -> s {_depth = dep}
 -- |Can the goal be solved for (by no steps) from the given
-doesSolve :: Token a => 
+doesSolve :: (Sentence sen tok, Token tok) =>
   -- |Given
-  Term a -> 
+  Term a ->
   -- |Goal
-  Term a -> LMGen tok Bool 
-doesSolve given goal = 
-  let 
-    givenT = introduce given 
+  Term a -> LMGen sen tok Bool
+doesSolve given goal =
+  let
+    givenT = introduce given
     goalT = introduce goal
   in case goalT of
-    _ | goodUnify $ goalT @? givenT -> return True
+    _ | isJust $ givenT @> goalT -> return True
 
 type PosSearch a = Choice (Term a)
-type LMGen tok a = forall sen. Sentence sen tok => LM (SearchState sen tok) a
-type SearchAction a = Token a => Term a -> LMGen a Bool
+type LMGen sen tok a = (Sentence sen tok, Token tok) => LM (SearchState sen tok) a
+--type SearchAction a = Token a => Term a -> LMGen a Bool
 
-yudGen :: Term tok -> LMGen tok [Term tok]
-yudGen val = return $ (let (term,vars) = intros val in 
+yudGen :: Sentence sen tok => Term tok -> LMGen sen tok [Term tok]
+yudGen val = return $ (let (term,vars) = intros val in
   unintros (Rule term Yud) vars) : (Rule val Yud) : []
 
-yudRed :: Term tok -> LMGen tok [Term tok]
-yudRed val = _
+yudRed :: Sentence sen tok => Term tok -> LMGen sen tok [Term tok]
+yudRed val =
+  return $ let (term,vars) = intros val in
+    case term of
+      (Rule term1 Yud) -> [unintros term1 vars]
+
+yudSolve :: (Sentence sen tok, Token tok) => Term tok -> LMGen sen tok [Term tok]
+yudSolve apply | (Rule to from,vars) <- intros apply = do {
+  terms <- getTerms ;
+  res <- mapM (yudSolve' apply) terms  ;
+  return $ concat res
+} -- TODO something with vars?
+yudSolve _ = return []
+yudSolve' :: (Sentence sen tok, Token tok) => Term tok -> Term tok -> LMGen sen tok [Term tok]
+yudSolve' apply iter | (Rule to from,vars) <- intros apply =
+    return $ case shrink iter from of {
+        Just (_,reps) -> singleton $ forEach replace' reps to ;
+        _ -> []
+    }
+yudSolve' _ _ = return []
+
+solve :: forall sen tok. (Sentence sen tok, Token tok) => Term tok -> LMGen sen tok (LogicResult ())
+solve goal = do
+  terms <- getTerms
+  curDepth <- getDepth
+  let _ = traceShowId terms 
+  let _ = traceShowId curDepth
+  val <- mapM (solveStep :: Term tok -> LMGen sen tok [Term tok])  terms
+  addTerms $ concat val
+  nterms <- getTerms
+  anySolve <- mapM (`doesSolve` goal) nterms
+  if any id anySolve then return Solved else case curDepth of {
+    Nothing -> solve goal ;
+    Just curDepthJ -> do {
+      setDepth $ Just (curDepthJ - 1) ;
+      if curDepthJ > 0 then
+        solve goal
+      else
+        return Stopped
+    }
+  }
+
+solveStep :: Sentence sen tok => Term tok -> LMGen sen tok [Term tok]
+
+solveStep interm = do {
+  gens <- yudGen interm ;
+  reds <- yudRed interm ;
+  solves <- yudSolve interm ;
+  return $ gens <> reds <> solves
+}

@@ -1,2 +1,25 @@
 \section{Formalization of Flat Type Theory}
 
+All words, variables, numbers, and operators that do not otherwise make up Well Formed Terms are atomic Well Formed Terms
+
+\begin{math}
+	\wft (()) \\
+	\wft (\yud ) \\
+	\wft (\alpha) \bip \wft (\fhe{\alpha}) \\
+	\diwft{\langle \alpha \cdot \beta \rangle} \\
+	\diwft{\fsubt{\alpha}{\beta}} \\
+	\diwft{\flam{\alpha}{\beta}} \\
+	\Gamma_0 [\fcons{\alpha_0}{\beta_0} \unif \fcons{\alpha_1}{\beta_1}], 
+	\Gamma_1 [\alpha_0 \unif \alpha_1],
+	\Gamma_2 [\beta_0 \unif \beta_1] \bip 
+	\Gamma_0 \equiv \Gamma_1 \cup \Gamma_2 \\
+	\Gamma_0 [\fsubt{\alpha_0}{\beta_0} \unif \fsubt{\alpha_1}{\beta_1}], 
+	\Gamma_1 [\alpha_0 \unif \alpha_1],
+	\Gamma_2 [\beta_0 \unif \beta_1] \bip 
+	\Gamma_0 \equiv \Gamma_1 \cup \Gamma_2 \\
+	\Gamma_0 [\flam{\alpha_0}{\beta_0} \unif \flam{\alpha_1}{\beta_1}], 
+	\Gamma_1 [\alpha_0 \unif \alpha_1],
+	\Gamma_2 [\beta_0 \unif \beta_1] \bip 
+	\Gamma_0 \equiv \Gamma_1 \cup \Gamma_2 \\
+	\Gamma_0[\fhe{\alpha} \unif \fhe{\beta}], \Gamma_1[\alpha \unif \beta] \bip \Gamma_0 \equiv \Gamma_1
+\end{math}

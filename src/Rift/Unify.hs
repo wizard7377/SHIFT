@@ -54,8 +54,8 @@ goodUnify :: Token (Term a) => Maybe [Binding' (Term a) (Term a)] -> Bool
 goodUnify i = case i of {
     Nothing -> False ; 
     Just [] -> True ;
-    Just binds -> traceShowId (all (\(k,_) -> 
-        let vals = traceShowId $ lookupAll binds k in
+    Just binds -> (all (\(k,_) -> 
+        let vals = lookupAll binds k in
             unique vals
     ) binds) && ((all (\(k,v) -> ((k == v) || isHe k))) binds) -- TODO something im forgetting im sure
 }

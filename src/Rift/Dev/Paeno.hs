@@ -11,6 +11,7 @@ justAssume v = case v of
 tRead :: String -> Term String
 tRead = justAssume . readTerm
 
+basenat = tRead "N"
 t0 = tRead "{0 : N}"
 it0 = introduce t0
 tt0 = tRead "?<n>[{0 : N}]"

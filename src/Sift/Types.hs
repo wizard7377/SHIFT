@@ -12,6 +12,7 @@ data LogicResult e =
     | Stopped 
     -- |Failed with an error
     | Failed e
+    deriving (Show,Eq)
 
 -- |The enviroment of a logical solve 
 data LogicEnv = LogicEnv {
@@ -21,5 +22,5 @@ data LogicEnv = LogicEnv {
 
 defaultEnv :: LogicEnv 
 defaultEnv = LogicEnv {
-    _depth = Just 30
+    _depth = Just 10
 }

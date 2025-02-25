@@ -10,6 +10,10 @@ flags:
   dev: 
     default: false 
     manual: false
+  check: 
+    default: false 
+    manual: false
+
 extra-source-files:
 - README.md
 - CHANGELOG.md
@@ -21,6 +25,7 @@ language: GHC2021
 other-extensions:
 - AllowAmbiguousTypes
 - FunctionalDependencies
+- PatternGuards
 description:         Please see the README on GitHub at <https://github.com/githubuser/SHIFT#readme>
 
 dependencies:
@@ -30,22 +35,35 @@ dependencies:
 - mtl
 - megaparsec
 
-ghc-options:
-- -Wall
-- -Wcompat
-- -Widentities
-- -Wincomplete-record-updates
-- -Wincomplete-uni-patterns
-- -Wmissing-export-lists
-- -Wmissing-home-modules
-- -Wpartial-fields
-- -Wredundant-constraints
 
 when:
   condition: flag(dev)
-  ghc-options:
-    -fdefer-typed-holes
-    -fdefer-type-errors
+  then: 
+    ghc-options:
+      -fdefer-typed-holes
+      -fdefer-type-errors
+      -w
+      -Wtyped-holes
+      -Wdeferred-type-errors
+      -Wdeferred-out-of-scope-variables
+  else: 
+    when: 
+      condition: flag(check)
+      then: 
+        ghc-options:
+          - -Wall
+          - -Wcompat
+          - -Widentities
+          - -Wincomplete-record-updates
+          - -Wincomplete-uni-patterns
+          - -Wmissing-export-lists
+          - -Wmissing-home-modules
+          - -Wpartial-fields
+          - -Wredundant-constraints
+      else: 
+        ghc-options: 
+          -w
+  
 
 library:
   source-dirs: src

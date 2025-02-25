@@ -1,7 +1,10 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE FunctionalDependencies #-}
+
 module Rift.Base where 
 
 import Text.Show.Functions()
+import Data.Kind (Type)
 type Token t = (Eq t,Show t)
 type TPureComp a b = (a -> b)
 -- |The type of all terms, parameterized over a given token type
@@ -28,6 +31,10 @@ isAtom _ | otherwise = False
 isFundamental :: Term tok -> Bool
 isFundamental val = isAtom val || isHe val
 -- |The class of all top level sentences, which can convert to `Term tok`
-class Sentence sen tok where 
+class Sentence (sen :: Type -> Type) tok where 
     fromTerm :: Term tok -> sen tok 
     toTerm :: sen tok -> Term tok 
+
+instance Sentence Term tok where 
+    fromTerm = id 
+    toTerm = id

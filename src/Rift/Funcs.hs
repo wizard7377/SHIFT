@@ -8,6 +8,9 @@ import Debug.Trace
 import Rift.Instances()
 import Data.Traversable (for)
 import Extra.List
+
+replace' :: Token a => Binding (Term a) -> Term a -> Term a 
+replace' (from,to) within = replace from to within
 -- |Replace every instance of a given value with another
 replace :: Token a =>
     -- |From 
@@ -17,6 +20,7 @@ replace :: Token a =>
     -- |Within 
     Term a ->
     Term a
+
 
 replace from to within | from == within = to
 replace from to within = let myreplace = replace from to in case within of {
@@ -51,7 +55,12 @@ introduce term =
 
 
 -- |"Shrink" the term, that is, generate a term that is as generally as possible equal
-shrink :: Token a => Term a -> Term a -> Maybe (Term a, Bindings (Term a))
+shrink :: Token a => 
+    -- |More "general" term
+    Term a -> 
+    -- |More "specific" term    
+    Term a -> 
+    Maybe (Term a, Bindings (Term a))
 shrink termAt termBt = let 
     termA = introduce termAt
     termB = introduce termBt

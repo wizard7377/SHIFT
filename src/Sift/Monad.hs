@@ -11,6 +11,7 @@ import Control.Monad.State (MonadState(..))
 import qualified Rift
 import Sift.Types (LogicEnv)
 import Rift (Term)
+import Data.Typeable
 
 -- |The basic monad transformer, a computation over a monad with `LogicEnv` and some state @s@, to produce an action @a@
 newtype LMT s m a = LMT { 
@@ -69,6 +70,16 @@ instance Monad m => MonadState s (LMT s m) where
   state :: (s -> (a, s)) -> LMT s m a
   state trans = LMT $ \_ stateV -> (let (res,_) = trans stateV in return res)
   
+
+
+
+  
 -- |With an environment, and some sentences, generate a state @me@
 class EnterState me where 
   enterState :: Rift.Sentence sen tok => LogicEnv -> [sen tok] -> me sen tok
+
+
+runLMT :: LMT s m a -> LogicEnv -> s -> m a 
+runLMT = unLMT 
+mkLMT :: (LogicEnv -> s -> m a) -> LMT s m a 
+mkLMT = LMT
