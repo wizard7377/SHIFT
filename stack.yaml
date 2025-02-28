@@ -1,4 +1,4 @@
-snapshot: lts-22.20
+snapshot: lts-21.25
 
 packages:
 - .

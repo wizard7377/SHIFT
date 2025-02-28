@@ -1,63 +1,44 @@
 {-# LANGUAGE BlockArguments #-}
-module Rift.Unify(
-    (@=),(@?),goodUnify,
-    Binding, Binding',Bindings
+
+module Rift.Unify (
+  unify,
+  Unification,
+  (>?>),
+  (>@>),
 ) where
 
 import Rift.Base
 
-import Test.QuickCheck (collect)
-import Data.List (intersect,union)
+import Control.Monad.Identity (Identity)
+import Data.Kind (Type)
+import Data.List (intersect, union)
+import Data.Map
+import Debug.Trace
 import Extra.Choice
 import Extra.List (forEach)
-import Debug.Trace
+import Test.QuickCheck (collect)
 
--- |The type of a binding, just a tuple with the from @(from,to)@
-type Binding' a b = (a,b)
--- |The type of a homogenues binding
-type Binding a = Binding' a a
--- |A list of homogenuos bindings
-type Bindings a = [Binding a]
+-- | The basic unification function
+unify :: (Eq atom, Ord (Term atom)) => Term atom -> Term atom -> Unification atom
+unify t0 t1 = case (t0, t1) of
+  (Lamed b0 v0, Lamed b1 v1) -> unify b0 b1 <> unify v0 v1
+  (Cons a0 b0, Cons a1 b1) -> unify a0 a1 <> unify b0 b1
+  (Rule t0 f0, Rule t1 f1) -> unify t0 t1 <> unify f0 f1
+  _ -> singleton t0 t1
 
-{-|Collect the corresponding nodes on each tree, where it stops descending whenever the function is true
+mapToF :: (Ord a) => Map a a -> a -> a
+mapToF m k = if member k m then m ! k else k
 
+{- | The type of all unification, takes a list of bindings, then a list of free terms
+ Note that the unification functions go from general to specific, so @unify t0 t1@ is saying that t0 is more general then t1
 -}
-unify :: (Term a -> Term b -> Bool) -> Term a -> Term b -> Maybe [Binding' (Term a) (Term b)]
-unify f ta tb =
-    if f ta tb then Just [(ta,tb)] else
-        case (ta,tb) of {
-            (Atom va,Atom vb) -> Just [(ta,tb)] ;
-            (List (x:xs),List (y:ys)) -> Just [(x,y)] <> thisUnify (List xs) (List ys) ;
-            (Lamed ba ta, Lamed bb tb) -> thisUnify ba bb <> thisUnify ta tb ;
-            (Yud, Yud) -> Just [] ;
-            (Resh,Resh) -> Just [] ;
-            (Rule aa ba, Rule ab bb) -> thisUnify aa ab <> thisUnify ba bb ;
-            (Tagged _ va, Tagged _ vb) -> thisUnify va vb ;
-            (val@(He _),_) -> Just [(val,tb)] ;
-            _ -> Nothing
-        }
-    where thisUnify = unify f
+type Unification atom = (Ord (Term atom)) => (Map (Term atom) (Term atom))
 
+(>?>) :: (Eq atom) => Term atom -> Term atom -> Unification atom
+v0 >?> v1 = unify v0 v1
 
-infix 5 @=
-(@=) :: Term a -> Term b -> Maybe [Binding' (Term a) (Term b)]
-v0 @= v1 = unify (\x y -> isFundamental x || isFundamental y) v0 v1
-infix 5 @? 
-(@?) :: Token (Term a) => Term a -> Term a -> Maybe [Binding' (Term a) (Term a)]
-v0 @? v1 = filter (\(x,y) -> x /= y) <$> unify (\x y -> isFundamental x || isFundamental y || x == y) v0 v1
+(>@>) :: (Ord (Term atom)) => Unification atom -> Term atom -> Term atom
+f >@> t = mapToF f t
 
-unique :: Token a => [a] -> Bool
-unique vals = all (\v0 -> all (\v1 -> v0 == v1) vals) vals
-lookupAll :: Token k => [(k,v)] -> k -> [v]
-lookupAll vals k = snd <$> filter (\(k2,_) -> k == k2) vals
-goodUnify :: Token (Term a) => Maybe [Binding' (Term a) (Term a)] -> Bool
-goodUnify i = case i of {
-    Nothing -> False ; 
-    Just [] -> True ;
-    Just binds -> (all (\(k,_) -> 
-        let vals = lookupAll binds k in
-            unique vals
-    ) binds) && ((all (\(k,v) -> ((k == v) || isHe k))) binds) -- TODO something im forgetting im sure
-}
-
-
+infixr 5 >@>
+infixr 6 >?>

@@ -1,40 +1,35 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE FunctionalDependencies #-}
 
-module Rift.Base where 
+module Rift.Base (Term (..), Sentence (..), TestTerm, Atomic) where
 
-import Text.Show.Functions()
+import Control.Monad.Identity (Identity)
+import Data.Data (Data)
 import Data.Kind (Type)
-type Token t = (Eq t,Show t)
-type TPureComp a b = (a -> b)
--- |The type of all terms, parameterized over a given token type
-data Term tok where
-    Atom :: Token tok => tok -> Term tok -- ^Atomic forms
-    List :: [Term tok] -> Term tok -- ^Basic expressions expressions
-    PureComp :: (Term tok -> Term tok) -> (Term tok) -> (Term tok) -- ^A pure computation 
-    ImpureComp :: Monad m => (Term tok -> m (Term tok)) -> (Term tok) -> (Term tok) -- ^An impure computation, can transform to another type
-    Lamed :: (Term tok) -> (Term tok) -> (Term tok) -- ^A lamed term
-    Yud :: Term tok -- ^Truth
-    Resh :: Term tok -- ^Falsehood
-    Rule :: (Term tok) -> (Term tok) -> (Term tok) -- ^A subtyping rule of the form (to : from)
-    Tagged :: tag -> Term tok -> Term tok -- TODO a bunch of stuff related to this
-    He :: Term tok -> Term tok
+import Data.Text as T
+import GHC.Generics (Generic)
+import Text.Show.Functions ()
 
+data Term atom where
+  Atom :: atom -> Term atom
+  Empty :: Term atom
+  Yud :: Term atom
+  Lamed :: Term atom -> Term atom -> Term atom
+  Cons :: Term atom -> Term atom -> Term atom
+  Rule :: Term atom -> Term atom -> Term atom
+  deriving (Functor, Foldable, Traversable, Data, Generic)
 
-isHe :: Term tok -> Bool 
-isHe (He _) = True 
-isHe _ | otherwise = False
-isAtom :: Term tok -> Bool 
-isAtom (Atom _) = True 
-isAtom _ | otherwise = False
+type TestTerm = Term Text
 
-isFundamental :: Term tok -> Bool
-isFundamental val = isAtom val || isHe val
--- |The class of all top level sentences, which can convert to `Term tok`
-class Sentence (sen :: Type -> Type) tok where 
-    fromTerm :: Term tok -> sen tok 
-    toTerm :: sen tok -> Term tok 
+type Atomic a = (Eq a)
 
-instance Sentence Term tok where 
-    fromTerm = id 
-    toTerm = id
+-- type Atom a = (Eq a, Show a)
+
+-- | The class of all top level sentences, which can convert to `Term' tok`
+class Sentence sen where
+  fromTerm :: Term atom -> sen atom
+  toTerm :: sen atom -> Term atom
+
+instance Sentence Term where
+  fromTerm = id
+  toTerm = id

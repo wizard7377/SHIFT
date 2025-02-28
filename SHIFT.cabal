@@ -61,8 +61,10 @@ library
       Extra.List
       Extra.Tree
       Extra.Tuple
+      Extra.Types
       Rift.Base
       Rift.Dev
+      Rift.Dev.Check
       Rift.Dev.Paeno
       Rift.Funcs
       Rift.Instances
@@ -78,6 +80,7 @@ library
       Sift.Solver.BasicSearch.Tree
       Sift.Solver.GenSearch
       Sift.Types
+      Sift.Types.Unify
       Paths_SHIFT
   autogen-modules:
       Paths_SHIFT
@@ -87,12 +90,14 @@ library
       AllowAmbiguousTypes
       FunctionalDependencies
       PatternGuards
+      OverloadedStrings
   build-depends:
       QuickCheck
     , base >=4.7 && <5
     , containers
     , megaparsec
     , mtl
+    , text
   default-language: GHC2021
   if flag(dev)
     ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wtyped-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables
@@ -100,7 +105,7 @@ library
     if flag(check)
       ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
     else
-      ghc-options: -w
+      ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
 
 executable SHIFT-exe
   main-is: Main.hs
@@ -114,6 +119,7 @@ executable SHIFT-exe
       AllowAmbiguousTypes
       FunctionalDependencies
       PatternGuards
+      OverloadedStrings
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       QuickCheck
@@ -122,6 +128,7 @@ executable SHIFT-exe
     , containers
     , megaparsec
     , mtl
+    , text
   default-language: GHC2021
   if flag(dev)
     ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wtyped-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables
@@ -129,7 +136,7 @@ executable SHIFT-exe
     if flag(check)
       ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
     else
-      ghc-options: -w
+      ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
 
 test-suite SHIFT-test
   type: exitcode-stdio-1.0
@@ -144,6 +151,7 @@ test-suite SHIFT-test
       AllowAmbiguousTypes
       FunctionalDependencies
       PatternGuards
+      OverloadedStrings
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       QuickCheck
@@ -152,6 +160,7 @@ test-suite SHIFT-test
     , containers
     , megaparsec
     , mtl
+    , text
   default-language: GHC2021
   if flag(dev)
     ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wtyped-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables
@@ -159,4 +168,4 @@ test-suite SHIFT-test
     if flag(check)
       ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
     else
-      ghc-options: -w
+      ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints

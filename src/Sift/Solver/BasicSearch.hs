@@ -1,23 +1,24 @@
-
-
 module Sift.Solver.BasicSearch where
-import Sift.Monad hiding (_depth)
-import Sift.Monad()
-import qualified Sift.Monad as Sift
+
+import Extra.Choice (Choice (AllOf, AnyOf, EmptyNode, Simple, Trivial))
 import Rift
-import Extra.Choice(Choice (AllOf,AnyOf,Simple,Trivial,EmptyNode))
-import qualified Sift.Types (LogicEnv(..))
-import Sift.Types (LogicEnv)
-import Rift.Funcs (intros)
+import Sift.Base (LogicEnv)
+import Sift.Base qualified (LogicEnv (..))
+import Sift.Monad ()
+import Sift.Monad hiding (_depth)
+import Sift.Monad qualified as Sift
+
+-- import Rift.Funcs (intros)
 import Data.Tree
+
 {-
 -- |The state of the Search monad with sentence `sen` on token `tok`
 data SearchState sen tok = SearchState {
     -- |All proven statements
     _sentences :: [sen tok],
-    -- |Current depth to end 
+    -- |Current depth to end
     _depth :: Maybe Int,
-    -- |List of infered vars 
+    -- |List of infered vars
     _vars :: Int
 }
 {-
@@ -38,10 +39,10 @@ yudGen val = return $ Simple $ Rule val Yud --TODO
 yudRed (Rule val Yud) = return $ Simple val
 yudRed _ = return EmptyNode
 transSolveBasic :: Term a -> Term a -> LMS a (PosSearch a)
-transSolveBasic iterm0 iterm1 = 
-  let 
+transSolveBasic iterm0 iterm1 =
+  let
     (term0,bounds0) = intros term0
-    (term1,bounds1) = intros term1 
+    (term1,bounds1) = intros term1
   in case (term0,term1) of {
     ((Rule to0 from0),(Rule to1 from1)) -> _ ;
     (_,(Rule to0 from0)) -> _

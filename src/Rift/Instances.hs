@@ -1,9 +1,10 @@
 module Rift.Instances where
 
+import Data.Functor ((<$>))
+import Extra.Choice
+import Extra.Choice (Choice (EmptyNode))
 import Rift.Base
 import Rift.Unify
-import Extra.Choice
-import Extra.Choice (Choice(EmptyNode))
 
 {-
 instance Token a => Unify (Term a) where
@@ -19,28 +20,17 @@ instance Token a => Unify (Term a) where
         _ -> EmptyNode
     }]
 -}
-instance Show a => Show (Term a) where
-    show (Atom a) = show a
-    show (List l) = "#(" ++ showList l "" ++ ")#"
-    show (PureComp _ v) = "<>" ++ show v
-    show (ImpureComp _ v) = "<!>" ++ show v
-    show (Lamed b t) = "?" ++ show b ++ "#[" ++ show t ++ "]#"
-    show Yud = "*"
-    show Resh = "!"
-    show (Rule t f) = "#{" ++ show t ++ " : " ++ show f ++ "}#"
-    show (Tagged tag t) = "+" ++ show t
-    show (He t) = "$" ++ (show t)
+instance (Show box) => Show (Term box) where
+  show (Atom a) = show a
+  show (Cons l0 l1) = show l0 ++ " . " ++ show l1
+  show (Lamed b t) = "?" ++ show b ++ "#[" ++ show t ++ "]#"
+  show Yud = "*"
+  show (Rule t f) = "#{" ++ show t ++ " : " ++ show f ++ "}#"
 
-instance Eq a => Eq (Term a) where
-    (Atom a0) == (Atom a1) = a0 == a1
-    (List l0) == (List l1) = l0 == l1
-    (Lamed b0 t0) == (Lamed b1 t1) = (b0 == b1) && (t0 == t1)
-    Yud == Yud = True
-    Resh == Resh = True
-    (Rule t0 f0) == (Rule t1 f1) = (t0 == t1) && (f0 == f1)
-    (Tagged _ t0) == t1 = t0 == t1
-    t0 == (Tagged _ t1) = t0 == t1
-    He t0 == He t1 = t0 == t1
-    _ == _ = False
-
-
+instance (Eq (box)) => Eq (Term box) where
+  (Atom a0) == (Atom a1) = a0 == a1
+  (Cons ta0 tb0) == (Cons ta1 tb1) = (ta0 == ta1) && (tb0 == tb1)
+  (Lamed b0 t0) == (Lamed b1 t1) = (b0 == b1) && (t0 == t1)
+  Yud == Yud = True
+  (Rule t0 f0) == (Rule t1 f1) = (t0 == t1) && (f0 == f1)
+  _ == _ = False

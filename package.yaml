@@ -26,6 +26,7 @@ other-extensions:
 - AllowAmbiguousTypes
 - FunctionalDependencies
 - PatternGuards
+- OverloadedStrings
 description:         Please see the README on GitHub at <https://github.com/githubuser/SHIFT#readme>
 
 dependencies:
@@ -33,6 +34,7 @@ dependencies:
 - QuickCheck
 - containers
 - mtl
+- text
 - megaparsec
 
 
@@ -62,7 +64,15 @@ when:
           - -Wredundant-constraints
       else: 
         ghc-options: 
-          -w
+          - -Wall
+          - -Wcompat
+          - -Widentities
+          - -Wincomplete-record-updates
+          - -Wincomplete-uni-patterns
+          - -Wmissing-export-lists
+          - -Wmissing-home-modules
+          - -Wpartial-fields
+          - -Wredundant-constraints
   
 
 library:
