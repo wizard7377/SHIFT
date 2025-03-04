@@ -5,6 +5,7 @@
 module Sift.Monad where
 
 import Control.Monad
+import Control.Monad.Except (Except, ExceptT)
 import Control.Monad.Reader (MonadReader (..))
 import Control.Monad.State (MonadState (..))
 import Control.Monad.Trans as Trans
@@ -25,6 +26,26 @@ type LM s a = LMT s Identity a
 
 type LMT' s m a = LMT m s a
 
+{-
+instance (Functor f) => Functor (LMT s f) where
+  fmap :: (a -> b) -> LMT s f a -> LMT s f b
+  fmap func val = LMT $ \env stateV ->
+    let val' = unLMT val env stateV
+        ret = fmap func <$> val'
+     in ret
+
+instance (Applicative f) => Applicative (LMT s f) where
+  pure :: a -> LMT s f a
+  pure v = LMT $ \_ _ -> pure $ Right v
+  (<*>) :: LMT s f (a -> b) -> LMT s f a -> LMT s f b
+  func <*> val = LMT $ \env stateV ->
+    let val' = unLMT val env stateV
+        func' = unLMT func env stateV
+        transf = (\func1 val1 -> case func1 of
+          Right func2 -> Right $ func1 val1
+          Left e -> e)
+    in transf <$> func' <*> val'
+-}
 instance (Functor f) => Functor (LMT s f) where
   fmap :: (a -> b) -> LMT s f a -> LMT s f b
   fmap func val = LMT $ \env stateV ->
@@ -39,8 +60,7 @@ instance (Applicative f) => Applicative (LMT s f) where
   func <*> val = LMT $ \env stateV ->
     let val' = unLMT val env stateV
         func' = unLMT func env stateV
-        ret = func' <*> val'
-     in ret
+     in func' <*> val'
 
 instance (Monad m) => Monad (LMT s m) where
   return :: a -> LMT s m a
@@ -70,8 +90,8 @@ instance (Monad m) => MonadState s (LMT s m) where
   state trans = LMT $ \_ stateV -> (let (res, _) = trans stateV in return res)
 
 -- | With an environment, and some sentences, generate a state @me@
-class EnterState me where
-  enterState :: (Rift.Sentence sen) => LogicEnv -> [sen atom] -> me sen atom
+class EnterState me term where
+  enterState :: forall sen atom. (Rift.Sentence sen term) => LogicEnv -> [sen atom] -> me sen atom
 
 runLMT :: LMT s m a -> LogicEnv -> s -> m a
 runLMT = unLMT

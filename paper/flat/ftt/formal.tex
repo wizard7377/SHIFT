@@ -1,7 +1,45 @@
-\section{Formalization of Flat Type Theory}
+\section{An Overview of Flat Type Theory}
 
-All words, variables, numbers, and operators that do not otherwise make up Well Formed Terms are atomic Well Formed Terms
+\this is essientally a cross between formal logic and language as well as a type theory.
 
+However, it is not truly either.
+It lacks the prgramtic utility of heirarchechal type theory while being tooo complex to be a true system for logic.
+
+However, it still might be useful for they hings not under the purview of either system.
+Namely, an automated proving system that is simple enough to be easily verefied yet readable enough to be understood.
+
+Automated provers, bi it those that use type theory such as COQ or Isabelle and those that use more tradotional logics, such as Prolog SMT, and Metamath, all suffer from limiations \needcite.
+Metamath is more a proof \emph{markup} system with verification than anything else, and SMT solvers are very narrow in scope.
+Prolog is quite general however proof search often recurses even when simpe proof(s) exists.
+
+Flat Type Theory aims to be the base of a system as flexible as Prolog, useful as metamath, fast as Coq, and expressive as Issabelle 
+
+\subsection{Flat Types as a System}
+
+First, let us take a look at  the language of Flat Type Theory, repersented in a simple metalanguage.
+First, we shall cover the rules for term construction.
+
+Every identifier is a term (this includes words, numbers, and operators not otherwise mentioned).
+In addition the universe, repersented by Hebrew Yud \yud, is a term, as is the empty list $()$. 
+If $\alpha$ and $\beta$ are both terms then $\fcons{\alpha}{\beta}$ (cons constructor) is a term\footnote{This will be represented in expression syntax, familiar to Lisp users}
+If $\alpha$ and $\beta$ are both terms then $\fsubt{\alpha}{\beta}$ is a term
+If $\alpha$ and $\beta$ are both terms then $\flam{\alpha}{\beta}$ is a term
+If $\alpha$ and $\beta$ are both terms then $?$ is a term
+If $\alpha$ and $\beta$ are both terms then $?$ is a term
+
+Terms are equal if and only if they are the same type and all their elements are equal.
+
+Thence we can get on to the main rules, \yud-lowering, \yud-raising, a transitivity.
+\yud-lowering and raising are a pair of rules those being $\alpha \proves \alpha : \yud$ (\yud-lowering) and $\alpha : \yud \proves \alpha$ (\yud-raising).
+They are called this because they "lower" and "raise" statements from and to their "true" forms and their "representations".
+That is, the respective terms becoming lifted as the statement "x is true" to "x" and "x" to "x is true"
+
+The secound statement although perhaps looking strange, is the most importatn, and it is if \domath{if a in b b in c pip a in c}. 
+This statement \emph{isnt} true in heirarchal type with, with regards to $::$, however, is \emph{is} true with regards to $\to$, namely, if \domath{if f a -> b and g b -> c thence g . f is a -> c}
+
+Together thes form three rules already allow us to do much, for instance, proving modus ponenes:
+
+\needmath
 \begin{math}
 	\wft (()) \\
 	\wft (\yud ) \\

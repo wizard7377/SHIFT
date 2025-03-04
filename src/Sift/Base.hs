@@ -3,6 +3,7 @@ module Sift.Base where
 import Data.Kind (Type)
 import Rift qualified
 import Rift.Base (Term (..))
+import Rift.Funcs
 import Rift.Instances ()
 
 -- | The result of a logic solve
@@ -29,12 +30,36 @@ defaultEnv =
     { _depth = Just 10
     }
 
+{- | The solver atomic type.
+ Note that this is an _atom_, and not a _term_, as to allow for unification
+ That is, we have @Term (SAtom atom)@
+ However, `SAtom` is paramaterized over an "inner attom"
+-}
 data SAtom atom where
-  Token :: atom -> SAtom atom
-  Leave :: STerm atom -> SAtom atom
-  He :: STerm atom -> SAtom atom
-  Wild :: SAtom atom
-type STerm (tok :: Type) = Term (SAtom tok)
+  Simple :: atom -> SAtom atom
+  He :: Term atom -> SAtom atom
+  deriving (Show, Eq, Ord)
+
+type STerm atom = Term (SAtom atom)
+
+{- | Qualified terms, that is, terms that have some _He_'s in them
+ The first part is the term, the second part the frees
+-}
 type QTerm tok = (STerm tok, [STerm tok])
-toSTerm :: Term atom -> STerm atom
-toSTerm = fmap Token
+
+toSTerm :: Term atom -> Term (SAtom atom)
+toSTerm = fmap Simple
+
+-- TODO makes this work without incompleteness
+fromSAtom :: SAtom atom -> atom
+fromSAtom term = case term of
+  Simple val -> val
+  _ -> _
+
+fromSTerm :: STerm atom -> Term atom
+fromSTerm term = fromSAtom <$> term
+
+qbinds :: QTerm tok -> [STerm tok]
+qbinds = snd
+qterm :: QTerm tok -> STerm tok
+qterm = fst

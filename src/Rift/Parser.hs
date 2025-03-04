@@ -13,6 +13,7 @@ import Data.Functor.Identity
 import Data.List (singleton)
 import Data.Text qualified as T
 import Data.Void
+import Extra.List
 import Rift.Base
 import Text.Megaparsec.Char
 import Text.Megaparsec.Debug
@@ -55,12 +56,10 @@ llamed = spaced $ string "?"
 plamed = try $ do
   llamed
   leftAngle
-  bound <- pterm
+  bounds <- many pterm
   rightAngle
-  leftBracket
   term <- pterm
-  rightBracket
-  return $ Lamed bound term
+  return $ forEach Lamed bounds term
 prule = try $ do
   leftBrace
   t0 <- pterm
