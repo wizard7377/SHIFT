@@ -1,10 +1,5 @@
 module Rift (
-  module Rift.Base,
-  module Rift.Parser,
-  module Rift.Unify,
-  module Rift.Dev,
-  (>@>),
-  (>?>),
+  module Rift.Core,
   Term (..),
   Unification,
   unify,
@@ -12,10 +7,7 @@ module Rift (
 
 -- \|
 --    The representation for Flat Types
-import Rift.Base
-import Rift.Dev
-import Rift.Instances ()
-import Rift.Parser
-import Rift.Unify
+import Rift.Core
+import Rift.Names
 
 -- ^ Flat Intermediate Representation

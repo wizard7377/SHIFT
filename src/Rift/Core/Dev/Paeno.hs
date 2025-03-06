@@ -1,9 +1,9 @@
-module Rift.Dev.Paeno where
+module Rift.Core.Dev.Paeno where
 
 import Data.Text qualified as T
-import Rift.Base
+import Rift.Core.Base
 
-import Rift.Parser (readTerm)
+import Rift.Core.Parser (readTerm)
 
 justAssume :: Maybe a -> a
 justAssume v = case v of

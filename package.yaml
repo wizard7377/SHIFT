@@ -13,6 +13,9 @@ flags:
   check:
     default: false
     manual: false
+  release:
+    default: false
+    manual: false
 
 extra-source-files:
   - README.md
@@ -27,6 +30,7 @@ other-extensions:
   - FunctionalDependencies
   - PatternGuards
   - OverloadedStrings
+  - LambdaCase
   - QuantifiedConstraints
 description: Please see the README on GitHub at <https://github.com/githubuser/SHIFT#readme>
 
@@ -37,41 +41,33 @@ dependencies:
   - mtl
   - text
   - megaparsec
+  - binary
+  - data-default
 
 when:
-  condition: flag(dev)
-  then:
-    ghc-options: -fdefer-typed-holes
-      -fdefer-type-errors
-      -w
-      -Wtyped-holes
-      -Wdeferred-type-errors
-      -Wdeferred-out-of-scope-variables
-  else:
-    when:
-      condition: flag(check)
-      then:
-        ghc-options:
-          - -Wall
-          - -Wcompat
-          - -Widentities
-          - -Wincomplete-record-updates
-          - -Wincomplete-uni-patterns
-          - -Wmissing-export-lists
-          - -Wmissing-home-modules
-          - -Wpartial-fields
-          - -Wredundant-constraints
-      else:
-        ghc-options:
-          - -Wall
-          - -Wcompat
-          - -Widentities
-          - -Wincomplete-record-updates
-          - -Wincomplete-uni-patterns
-          - -Wmissing-export-lists
-          - -Wmissing-home-modules
-          - -Wpartial-fields
-          - -Wredundant-constraints
+  - condition: flag(dev) && (!flag(release))
+    ghc-options:
+      - -fdefer-typed-holes
+      - -fdefer-type-errors
+      - -w
+      - -Wtyped-holes
+      - -Wdeferred-type-errors
+      - -Wdeferred-out-of-scope-variables
+  - condition: flag(dev) && flag(release)
+    ghc-options:
+      - -Wall
+      - -Wcompat
+      - -Widentities
+      - -Wincomplete-record-updates
+      - -Wincomplete-uni-patterns
+      - -Wmissing-export-lists
+      - -Wmissing-home-modules
+      - -Wpartial-fields
+      - -Wredundant-constraints
+  - condition: flag(release)
+    ghc-options:
+      - -w
+      - -O2
 
 library:
   source-dirs: src

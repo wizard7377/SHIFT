@@ -1,10 +1,9 @@
-module Rift.Instances where
+module Rift.Core.Instances where
 
 import Data.Functor ((<$>))
 import Extra.Choice
-import Extra.Choice (Choice (EmptyNode))
-import Rift.Base
-import Rift.Unify
+import Rift.Core.Base
+import Rift.Core.Unify
 
 {-
 instance Token a => Unify (Term a) where

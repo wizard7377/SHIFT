@@ -1,10 +1,8 @@
 module Sift.Base where
 
 import Data.Kind (Type)
+import Rift
 import Rift qualified
-import Rift.Base (Term (..))
-import Rift.Funcs
-import Rift.Instances ()
 
 -- | The result of a logic solve
 data LogicResult e

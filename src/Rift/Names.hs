@@ -1,0 +1,1 @@
+module Rift.Names where

@@ -1,14 +1,14 @@
 {-# LANGUAGE BlockArguments #-}
 
-module Rift.Funcs where
+module Rift.Core.Funcs where
 
 import Data.Traversable (for)
 import Debug.Trace
 import Extra.Choice
 import Extra.List
-import Rift.Base
-import Rift.Instances ()
-import Rift.Unify
+import Rift.Core.Base
+import Rift.Core.Instances ()
+import Rift.Core.Unify
 
 replace :: (Atomic atom) => Term atom -> Term atom -> Term atom -> Term atom
 replace from to within =

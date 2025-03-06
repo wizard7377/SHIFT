@@ -49,6 +49,10 @@ flag dev
   manual: False
   default: False
 
+flag release
+  manual: False
+  default: False
+
 library
   exposed-modules:
       Rift
@@ -59,18 +63,22 @@ library
       Extra.Basics
       Extra.Choice
       Extra.Decide
+      Extra.Error
       Extra.List
       Extra.Tree
       Extra.Tuple
       Extra.Types
-      Rift.Base
-      Rift.Dev
-      Rift.Dev.Check
-      Rift.Dev.Paeno
-      Rift.Funcs
-      Rift.Instances
-      Rift.Parser
-      Rift.Unify
+      Rift.Core
+      Rift.Core.Base
+      Rift.Core.Dev
+      Rift.Core.Dev.Check
+      Rift.Core.Dev.Paeno
+      Rift.Core.Funcs
+      Rift.Core.Instances
+      Rift.Core.Parser
+      Rift.Core.Unify
+      Rift.Names
+      Rift.Names.Base
       Sift.Base
       Sift.Dev
       Sift.Dev.Util
@@ -92,22 +100,24 @@ library
       FunctionalDependencies
       PatternGuards
       OverloadedStrings
+      LambdaCase
       QuantifiedConstraints
   build-depends:
       QuickCheck
     , base >=4.7 && <5
+    , binary
     , containers
+    , data-default
     , megaparsec
     , mtl
     , text
   default-language: GHC2021
-  if flag(dev)
+  if flag(dev) && (!flag(release))
     ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wtyped-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables
-  else
-    if flag(check)
-      ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
-    else
-      ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  if flag(dev) && flag(release)
+    ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  if flag(release)
+    ghc-options: -w -O2
 
 executable SHIFT-exe
   main-is: Main.hs
@@ -122,24 +132,26 @@ executable SHIFT-exe
       FunctionalDependencies
       PatternGuards
       OverloadedStrings
+      LambdaCase
       QuantifiedConstraints
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       QuickCheck
     , SHIFT
     , base >=4.7 && <5
+    , binary
     , containers
+    , data-default
     , megaparsec
     , mtl
     , text
   default-language: GHC2021
-  if flag(dev)
+  if flag(dev) && (!flag(release))
     ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wtyped-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables
-  else
-    if flag(check)
-      ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
-    else
-      ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  if flag(dev) && flag(release)
+    ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  if flag(release)
+    ghc-options: -w -O2
 
 test-suite SHIFT-test
   type: exitcode-stdio-1.0
@@ -155,21 +167,23 @@ test-suite SHIFT-test
       FunctionalDependencies
       PatternGuards
       OverloadedStrings
+      LambdaCase
       QuantifiedConstraints
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       QuickCheck
     , SHIFT
     , base >=4.7 && <5
+    , binary
     , containers
+    , data-default
     , megaparsec
     , mtl
     , text
   default-language: GHC2021
-  if flag(dev)
+  if flag(dev) && (!flag(release))
     ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wtyped-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables
-  else
-    if flag(check)
-      ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
-    else
-      ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  if flag(dev) && flag(release)
+    ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  if flag(release)
+    ghc-options: -w -O2

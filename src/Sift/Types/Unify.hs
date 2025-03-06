@@ -4,9 +4,8 @@ import Data.List
 import Data.Map
 import Extra.Basics
 import Extra.List
-import Rift (Atomic, Term (..), unify, (>?>), (>@>))
-import Rift.Funcs
-import Rift.Unify
+import Rift
+import Rift (Atomic, Term (..), unify)
 import Sift.Base (QTerm, SAtom (..), STerm, fromSTerm, toSTerm)
 
 isHe :: SAtom atom -> Bool

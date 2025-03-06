@@ -1,7 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE FunctionalDependencies #-}
 
-module Rift.Base (Term (..), Sentence (..), TestTerm, Atomic) where
+module Rift.Core.Base (Term (..), Sentence (..), TestTerm, Atomic) where
 
 import Control.Monad.Identity (Identity)
 import Data.Data (Data)

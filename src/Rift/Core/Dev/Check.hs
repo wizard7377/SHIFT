@@ -1,6 +1,6 @@
-module Rift.Dev.Check where
+module Rift.Core.Dev.Check where
 
-import Rift.Base
+import Rift.Core.Base
 import Test.QuickCheck
 
 abin :: (Arbitrary a, Arbitrary b) => (a -> b -> c) -> Gen c

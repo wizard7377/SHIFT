@@ -1,4 +1,5 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-noncanonical-monad-instances #-}
 
@@ -9,15 +10,17 @@ import Control.Monad.Except (Except, ExceptT)
 import Control.Monad.Reader (MonadReader (..))
 import Control.Monad.State (MonadState (..))
 import Control.Monad.Trans as Trans
+import Data.Bifunctor (second)
 import Data.Functor.Identity (Identity)
 import Data.Typeable
+import Extra.Error (Error)
 import Rift (Term)
 import Rift qualified
 import Sift.Base (LogicEnv)
 
 -- | The basic monad transformer, a computation over a monad with `LogicEnv` and some state @s@, to produce an action @a@
 newtype LMT s m a = LMT
-  { unLMT :: LogicEnv -> s -> m a
+  { unLMT :: LogicEnv -> s -> m ((), (Either Error a))
   -- ^ The functional internals
   }
 
@@ -50,27 +53,31 @@ instance (Functor f) => Functor (LMT s f) where
   fmap :: (a -> b) -> LMT s f a -> LMT s f b
   fmap func val = LMT $ \env stateV ->
     let val' = unLMT val env stateV
-        ret = fmap func val'
-     in ret
+     in ( \case
+            ((), Right v) -> ((), Right $ func v)
+            ((), Left e) -> ((), Left e)
+        )
+          <$> val'
 
 instance (Applicative f) => Applicative (LMT s f) where
   pure :: a -> LMT s f a
-  pure v = LMT $ \_ _ -> pure v
+  pure v = LMT $ \_ _ -> pure ((), Right v)
   (<*>) :: LMT s f (a -> b) -> LMT s f a -> LMT s f b
   func <*> val = LMT $ \env stateV ->
-    let val' = unLMT val env stateV
-        func' = unLMT func env stateV
-     in func' <*> val'
+    case (unLMT val env stateV, unLMT func env stateV) of
+      (((), Right val'), ((), Right func')) -> func' <*> val'
 
 instance (Monad m) => Monad (LMT s m) where
   return :: a -> LMT s m a
   return = pure
   (>>=) :: LMT s m a -> (a -> LMT s m b) -> LMT s m b
   v >>= c = LMT $ \stateV env ->
-    ( let r0 = (unLMT v) stateV env
-          r1 = (lift r0) >>= c
-          r2 = (unLMT r1) stateV env
-       in r2
+    ( unLMT v stateV env >>= \case
+        ((), Right r0) ->
+          let r1 = c r0
+              r2 = (unLMT r1) stateV env
+           in r2
+        (_, Left err) -> return ((), Left err)
     )
 
 instance Trans.MonadTrans (LMT s) where
@@ -93,7 +100,7 @@ instance (Monad m) => MonadState s (LMT s m) where
 class EnterState me term where
   enterState :: forall sen atom. (Rift.Sentence sen term) => LogicEnv -> [sen atom] -> me sen atom
 
-runLMT :: LMT s m a -> LogicEnv -> s -> m a
+runLMT :: LMT s m a -> LogicEnv -> s -> m ((), Either Error a)
 runLMT = unLMT
-mkLMT :: (LogicEnv -> s -> m a) -> LMT s m a
+mkLMT :: (LogicEnv -> s -> m ((), Either Error a)) -> LMT s m a
 mkLMT = LMT

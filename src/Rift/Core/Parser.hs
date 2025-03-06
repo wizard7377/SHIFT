@@ -1,7 +1,7 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Rift.Parser (readTerm) where
+module Rift.Core.Parser (readTerm) where
 
 import Text.Megaparsec
 import Text.Megaparsec (MonadParsec (notFollowedBy, try), ParsecT, anySingle, choice, many, noneOf, oneOf, parseTest, single, some)
@@ -14,7 +14,7 @@ import Data.List (singleton)
 import Data.Text qualified as T
 import Data.Void
 import Extra.List
-import Rift.Base
+import Rift.Core.Base
 import Text.Megaparsec.Char
 import Text.Megaparsec.Debug
 
