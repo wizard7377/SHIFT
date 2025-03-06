@@ -1,3 +1,6 @@
+{- |
+ The module for the core definitions used by the solver
+-}
 module Rift.Core (
   module Base,
   module Dev,

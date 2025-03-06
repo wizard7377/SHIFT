@@ -43,7 +43,7 @@ type STerm atom = Term (SAtom atom)
 {- | Qualified terms, that is, terms that have some _He_'s in them
  The first part is the term, the second part the frees
 -}
-type QTerm tok = (STerm tok, [STerm tok])
+type QTerm tok = (Term tok, [Term tok])
 
 toSTerm :: Term atom -> Term (SAtom atom)
 toSTerm = fmap Simple
@@ -57,7 +57,7 @@ fromSAtom term = case term of
 fromSTerm :: STerm atom -> Term atom
 fromSTerm term = fromSAtom <$> term
 
-qbinds :: QTerm tok -> [STerm tok]
+qbinds :: QTerm tok -> [Term tok]
 qbinds = snd
-qterm :: QTerm tok -> STerm tok
+qterm :: QTerm tok -> Term tok
 qterm = fst

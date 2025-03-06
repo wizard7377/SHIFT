@@ -8,10 +8,7 @@ import Rift
 import Rift (Atomic, Term (..), unify)
 import Sift.Base (QTerm, SAtom (..), STerm, fromSTerm, toSTerm)
 
-isHe :: SAtom atom -> Bool
-isHe (He _) = True
-isHe _ = False
-intros :: (Atomic atom) => STerm atom -> QTerm atom
+intros :: (Atomic atom) => Term atom -> QTerm atom
 intros (Lamed bound term) =
   let
     (oterm, obound) = intros term
@@ -21,7 +18,9 @@ intros (Lamed bound term) =
     (newterm, allbounds)
 intros term = (term, [])
 
-unintros :: (Atomic atom) => QTerm atom -> STerm atom
+unintros' :: (Atomic atom) => [Term atom] -> Term atom -> Term atom
+unintros' frees within = unintros (within, frees)
+unintros :: (Atomic atom) => QTerm atom -> Term atom
 unintros (term, []) = term
 unintros (term, bound : xs) =
   let
@@ -29,8 +28,3 @@ unintros (term, bound : xs) =
     termB = replace bound bound termA
    in
     (Lamed bound termB)
-
-isBindIn :: (Atomic atom) => [STerm atom] -> STerm atom -> Bool
-isBindIn binds term = elem term binds
-allowed :: (Atomic atom) => [STerm atom] -> Unification Term (SAtom atom) -> Bool
-allowed frees unification = (all (isBindIn frees) (keys unification)) && (iso $ assocs unification)

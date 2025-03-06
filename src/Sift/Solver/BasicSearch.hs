@@ -1,6 +1,6 @@
 module Sift.Solver.BasicSearch where
 
-import Extra.Choice (Choice (AllOf, AnyOf, EmptyNode, Simple, Trivial))
+-- import Extra.Choice (Choice (AllOf, AnyOf, EmptyNode, Simple, Trivial))
 import Rift
 import Sift.Base (LogicEnv)
 import Sift.Base qualified (LogicEnv (..))
