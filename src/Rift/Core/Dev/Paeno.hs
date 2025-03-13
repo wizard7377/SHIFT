@@ -1,9 +1,10 @@
 module Rift.Core.Dev.Paeno where
 
+import Control.Lens ((^.), _2)
 import Data.Text qualified as T
 import Rift.Core.Base
-
 import Rift.Core.Parser (readTerm)
+import Rift.Core.Unify.Unify
 
 justAssume :: Maybe a -> a
 justAssume v = case v of
@@ -38,3 +39,7 @@ pax02 = tRead "?<n>{n : N}"
 pax1 = tRead "?<n>{{(s n) : N} : {n : N}}"
 pax2 = tRead "?<n>{(gt n 0) : {n : N}}"
 pax3 = tRead "?<m n>{((s m) = (s n)) : (n = m)}"
+it0 = intros t0
+itt0 = intros tt0
+
+treet0 = uTree (unify (fst it0) (fst itt0)) (it0 ^. _2) (itt0 ^. _2)

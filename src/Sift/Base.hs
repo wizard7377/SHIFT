@@ -39,25 +39,3 @@ data SAtom atom where
   deriving (Show, Eq, Ord)
 
 type STerm atom = Term (SAtom atom)
-
-{- | Qualified terms, that is, terms that have some _He_'s in them
- The first part is the term, the second part the frees
--}
-type QTerm tok = (Term tok, [Term tok])
-
-toSTerm :: Term atom -> Term (SAtom atom)
-toSTerm = fmap Simple
-
--- TODO makes this work without incompleteness
-fromSAtom :: SAtom atom -> atom
-fromSAtom term = case term of
-  Simple val -> val
-  _ -> _
-
-fromSTerm :: STerm atom -> Term atom
-fromSTerm term = fromSAtom <$> term
-
-qbinds :: QTerm tok -> [Term tok]
-qbinds = snd
-qterm :: QTerm tok -> Term tok
-qterm = fst

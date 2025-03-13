@@ -1,6 +1,7 @@
 module Rift.Names.Base where
 
 import Data.Tree qualified
+import Text.LaTeX as LaTeX
 
 type Todo = ()
 type NamePath = [Int]
@@ -18,4 +19,5 @@ type SymbolTable = Data.Tree.Tree Symbol
 data SymbolToken = SymbolToken
   { _name :: NamePath
   , _from :: Todo
+  , _latex :: LaTeX.LaTeX
   }

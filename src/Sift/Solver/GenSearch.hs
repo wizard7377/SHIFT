@@ -4,6 +4,7 @@
 
 module Sift.Solver.GenSearch where
 
+-- TODO apart from generally making this faster, also probs should do something for parital init
 import Control.Monad (join)
 import Control.Monad.Identity (Identity)
 import Control.Monad.State
@@ -15,16 +16,17 @@ import Debug.Trace (traceShow, traceShowId)
 import Extra.Basics
 
 -- import Extra.Choice (Choice (AllOf, AnyOf, EmptyNode, Simple, Trivial))
-import Extra.List (forEach)
+import Extra.List (forEach, subParts)
 import Rift
 import Rift (Atomic)
 import Sift (LogicResult (..))
-import Sift.Base (LogicEnv, SAtom (..), qbinds, qterm)
+import Sift.Base (LogicEnv, SAtom (..))
 import Sift.Base qualified (LogicEnv (..))
 import Sift.Monad ()
 import Sift.Monad hiding (_depth)
 import Sift.Monad qualified as Sift
-import Sift.Types.Unify
+
+-- import Sift.Types.Unify
 
 type LMGen sen atom a = (Atomic atom) => LM (SearchState sen atom) a
 
@@ -47,116 +49,15 @@ instance EnterState SearchState Term where
       , _vars = 0
       }
 
--- | Get the list of solved terms
-getTerms :: (Sentence sen Term, Atomic atom) => LMGen sen atom [Term atom]
-getTerms = do
-  state <- get
-  let sens = _sentences state
-  let val = toTerm . toTerm <$> sens
-  return val
+genSolve :: LMGen sen atom (LogicResult ())
+genSolve = _
 
--- | Set the list of solved terms
-setTerms :: forall sen atom. (Sentence sen Term, Atomic atom) => [Term atom] -> LMGen sen atom ()
-setTerms input = modify $ \s -> s{_sentences = fromTerm <$> fromTerm <$> input}
+yudGen :: (Atomic atom) => Term atom -> LMGen sen atom [Term atom]
+yudGen term = do
+  let (t0, f0) = intros term
+  let rebinds = subParts f0
+  let terms = fmap (\(inners, outers) -> (unintros (t0, inners), outers)) rebinds
+  _
 
--- | Add some terms to the list of solved terms
-addTerms :: forall sen atom. (Sentence sen Term, Atomic atom) => [Term atom] -> LMGen sen atom ()
-addTerms add = do
-  terms <- getTerms
-  setTerms (add ++ terms)
-
-getDepth :: (Sentence sen Term, Atomic atom) => LMGen sen atom (Maybe Int)
-getDepth = do
-  state <- get
-  let dep = _depth state
-  return dep
-setDepth :: (Sentence sen Term, Atomic atom) => Maybe Int -> LMGen sen atom ()
-setDepth dep = modify $ \s -> s{_depth = dep}
-
--- | Can the goal be solved for (by no steps) from the given
-doesSolve ::
-  (Sentence sen Term, Atomic atom) =>
-  -- | Given
-  Term atom ->
-  -- | Goal
-  Term atom ->
-  LMGen sen atom Bool
-doesSolve given goal =
-  let
-    (givenT, givenV) = intros given
-    (goalT, goalV) = intros goal
-   in
-    case goalT of
-      _ | allowed givenV (givenT >?> goalT) -> return True
-      _ -> return False
-
--- TODO?
-
--- type SearchAction a = Atomic a => Term a -> LMGen a Bool
-
-yudGen :: (Sentence sen Term) => Term atom -> LMGen sen atom [Term atom]
-yudGen val =
-  return $
-    ( let (term, vars) = intros val
-       in fromTerm <$> unintros ((Rule term Yud), vars)
-    )
-      : (fromTerm (Rule val Yud))
-      : []
-
-yudRed :: (Sentence sen Term) => Term atom -> LMGen sen atom [Term atom]
-yudRed val =
-  return $
-    let (term, vars) = intros val
-     in case term of
-          (Rule term1 Yud) -> [unintros term1 vars]
-
-yudSolve :: (Sentence sen Term, Atomic atom) => Term atom -> LMGen sen atom [Term atom]
-yudSolve term = do
-  terms <- getTerms
-  results <- for terms (yudSolve' term)
-  return $ traceShowId $ concat results
-
-lamedSplit :: (Sentence sen Term, Atomic atom) => Term atom -> LMGen sen atom [Term atom]
-lamedSplit term = do
-  let frees = intros term
-  let powerset = subsequences $ snd frees
-  case term of
-    Rule to from -> unintros <$> (Rule <$> lamedSplit to <*> lamedSplit from)
-    _ -> return []
-
--- THere are like fifteen things wrong with this
-yudSolve' :: (Sentence sen Term, Atomic atom) => Term atom -> Term atom -> LMGen sen atom [Term atom]
-yudSolve' term other = do
-  let (term', frees) = intros term
-  let (other', frees') = intros other
-  let binds = traceShowId $ (term') >?> (other')
-  if allowed frees binds then [unintros ((binds >@> term'), frees)] else []
-
-solve :: forall sen atom. (Sentence sen Term, Atomic atom) => Term atom -> LMGen sen atom (LogicResult ())
-solve goal = do
-  terms <- getTerms
-  curDepth <- getDepth
-  let _ = traceShowId terms
-  let _ = traceShowId curDepth
-  val <- mapM (solveStep :: Term atom -> LMGen sen atom [Term atom]) terms
-  addTerms $ concat val
-  nterms <- getTerms
-  anySolve <- mapM (`doesSolve` goal) nterms
-  if any id anySolve
-    then return Solved
-    else case curDepth of
-      Nothing -> solve goal
-      Just curDepthJ -> do
-        setDepth $ Just (curDepthJ - 1)
-        if curDepthJ > 0
-          then
-            solve goal
-          else
-            return Stopped
-
-solveStep :: (Sentence sen Term) => Term atom -> LMGen sen atom [Term atom]
-solveStep interm = do
-  gens <- yudGen interm
-  reds <- yudRed interm
-  solves <- yudSolve interm
-  return $ gens <> reds <> solves
+yudGen' :: (Atomic atom) => QTerm atom -> Term atom
+yudGen' (term, f0) = unintros ((Rule term Yud), f0)

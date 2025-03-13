@@ -1,6 +1,9 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE OverloadedStrings #-}
 
+{- | A basic debug parser for Rift
+ - Note that this is /not/ a front end user facing thing, rather, this is just for quick and dirty debugging
+-}
 module Rift.Core.Parser (readTerm) where
 
 import Text.Megaparsec

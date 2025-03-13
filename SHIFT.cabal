@@ -65,9 +65,15 @@ library
       Extra.Decide
       Extra.Error
       Extra.List
+      Extra.Map
       Extra.Tree
       Extra.Tuple
       Extra.Types
+      Lift.Base
+      Lift.Base.Core
+      Lift.Base.Dift
+      Lift.Base.Mift
+      Lift.Base.Pift
       Rift.Core
       Rift.Core.Base
       Rift.Core.Dev
@@ -77,6 +83,8 @@ library
       Rift.Core.Instances
       Rift.Core.Parser
       Rift.Core.Unify
+      Rift.Core.Unify.Solve
+      Rift.Core.Unify.Unify
       Rift.Names
       Rift.Names.Base
       Sift.Base
@@ -89,7 +97,6 @@ library
       Sift.Solver.BasicSearch.Tree
       Sift.Solver.GenSearch
       Sift.Types
-      Sift.Types.Unify
       Paths_SHIFT
   autogen-modules:
       Paths_SHIFT
@@ -103,11 +110,13 @@ library
       LambdaCase
       QuantifiedConstraints
   build-depends:
-      QuickCheck
+      HaTeX
+    , QuickCheck
     , base >=4.7 && <5
     , binary
     , containers
     , data-default
+    , lens
     , megaparsec
     , mtl
     , text
@@ -136,12 +145,14 @@ executable SHIFT-exe
       QuantifiedConstraints
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      QuickCheck
+      HaTeX
+    , QuickCheck
     , SHIFT
     , base >=4.7 && <5
     , binary
     , containers
     , data-default
+    , lens
     , megaparsec
     , mtl
     , text
@@ -171,12 +182,14 @@ test-suite SHIFT-test
       QuantifiedConstraints
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      QuickCheck
+      HaTeX
+    , QuickCheck
     , SHIFT
     , base >=4.7 && <5
     , binary
     , containers
     , data-default
+    , lens
     , megaparsec
     , mtl
     , text

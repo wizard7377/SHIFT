@@ -41,9 +41,10 @@ dependencies:
   - mtl
   - text
   - megaparsec
+  - lens
   - binary
   - data-default
-
+  - HaTeX
 when:
   - condition: flag(dev) && (!flag(release))
     ghc-options:

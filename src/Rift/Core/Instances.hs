@@ -1,9 +1,6 @@
 module Rift.Core.Instances where
 
-import Data.Functor ((<$>))
-import Extra.Choice
 import Rift.Core.Base
-import Rift.Core.Unify
 
 {-
 instance Token a => Unify (Term a) where
@@ -27,11 +24,3 @@ instance (Show box) => Show (Term box) where
   show (Rule t f) = "#{" ++ show t ++ " : " ++ show f ++ "}#"
   show (Empty) = "()"
   show _ = "!"
-
--- instance (Eq (box)) => Eq (Term box) where
---  (Atom a0) == (Atom a1) = a0 == a1
---  (Cons ta0 tb0) == (Cons ta1 tb1) = (ta0 == ta1) && (tb0 == tb1)
---  (Lamed b0 t0) == (Lamed b1 t1) = (b0 == b1) && (t0 == t1)
---  Yud == Yud = True
---  (Rule t0 f0) == (Rule t1 f1) = (t0 == t1) && (f0 == f1)
---  _ == _ = False

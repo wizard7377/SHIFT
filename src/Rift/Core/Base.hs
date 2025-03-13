@@ -10,18 +10,32 @@ import Data.Text as T
 import GHC.Generics (Generic)
 import Text.Show.Functions ()
 
+{- | The type of all abstract terms in SHIFt
+ Note that this definition is quite minimal, concrete implementation details are hidden from difference parts of the compiler by the @atom@ parameter
+-}
 data Term atom where
+  -- | Atomic values, that is, primitives
   Atom :: atom -> Term atom
+  -- | The empty list, \(()\)
   Empty :: Term atom
+  -- | The yud, or universe type
   Yud :: Term atom
+  -- | The Lamed, or quantified, type
   Lamed :: Term atom -> Term atom -> Term atom
+  -- | The cons type, that is, @x . y@
   Cons :: Term atom -> Term atom -> Term atom
+  -- | The subtyping type, that is @a : b@
   Rule :: Term atom -> Term atom -> Term atom
-  deriving (Functor, Foldable, Traversable, Data, Generic, Eq, Ord)
+  deriving (Functor, Foldable, Traversable, Data, Generic, Ord)
 
+deriving instance (Eq atom) => Eq (Term atom)
 type TestTerm = Term Text
 
-type Atomic a = (Eq a, Ord a)
+{- | The attomic class constraint
+ Represents a collection of "packaged requirements" that all atoms must have
+ All of these are fairly standard and should be implemented for most types anyway
+-}
+type Atomic a = (Eq a, Ord a, Show a)
 
 -- type Atom a = (Eq a, Show a)
 

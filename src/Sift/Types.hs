@@ -1,3 +1,3 @@
 module Sift.Types where
 
-import Sift.Types.Unify
+-- import Sift.Types.Unify
