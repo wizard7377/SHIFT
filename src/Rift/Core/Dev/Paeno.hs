@@ -42,4 +42,7 @@ pax3 = tRead "?<m n>{((s m) = (s n)) : (n = m)}"
 it0 = intros t0
 itt0 = intros tt0
 
+memTestA0 = tRead "{x : y}"
+memTestA1 = tRead "{y : z}"
+testValA = tRead "?<a b c d>{(a b) : 0}"
 treet0 = uTree (unify (fst it0) (fst itt0)) (it0 ^. _2) (itt0 ^. _2)

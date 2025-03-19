@@ -84,6 +84,7 @@ library
       Rift.Core.Parser
       Rift.Core.Unify
       Rift.Core.Unify.Solve
+      Rift.Core.Unify.Types
       Rift.Core.Unify.Unify
       Rift.Names
       Rift.Names.Base
@@ -109,6 +110,7 @@ library
       OverloadedStrings
       LambdaCase
       QuantifiedConstraints
+      PartialTypeSignatures
   build-depends:
       HaTeX
     , QuickCheck
@@ -119,6 +121,7 @@ library
     , lens
     , megaparsec
     , mtl
+    , prettyprinter
     , text
   default-language: GHC2021
   if flag(dev) && (!flag(release))
@@ -143,6 +146,7 @@ executable SHIFT-exe
       OverloadedStrings
       LambdaCase
       QuantifiedConstraints
+      PartialTypeSignatures
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       HaTeX
@@ -155,6 +159,7 @@ executable SHIFT-exe
     , lens
     , megaparsec
     , mtl
+    , prettyprinter
     , text
   default-language: GHC2021
   if flag(dev) && (!flag(release))
@@ -180,6 +185,7 @@ test-suite SHIFT-test
       OverloadedStrings
       LambdaCase
       QuantifiedConstraints
+      PartialTypeSignatures
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       HaTeX
@@ -192,6 +198,7 @@ test-suite SHIFT-test
     , lens
     , megaparsec
     , mtl
+    , prettyprinter
     , text
   default-language: GHC2021
   if flag(dev) && (!flag(release))

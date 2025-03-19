@@ -32,6 +32,7 @@ other-extensions:
   - OverloadedStrings
   - LambdaCase
   - QuantifiedConstraints
+  - PartialTypeSignatures
 description: Please see the README on GitHub at <https://github.com/githubuser/SHIFT#readme>
 
 dependencies:
@@ -45,6 +46,7 @@ dependencies:
   - binary
   - data-default
   - HaTeX
+  - prettyprinter
 when:
   - condition: flag(dev) && (!flag(release))
     ghc-options:

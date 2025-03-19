@@ -2,7 +2,6 @@
 
 module Rift.Core.Unify.Solve where
 
-import Control.Arrow
 import Control.Lens (over, set, view, (%~), (&), (.~), (^.))
 import Control.Lens qualified as Lens
 import Control.Monad hiding (filter)
@@ -15,13 +14,11 @@ import Extra.Choice hiding (solve)
 import Extra.Map
 import Rift.Core.Instances ()
 
+import Rift.Core.Unify.Types
+
 -- import Rift.Core ()
 import Rift.Core.Base
 import Rift.Core.Unify.Unify
-
-type QUnify a = ([Binding (Term a)], UState a)
-
-type UM a b = State (UState a) b
 
 -- | Attempt to simplify the unification as much as possible
 solve :: (Atomic atom) => UTree atom -> UTree atom
@@ -55,3 +52,17 @@ solveStep (uni, state) =
     state0 = state & freeLeft %~ (\\ (mapToF ovar2 <$> fst <$> lvar))
    in
     (ovar2, state)
+
+require :: (Atomic atom) => [Term atom] -> UTree atom -> Choice [Term atom]
+require reqs = cfilterMap (require' reqs)
+require' :: (Atomic atom) => [Term atom] -> ULeaf atom -> Maybe [Term atom]
+require' reqs leaf@(uni, state) =
+  let
+    -- \|Get all the relavent keys
+    keys = map fst $ filter (\(x, y) -> y `elem` reqs) uni
+    -- \|Then all the relavent values
+    focused = filter (\(x, y) -> x `elem` reqs) uni
+    allFree = any (\(_, y) -> y `notElem` reqs) uni
+    oneToOne = minject focused -- TODO maybe
+   in
+    if allFree && oneToOne then Just keys else Nothing

@@ -15,6 +15,8 @@ type HMap a = Map a a
 
 image :: a -> b -> Image a b
 image a b = (a, b)
+(>->) :: a -> b -> Image a b
+(>->) = image
 mlookup :: (Eq a) => Map a b -> a -> Maybe b
 mlookup [] _ = Nothing
 mlookup ((k, v) : xs) x = if k == x then Just v else mlookup xs x
@@ -33,3 +35,14 @@ msuject :: (Eq a) => (Eq b) => Map a b -> Bool
 msuject m = all (\(k, v) -> all (\(k', v') -> implies (k == k') (v == v')) m) m
 minject :: (Eq a) => (Eq b) => Map a b -> Bool
 minject m = all (\(k, v) -> all (\(k', v') -> implies (v == v') (k == k')) m) m
+
+isFrom :: (Eq a, Eq b) => Image a b -> a -> Bool
+isFrom (x, _) val = x == val
+isTo :: (Eq a, Eq b) => Image a b -> b -> Bool
+isTo (_, y) val = y == val
+
+getKeys :: Map a b -> [a]
+getKeys = map fst
+
+getValues :: Map a b -> [b]
+getValues = map snd

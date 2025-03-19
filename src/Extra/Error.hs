@@ -8,3 +8,4 @@ import Data.Text (Text)
 data Error
   = MatchError Text
   | Other Text
+  deriving (Eq, Show, Ord)

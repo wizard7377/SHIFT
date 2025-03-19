@@ -16,6 +16,7 @@ instance Token a => Unify (Term a) where
         _ -> EmptyNode
     }]
 -}
+
 instance (Show box) => Show (Term box) where
   show (Atom a) = show a
   show (Cons l0 l1) = show l0 ++ " . " ++ show l1

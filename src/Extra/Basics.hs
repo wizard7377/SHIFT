@@ -1,6 +1,11 @@
-module Extra.Basics where
+{-# LANGUAGE ExplicitNamespaces #-}
+
+module Extra.Basics (Bifunctor (bimap, first, second), split, combine, (<$$>), (</>), (-?>), (|>), (<|), Easy, ListLike, Mapping, iso, xor, (%%), type (->>), implies, traceWith, over, set, view, (%~), (^.), (.~)) where
 
 import Control.Arrow qualified as Arrow
+import Control.Lens (over, set, view, (%~), (&), (.~), (^.))
+import Control.Lens qualified as L
+import Data.Bifunctor
 import Data.Text qualified as T
 import Debug.Trace (trace, traceShow, traceShowId)
 
@@ -8,9 +13,18 @@ import Debug.Trace (trace, traceShow, traceShowId)
 implies :: Bool -> Bool -> Bool
 implies a b = a || not b
 
+infixr 1 -?>
+(-?>) = implies
+
+infixl 4 <$$>
+
 -- | Nested `<$>`
 (<$$>) :: (Functor f0) => (Functor f1) => (a -> b) -> f1 (f0 a) -> f1 (f0 b)
 (<$$>) = fmap . fmap
+
+infixl 4 </>
+(</>) :: (Monad m) => (a -> m b) -> m a -> m b
+(</>) f a = a >>= f
 
 -- | A synoynm for `>>=`
 (|>) :: (Monad m) => m a -> (a -> m b) -> m b
@@ -22,6 +36,9 @@ implies a b = a || not b
 
 type Mapping a b = [(a, b)]
 
+type Easy a = (Eq a, Show a)
+type ListLike box elem = (Functor box, Applicative box, Monad box, Foldable box, Traversable box, Semigroup (box elem), Monoid (box elem))
+type ArrayLike box = (Functor box, Applicative box, Monad box, Foldable box)
 iso :: (Eq a) => (Eq b) => Mapping a b -> Bool
 iso mapping = (all ((\(x0, y0) -> all (\(x1, y1) -> implies (x0 == x1) (y0 == y1)) mapping))) mapping
 
@@ -30,6 +47,10 @@ xor :: Bool -> Bool -> Bool
 xor a b = (a || b) && not (a && b)
 
 (%%) = xor
+split :: a -> (a, a)
+split a = (a, a)
+combine :: (a -> b -> c) -> (a, b) -> c
+combine f (a, b) = f a b
 infixl 7 %%
 type a ->> b = forall arr. (Arrow.Arrow arr) => arr a b
 

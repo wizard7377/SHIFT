@@ -66,6 +66,10 @@ choiceAnd (Choice as) (Choice bs) = Choice $ (<>) <$> as <*> bs
 choiceOr :: Choice a -> Choice a -> Choice a
 choiceOr (Choice as) (Choice bs) = Choice $ as ++ bs
 
+capply :: (a -> b) -> Choice a -> Choice b
+capply f (Choice as) = Choice $ f <$> as
+cfilterMap :: (a -> Maybe b) -> Choice a -> Choice b
+cfilterMap f (Choice as) = Choice $ catMaybes $ f <$> as
 cfilter f (Choice as) = Choice $ filter f as
 (<&&>) :: (Semigroup a) => Choice a -> Choice a -> Choice a
 (<||>) :: (Semigroup a) => Choice a -> Choice a -> Choice a
