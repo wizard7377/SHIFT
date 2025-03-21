@@ -114,6 +114,7 @@ library
   build-depends:
       HaTeX
     , QuickCheck
+    , ansi-terminal
     , base >=4.7 && <5
     , binary
     , containers
@@ -152,6 +153,7 @@ executable SHIFT-exe
       HaTeX
     , QuickCheck
     , SHIFT
+    , ansi-terminal
     , base >=4.7 && <5
     , binary
     , containers
@@ -191,6 +193,7 @@ test-suite SHIFT-test
       HaTeX
     , QuickCheck
     , SHIFT
+    , ansi-terminal
     , base >=4.7 && <5
     , binary
     , containers

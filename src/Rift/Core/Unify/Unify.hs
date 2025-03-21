@@ -29,6 +29,8 @@ addTo :: (Atomic atom) => Term atom -> [Term atom] -> Term atom
 addTo term = unintros . (mkQTerm term)
 uTree :: Choice (Unification (Term atom)) -> [Term atom] -> [Term atom] -> UTree atom
 uTree uni l r = fmap (\uni' -> (uni', UState l r)) uni
+uTree' :: Choice (Unification (Term atom)) -> UState (Term atom) -> UTree atom
+uTree' uni tree = fmap (\uni' -> (uni', tree)) uni
 instance (Atomic atom) => Unify (Term atom) where
   unify t0 t1 =
     (sbind t0 t1) <||> case (t0, t1) of

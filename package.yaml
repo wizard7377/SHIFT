@@ -47,6 +47,7 @@ dependencies:
   - data-default
   - HaTeX
   - prettyprinter
+  - ansi-terminal
 when:
   - condition: flag(dev) && (!flag(release))
     ghc-options:

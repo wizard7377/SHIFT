@@ -1,18 +1,25 @@
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE ExplicitNamespaces #-}
 
-module Extra.Basics (Bifunctor (bimap, first, second), split, combine, (<$$>), (</>), (-?>), (|>), (<|), Easy, ListLike, Mapping, iso, xor, (%%), type (->>), implies, traceWith, over, set, view, (%~), (^.), (.~)) where
+module Extra.Basics (Bifunctor (bimap, first, second), split, combine, (<$$>), (</>), (-?>), (|>), (<|), Easy, ListLike, Mapping, iso, xor, (%%), type (->>), implies, traceWith, over, set, view, (%~), (^.), (.~), (<?>), _1, _2) where
 
 import Control.Arrow qualified as Arrow
-import Control.Lens (over, set, view, (%~), (&), (.~), (^.))
+import Control.Lens (over, set, view, (%~), (&), (.~), (^.), _1, _2)
 import Control.Lens qualified as L
 import Data.Bifunctor
 import Data.Text qualified as T
-import Debug.Trace (trace, traceShow, traceShowId)
+import Debug.Trace (trace, traceEvent, traceMarker, traceShow, traceShowId)
+import GHC.Stack (HasCallStack)
+import GHC.Stack qualified as Stack
+import System.Console.ANSI qualified as ANSI
 
 -- | The simple boolean implication function, that is \(a \to b\)
 implies :: Bool -> Bool -> Bool
 implies a b = a || not b
 
+colorCode :: ANSI.Color -> String
+colorCode x = ANSI.setSGRCode [ANSI.SetColor ANSI.Foreground ANSI.Vivid x]
+resetCode = ANSI.setSGRCode []
 infixr 1 -?>
 (-?>) = implies
 
@@ -56,4 +63,11 @@ type a ->> b = forall arr. (Arrow.Arrow arr) => arr a b
 
 -- | Trace a value, and add a snippet of text so that it's easier to track
 traceWith :: (Show a) => T.Text -> a -> a
-traceWith msg a = trace (T.unpack msg <> ": " <> show a) a
+traceWith msg a = trace (colorCode ANSI.Red ++ T.unpack msg ++ ": " ++ colorCode ANSI.Yellow ++ show a ++ resetCode) a
+
+(<?>) :: (Show a) => String -> a -> a
+msg <?> val = traceWith (T.pack msg) val
+
+infixr 0 <?>
+traceWithStack :: (HasCallStack) => (Show a) => T.Text -> a -> a
+traceWithStack msg a = trace (Stack.prettyCallStack Stack.callStack <> T.unpack msg <> ": " <> show a) a

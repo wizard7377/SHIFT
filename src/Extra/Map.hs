@@ -27,7 +27,10 @@ mapToF :: (Eq a) => HMap a -> a -> a
 mapToF m v = case mlookup m v of
   Just x -> x
   Nothing -> v
-
+mapToFR :: (Eq a) => HMap a -> a -> a
+mapToFR m v = case mlookupV m v of
+  Just x -> x
+  Nothing -> v
 miso :: (Eq a) => HMap a -> Bool
 miso = iso
 
@@ -46,3 +49,5 @@ getKeys = map fst
 
 getValues :: Map a b -> [b]
 getValues = map snd
+flipflop :: Map a b -> Map b a
+flipflop vals = (\(x, y) -> (y, x)) <$> vals
