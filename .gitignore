@@ -8,3 +8,4 @@ paper/**
 !paper/**/
 !paper/**/*.tex
 !paper/**/*.bib
+tags

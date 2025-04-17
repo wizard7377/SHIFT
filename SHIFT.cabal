@@ -62,6 +62,7 @@ library
   other-modules:
       Extra.Basics
       Extra.Choice
+      Extra.Debug
       Extra.Decide
       Extra.Error
       Extra.List
@@ -111,6 +112,7 @@ library
       LambdaCase
       QuantifiedConstraints
       PartialTypeSignatures
+      TemplateHaskell
   build-depends:
       HaTeX
     , QuickCheck
@@ -123,6 +125,7 @@ library
     , megaparsec
     , mtl
     , prettyprinter
+    , template-haskell
     , text
   default-language: GHC2021
   if flag(dev) && (!flag(release))
@@ -148,6 +151,7 @@ executable SHIFT-exe
       LambdaCase
       QuantifiedConstraints
       PartialTypeSignatures
+      TemplateHaskell
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       HaTeX
@@ -162,6 +166,7 @@ executable SHIFT-exe
     , megaparsec
     , mtl
     , prettyprinter
+    , template-haskell
     , text
   default-language: GHC2021
   if flag(dev) && (!flag(release))
@@ -188,6 +193,7 @@ test-suite SHIFT-test
       LambdaCase
       QuantifiedConstraints
       PartialTypeSignatures
+      TemplateHaskell
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       HaTeX
@@ -202,6 +208,7 @@ test-suite SHIFT-test
     , megaparsec
     , mtl
     , prettyprinter
+    , template-haskell
     , text
   default-language: GHC2021
   if flag(dev) && (!flag(release))

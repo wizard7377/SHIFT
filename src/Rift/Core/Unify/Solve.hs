@@ -25,54 +25,53 @@ import Rift.Core.Unify.Unify
 -- TODO
 
 -- | Attempt to simplify the unification as much as possible
-solve :: (Atomic atom) => UTree atom -> UTree atom
-solve uni = case cfilterMap id $ solveStep <$> ("uni" <?> uni) of
+solve :: (Atomic atom) => UTree (Term atom) -> UTree (Term atom)
+solve uni = case solveStep <| ("uni" <?> uni) of
   uni' | uni == uni' -> uni'
   uni' | otherwise -> solve uni'
 
 -- | Remove all binds of @x@ to @y@ where @x@ is equal to @y@ and neither are free
-reflex :: (Atomic atom) => ULeaf atom -> ULeaf atom
+reflex :: (Atomic atom) => ULeaf (Term atom) -> UTree (Term atom)
 reflex (uni, state) =
   let
     lvarp = \(x, y) -> x `elem` state ^. freeLeft
     rvarp = \(x, y) -> y `elem` state ^. freeRight
-    (free, notFree) = partition (\b -> lvarp b %% rvarp b) uni
-    reds = filter (\(x, y) -> x /= y) notFree
+    (free, notFree) = partition (\b -> lvarp b %% rvarp b) (uni ^. unknown)
+    (reds, unreds) = partition (\(x, y) -> x /= y) notFree
    in
-    (free <> reds, state) -- TODO Make these change state
+    if not $ null reds then cabsurd else pure (set unknown [] uni, state)
 
 -- TODO needs some work
-solveStep :: (Atomic atom) => ULeaf atom -> Maybe (ULeaf atom)
+solveStep :: (Atomic atom) => ULeaf (Term atom) -> UTree (Term atom)
 solveStep (uni, state) =
-  if uni /= []
-    then
-      ( do
-          let dvarp = \(x, y) -> x `elem` state ^. freeLeft && y `elem` state ^. freeRight
-          let lvarp = \(x, y) -> x `elem` state ^. freeLeft
-          let rvarp = \(x, y) -> y `elem` state ^. freeRight
-          -- FIXME
-          let (simple, boundLeft, boundRight, lifted) = "bounds" <?> split4 lvarp rvarp uni
-          let newState' = over freeLeft (\\ (fst <$> boundLeft)) state
-          let newState@(UState newLeft newRight) = "newState" <?> over freeRight (\\ (snd <$> boundLeft)) state
-          let mapLeft = mapToF boundLeft
-          let mapRight = mapToF $ flipflop boundRight
-          let qBinds = bimap mapLeft mapRight <$> lifted
-          (resBinds, resState) <- solveStep (qBinds, newState)
-          -- TODO
-          "result" <?> case reflex (simple, newState) of
-            ([], _) -> Just (boundLeft <> boundRight <> resBinds, resState)
-            _ -> Nothing
-      )
-    else Just (uni, state)
+  if (uni ^. unknown) /= []
+    then do
+      let dvarp = \(x, y) -> x `elem` state ^. freeLeft && y `elem` state ^. freeRight
+      let lvarp = \(x, y) -> x `elem` state ^. freeLeft
+      let rvarp = \(x, y) -> y `elem` state ^. freeRight
+      -- FIXME
+      case "bounds" <?> split4 lvarp rvarp (uni ^. unknown) of
+        (simple, [], [], rest) -> (reflex (simple, state)) >> pure (rest, state)
+        (simple, boundLeft, boundRight, rest) ->
+          let
+            state1 = snd <$> reflex (simple, state)
+            lowerLeft = mapToF boundLeft
+            lowerRight = mapToFR boundRight
+            rest' = (map (bimap lowerLeft lowerRight) rest)
+            newLeaf = (,) (simpleResult rest') <$> state1
+            _ = "newLeaf" <?> newLeaf
+           in
+            first ((bindingLeft .~ boundLeft) . (bindingRight .~ boundRight)) <$> (solveStep <| newLeaf)
+    else simple (uni, state)
 
 -- let ovar1 = first (mapToF lvar) <$> lvar
 -- let ovar2 = second (mapToF rvar) <$> rvar
 -- let state0 = state & freeLeft %~ (\\ (mapToF ovar2 <$> fst <$> lvar))
 -- (ovar2, state)
 
-require :: (Atomic atom) => [Term atom] -> UTree atom -> Choice [Term atom]
+require :: (Atomic atom) => [Term atom] -> UTree (Term atom) -> Choice [Term atom]
 require reqs = cfilterMap (require' reqs)
-require' :: (Atomic atom) => [Term atom] -> ULeaf atom -> Maybe [Term atom]
+require' :: (Atomic atom) => [Term atom] -> ULeaf (Term atom) -> Maybe [Term atom]
 require' reqs leaf@(uni, state) =
   let
     -- \|Get all the relavent keys

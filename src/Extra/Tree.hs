@@ -1,8 +1,4 @@
-module Extra.Tree where 
+module Extra.Tree where
 
-import Data.Tree 
+import Data.Tree
 
-data Choice a = 
-    AllOf 
-    | AnyOf
-    | Leaf a  

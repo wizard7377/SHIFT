@@ -2,6 +2,8 @@
 {-# LANGUAGE DeepSubsumption #-}
 {-# LANGUAGE LiberalTypeSynonyms #-}
 {-# LANGUAGE PartialTypeSignatures #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskellQuotes #-}
 
 module Sift.Solver.GenSearch where
 
@@ -112,8 +114,8 @@ memFill termA termB = do
             prepReq = cfilterMap $ \(binds, state) -> if True then Just binds else Nothing
             prepReqV = prepReq stree
             -- TODO
-            prepMapA = mapToF <$> prepReqV
-            prepMapB = second mapToF <$> flipflop <$> prepReqV
+            prepMapA = (mapToF . (view bindingLeft)) <$> prepReqV
+            prepMapB = (mapToFR . (view bindingRight)) <$> prepReqV
             -- TODO
             prepA = "prepA" <?> (prepMapA <*> pure gA)
             prepB = "prepB" <?> (prepMapB <*> pure pB)

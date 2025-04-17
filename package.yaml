@@ -33,6 +33,7 @@ other-extensions:
   - LambdaCase
   - QuantifiedConstraints
   - PartialTypeSignatures
+  - TemplateHaskell
 description: Please see the README on GitHub at <https://github.com/githubuser/SHIFT#readme>
 
 dependencies:
@@ -48,6 +49,7 @@ dependencies:
   - HaTeX
   - prettyprinter
   - ansi-terminal
+  - template-haskell
 when:
   - condition: flag(dev) && (!flag(release))
     ghc-options:
