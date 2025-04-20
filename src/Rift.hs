@@ -1,8 +1,6 @@
 module Rift (
   module Rift.Core,
   Term (..),
-  Unification,
-  unify,
 ) where
 
 -- \|

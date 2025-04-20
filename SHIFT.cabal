@@ -84,8 +84,8 @@ library
       Rift.Core.Instances
       Rift.Core.Parser
       Rift.Core.Unify
-      Rift.Core.Unify.Solve
-      Rift.Core.Unify.Types
+      Rift.Core.Unify.Base
+      Rift.Core.Unify.Dev
       Rift.Core.Unify.Unify
       Rift.Names
       Rift.Names.Base
@@ -99,6 +99,7 @@ library
       Sift.Solver.BasicSearch.Tree
       Sift.Solver.GenSearch
       Sift.Types
+      Sift.Types.Generate
       Paths_SHIFT
   autogen-modules:
       Paths_SHIFT

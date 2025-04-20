@@ -34,6 +34,7 @@ import Sift.Base qualified (LogicEnv (..))
 import Sift.Monad ()
 import Sift.Monad hiding (_depth)
 import Sift.Monad qualified as Sift
+import Sift.Types.Generate
 
 -- import Sift.Types.Unify
 
@@ -47,6 +48,7 @@ data SearchState sen atom = SearchState
   -- ^ Current depth to end
   , _vars :: Int
   -- ^ List of infered vars
+  , _gen :: Generator
   }
 
 instance EnterState SearchState Term where
@@ -56,6 +58,7 @@ instance EnterState SearchState Term where
       { _sentences = sens
       , _depth = Sift.Base._depth env
       , _vars = 0
+      , _gen = Generator 0
       }
 
 genSolve :: (Atomic atom) => LMGen sen atom (LogicResult ())
@@ -82,6 +85,8 @@ genSolve = _
  - 8. Return `x' : y'`
  -
 -}
+
+{-
 memFill :: (Atomic atom) => Term atom -> Term atom -> LMGen sen atom [Term atom]
 memFill termA termB = do
   let termA1 = "termA1" <?> intros termA
@@ -122,6 +127,7 @@ memFill termA termB = do
             newTerm = Rule <$> prepA <*> prepB
          in resolve newTerm
       _ -> []
+-}
 
 -- | ?f(x : y) -> (?f(x) : ?f(y))
 lamedSplit :: (Atomic atom) => Term atom -> LMGen sen atom [Term atom]

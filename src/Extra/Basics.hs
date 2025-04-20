@@ -3,12 +3,13 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TemplateHaskellQuotes #-}
 
-module Extra.Basics (Bifunctor (bimap, first, second), split, combine, (<$$>), (</>), (-?>), (|>), (<|), Easy, ListLike, Mapping, iso, xor, (%%), type (->>), implies, traceWith, over, set, view, (%~), (^.), (.~), (<?>), _1, _2) where
+module Extra.Basics (Known, Bifunctor (bimap, first, second), split, combine, (<$$>), (</>), (-?>), (|>), (<|), Easy, ListLike, Mapping, iso, xor, (%%), type (->>), implies, traceWith, over, set, view, (%~), (^.), (.~), (<?>), _1, _2) where
 
 import Control.Arrow qualified as Arrow
 import Control.Lens (over, set, view, (%~), (&), (.~), (^.), _1, _2)
 import Control.Lens qualified as L
 import Data.Bifunctor
+import Data.Data
 import Data.Text qualified as T
 import Debug.Trace (trace, traceEvent, traceMarker, traceShow, traceShowId)
 import GHC.IO (unsafePerformIO)
@@ -16,6 +17,8 @@ import GHC.Stack (HasCallStack)
 import GHC.Stack qualified as Stack
 import Language.Haskell.TH qualified as TH
 import System.Console.ANSI qualified as ANSI
+
+type Known a = (Typeable a, Data a, Show a, Eq a)
 
 -- | The simple boolean implication function, that is \(a \to b\)
 implies :: Bool -> Bool -> Bool

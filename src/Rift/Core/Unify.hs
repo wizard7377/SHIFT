@@ -1,14 +1,5 @@
-{-# LANGUAGE BlockArguments #-}
-{-# LANGUAGE QuantifiedConstraints #-}
+module Rift.Core.Unify (module Rift.Core.Unify.Unify, module Rift.Core.Unify.Base, module Rift.Core.Unify.Dev) where
 
-module Rift.Core.Unify (
-  unify,
-  Unification,
-  module Solve,
-  module Unify,
-  module Types,
-) where
-
-import Rift.Core.Unify.Solve as Solve
-import Rift.Core.Unify.Types as Types
-import Rift.Core.Unify.Unify as Unify
+import Rift.Core.Unify.Base
+import Rift.Core.Unify.Dev
+import Rift.Core.Unify.Unify
