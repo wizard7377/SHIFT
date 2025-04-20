@@ -18,12 +18,12 @@ import Rift.Core.Instances ()
 type Idx = Int
 newtype Generator = Generator Idx
 
-heGen :: Generator -> (Idx, Generator)
-heGen (Generator n) = (n, Generator (n + 1))
+heGen :: Generator -> (VAtom atom, Generator)
+heGen (Generator n) = (Chet n, Generator (n + 1))
 
 data VAtom atom where
   Simple :: atom -> VAtom atom
-  Vav :: (VTerm atom) -> Idx -> VAtom atom
+  Chet :: Idx -> VAtom atom
 type VTerm atom = Term (VAtom atom)
 
 toVTerm :: (Functor Term) => Term atom -> VTerm atom
@@ -33,6 +33,6 @@ fromVTerm term =
   mapM
     ( \case
         Simple a -> Just a
-        Vav _ _ -> Nothing
+        Chet _ -> Nothing
     )
     term

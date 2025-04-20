@@ -22,6 +22,7 @@ data UnifyAttempt a = UnifyAttempt
   { _binds :: BindingSet a
   , _outs :: UnifyResult a
   , _frees :: LEnv a
+  , _flex :: LEnv a
   }
 
 deriving instance (Eq a) => Eq (UnifyAttempt a)
@@ -31,7 +32,8 @@ makeLenses ''UnifyAttempt
 
 type UnifyChoice a = Choice (UnifyAttempt a)
 initAttempt :: (Atomic atom) => (Functor Choice) => LEnv (Term atom) -> Choice (BindingSet (Term atom)) -> UnifyChoice (Term atom)
-initAttempt lenv choice = (\binds -> (UnifyAttempt binds (UnifyResult [] []) lenv)) <$> choice
+initAttempt lenv = initAttempt' lenv (LEnv [] [])
+initAttempt' lenv flex choice = (\binds -> (UnifyAttempt binds (UnifyResult [] []) lenv flex)) <$> choice
 unify :: (Show (Term atom)) => (Atomic atom) => UnifyAttempt (Term atom) -> UnifyChoice (Term atom)
 unify attempt = "Unify2" <?> cfilter verifyAttempt $ ("Unify1" <?> unifyStep attempt)
 
@@ -40,13 +42,15 @@ unifyStep attempt =
   let
     upVars = attempt ^. frees . varsUp
     downVars = attempt ^. frees . varsDown
+    upFlex = attempt ^. flex . varsUp
+    downFlex = attempt ^. flex . varsDown
     bindst = attempt ^. binds
     outst = attempt ^. outs
    in
-    case (split4 (\x -> (fst x `elem` upVars)) (\x -> (snd x `elem` downVars)) bindst) of
+    case (over _1 (split4 (\x -> (fst x `elem` upVars)) (\x -> (snd x `elem` downVars))) (split4 (\x -> (fst x `elem` upFlex)) (\x -> (snd x `elem` downFlex)) bindst)) of
       (atomics, [], [], []) -> if (verifyAtoms atomics) then pure (set binds [] attempt) else cabsurd
       (atomics, [], [], vars) -> cabsurd -- TODO
-      -- `(% ~ %, % ~ $, $ ~ %, $ ~ $`
+      -- `((% ~> %, % ~> $, $ ~> %, $ ~> $), ? ~> @, @ ~> ?, @ ~> @)`
       (atomics, raisers, lowers, vars) ->
         let
           lowerVars = getKeys lowers

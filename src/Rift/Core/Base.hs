@@ -10,6 +10,13 @@ import Data.Text as T
 import GHC.Generics (Generic)
 import Text.Show.Functions ()
 
+data GenericTerm cons atom where
+  Atom :: atom -> GenericTerm atom
+  Yud :: GenericTerm atom
+  Cons :: cons -> GenericTerm atom -> GenericTerm atom -> GenericTerm atom
+  deriving (Functor, Foldable, Traversable, Data, Generic, Ord)
+data BaseCons = Lamed | Cons | Rule
+
 {- | The type of all abstract terms in SHIFt
  Note that this definition is quite minimal, concrete implementation details are hidden from difference parts of the compiler by the @atom@ parameter
 -}
