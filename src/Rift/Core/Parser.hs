@@ -62,20 +62,20 @@ plamed = try $ do
   bounds <- many pterm
   rightAngle
   term <- pterm
-  return $ forEach Lamed bounds term
+  return $ forEach (BCons Lamed) bounds term
 prule = try $ do
   leftBrace
   t0 <- pterm
   colon
   t1 <- pterm
   rightBrace
-  return $ Rule t0 t1
+  return $ (BCons Rule) t0 t1
 plist :: Parser
 plist = try $ do
   leftParen
   l <- some pterm
   rightParen
-  return $ foldr Cons Empty l
+  return $ foldr (BCons Cons) Yud l
 pyud = try $ Yud <$ lyud
 spaced :: ParserG a -> ParserG a
 -- spaced = lexeme space1

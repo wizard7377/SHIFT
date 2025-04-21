@@ -3,7 +3,11 @@
 module Extra.Map where
 
 import Data.Bifunctor (Bifunctor (..))
-import Extra.Basics (Bifunctor, implies, iso)
+
+implies :: Bool -> Bool -> Bool
+implies a b = a || not b
+iso :: (Eq a, Eq b) => [(a, b)] -> Bool
+iso m = all (\(k, v) -> all (\(k', v') -> implies (k == k') (v == v')) m) m
 
 -- | A projection of a value of type @a@ onto a value of type @b@
 type Image a b = (a, b)

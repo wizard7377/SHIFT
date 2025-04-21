@@ -19,9 +19,9 @@ instance Token a => Unify (Term a) where
 
 instance (Show box) => Show (Term box) where
   show (Atom a) = show a
-  show (Cons l0 l1) = show l0 ++ " . " ++ show l1
-  show (Lamed b t) = "?" ++ show b ++ "#[" ++ show t ++ "]#"
+  show (BCons Cons l0 l1) = show l0 ++ " . " ++ show l1
+  show (BCons Lamed b t) = "?" ++ show b ++ "#[" ++ show t ++ "]#"
   show Yud = "*"
-  show (Rule t f) = "#{" ++ show t ++ " : " ++ show f ++ "}#"
-  show (Empty) = "()"
+  show (BCons Rule t f) = "#{" ++ show t ++ " : " ++ show f ++ "}#"
+  -- show (Empty) = "()"
   show _ = "!"

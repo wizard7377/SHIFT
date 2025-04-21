@@ -39,8 +39,9 @@ pax02 = tRead "?<n>{n : N}"
 pax1 = tRead "?<n>{{(s n) : N} : {n : N}}"
 pax2 = tRead "?<n>{(gt n 0) : {n : N}}"
 pax3 = tRead "?<m n>{((s m) = (s n)) : (n = m)}"
-it0 = intros t0
-itt0 = intros tt0
+
+-- it0 = intros t0
+-- itt0 = intros tt0
 
 memTestA0 = tRead "{x : y}"
 memTestA1 = tRead "{y : z}"
@@ -52,4 +53,8 @@ memTestC0 = tRead "?<x>{x : y}"
 memTestC1 = tRead "?<z>{y : z}"
 memTestsC = (memTestC0, memTestC1)
 testValA = tRead "?<a b c d>{(a b) : 0}"
-treet0 = uTree (unify (fst it0) (fst itt0)) (it0 ^. _2) (itt0 ^. _2)
+
+yudTest0 = tRead "{T : *}"
+yudTest1 = tRead "?<x>{(x = x) : *}"
+
+-- treet0 = uTree (unify (fst it0) (fst itt0)) (it0 ^. _2) (itt0 ^. _2)

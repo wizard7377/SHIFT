@@ -1,5 +1,6 @@
 module Rift.Core.Unify.Dev where
 
+import Extra
 import Extra.Basics
 import Extra.Choice
 import Rift.Core.Base

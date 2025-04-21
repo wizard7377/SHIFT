@@ -1,14 +1,7 @@
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE DeriveTraversable #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE LiberalTypeSynonyms #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 module Sift.Types.Generate where
 
@@ -24,11 +17,16 @@ heGen (Generator n) = (Chet n, Generator (n + 1))
 data VAtom atom where
   Simple :: atom -> VAtom atom
   Chet :: Idx -> VAtom atom
+  deriving (Eq, Ord)
+
 type VTerm atom = Term (VAtom atom)
 
+instance (Show atom) => Show (VAtom atom) where
+  show (Simple a) = show a
+  show (Chet id) = show "_" ++ show id
 toVTerm :: (Functor Term) => Term atom -> VTerm atom
 toVTerm term = Simple <$> term
-fromVTerm :: (Functor Term) => (Traversable Term) => VTerm atom -> Maybe (Term atom)
+fromVTerm :: (Functor Term) => (Traversable (GenericTerm BaseCons)) => VTerm atom -> Maybe (Term atom)
 fromVTerm term =
   mapM
     ( \case

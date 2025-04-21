@@ -67,6 +67,7 @@ library
       Extra.Error
       Extra.List
       Extra.Map
+      Extra.Ops
       Extra.Tree
       Extra.Tuple
       Extra.Types
@@ -94,6 +95,8 @@ library
       Sift.Dev.Util
       Sift.Instances
       Sift.Monad
+      Sift.MonadNew
+      Sift.MonadOld
       Sift.Solver
       Sift.Solver.BasicSearch
       Sift.Solver.BasicSearch.Tree
@@ -114,6 +117,8 @@ library
       QuantifiedConstraints
       PartialTypeSignatures
       TemplateHaskell
+      UndecidableInstances
+      ConstraintKinds
   build-depends:
       HaTeX
     , QuickCheck
@@ -153,6 +158,8 @@ executable SHIFT-exe
       QuantifiedConstraints
       PartialTypeSignatures
       TemplateHaskell
+      UndecidableInstances
+      ConstraintKinds
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       HaTeX
@@ -195,6 +202,8 @@ test-suite SHIFT-test
       QuantifiedConstraints
       PartialTypeSignatures
       TemplateHaskell
+      UndecidableInstances
+      ConstraintKinds
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       HaTeX

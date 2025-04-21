@@ -1,9 +1,10 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Rift.Core.Unify.Unify (UnifyAttempt, binds, outs, frees, UnifyChoice, unify, unifyStep, initAttempt) where
+module Rift.Core.Unify.Unify (UnifyAttempt, binds, outs, frees, UnifyChoice, unify, unifyStep, initAttempt, unifyMaps, lowering, raising) where
 
 import Control.Lens (makeLenses, (&), (<>~))
 import Data.List ((\\))
+import Extra
 import Extra.Basics
 import Extra.Choice
 import Extra.Map
@@ -42,12 +43,12 @@ unifyStep attempt =
   let
     upVars = attempt ^. frees . varsUp
     downVars = attempt ^. frees . varsDown
-    upFlex = attempt ^. flex . varsUp
+    upFlex = attempt ^. flex . varsUp -- TODO
     downFlex = attempt ^. flex . varsDown
     bindst = attempt ^. binds
     outst = attempt ^. outs
    in
-    case (over _1 (split4 (\x -> (fst x `elem` upVars)) (\x -> (snd x `elem` downVars))) (split4 (\x -> (fst x `elem` upFlex)) (\x -> (snd x `elem` downFlex)) bindst)) of
+    case (split4 (\x -> (fst x `elem` upVars)) (\x -> (snd x `elem` downVars)) bindst) of
       (atomics, [], [], []) -> if (verifyAtoms atomics) then pure (set binds [] attempt) else cabsurd
       (atomics, [], [], vars) -> cabsurd -- TODO
       -- `((% ~> %, % ~> $, $ ~> %, $ ~> $), ? ~> @, @ ~> ?, @ ~> @)`
@@ -77,3 +78,14 @@ verifyBinds :: (Atomic atom) => BindingSet (Term atom) -> Bool
 verifyBinds attempt = minject attempt
 verifyVars :: (Atomic atom) => BindingSet (Term atom) -> Bool
 verifyVars attempt = iso attempt
+
+unifyMapLeft :: (Atomic atom) => UnifyAttempt (Term atom) -> (Term atom -> Term atom)
+unifyMapLeft term = mapToF (term ^. outs . lowering)
+
+unifyMapRight :: (Atomic atom) => UnifyAttempt (Term atom) -> (Term atom -> Term atom)
+unifyMapRight term = mapToFR (term ^. outs . raising)
+unifyMaps :: (Atomic atom) => UnifyAttempt (Term atom) -> (Term atom -> Term atom, Term atom -> Term atom)
+unifyMaps term =
+  ( unifyMapLeft term
+  , unifyMapRight term
+  )

@@ -34,6 +34,8 @@ other-extensions:
   - QuantifiedConstraints
   - PartialTypeSignatures
   - TemplateHaskell
+  - UndecidableInstances
+  - ConstraintKinds
 description: Please see the README on GitHub at <https://github.com/githubuser/SHIFT#readme>
 
 dependencies:
