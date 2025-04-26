@@ -5,6 +5,7 @@
 
 module Sift.MonadOld where
 
+{-
 import Control.Monad
 import Control.Monad.Except (Except, ExceptT, MonadError (..))
 import Control.Monad.Reader (MonadReader (..))
@@ -126,9 +127,10 @@ instance (Monoid w, Monad m) => MonadError Error (LMT s w m) where
 
 class EnterState term state where
   enterState :: LogicEnv -> [term] -> state
-testLMT :: (Monad m) => (Monoid w) => (EnterState (Term atom) s) => LMT s w m a -> [Term atom] -> m (w, Either Error a)
+testLMT :: (Monad m) => (Monoid w) => (EnterState (Term' atom) s) => LMT s w m a -> [Term' atom] -> m (w, Either Error a)
 testLMT comp states = runLMT comp defaultEnv (enterState defaultEnv states)
 runLMT :: (Monad m, Monoid w) => LMT s w m a -> LogicEnv -> s -> m (w, Either Error a)
 runLMT = unLMT
 mkLMT :: (Monoid w, Monad m) => (LogicEnv -> s -> m (w, Either Error a)) -> LMT s w m a
 mkLMT = LMT
+-}

@@ -125,6 +125,7 @@ library
     , ansi-terminal
     , base >=4.7 && <5
     , binary
+    , comonad
     , containers
     , data-default
     , lens
@@ -135,7 +136,7 @@ library
     , text
   default-language: GHC2021
   if flag(dev) && (!flag(release))
-    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wtyped-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables
+    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wtyped-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -O0 -with-rtsopts="-v"
   if flag(dev) && flag(release)
     ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   if flag(release)
@@ -168,6 +169,7 @@ executable SHIFT-exe
     , ansi-terminal
     , base >=4.7 && <5
     , binary
+    , comonad
     , containers
     , data-default
     , lens
@@ -178,7 +180,7 @@ executable SHIFT-exe
     , text
   default-language: GHC2021
   if flag(dev) && (!flag(release))
-    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wtyped-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables
+    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wtyped-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -O0 -with-rtsopts="-v"
   if flag(dev) && flag(release)
     ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   if flag(release)
@@ -212,6 +214,7 @@ test-suite SHIFT-test
     , ansi-terminal
     , base >=4.7 && <5
     , binary
+    , comonad
     , containers
     , data-default
     , lens
@@ -222,7 +225,7 @@ test-suite SHIFT-test
     , text
   default-language: GHC2021
   if flag(dev) && (!flag(release))
-    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wtyped-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables
+    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wtyped-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -O0 -with-rtsopts="-v"
   if flag(dev) && flag(release)
     ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   if flag(release)

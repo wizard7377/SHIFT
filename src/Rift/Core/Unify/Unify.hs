@@ -32,13 +32,13 @@ makeLenses ''UnifyResult
 makeLenses ''UnifyAttempt
 
 type UnifyChoice a = Choice (UnifyAttempt a)
-initAttempt :: (Atomic atom) => (Functor Choice) => LEnv (Term atom) -> Choice (BindingSet (Term atom)) -> UnifyChoice (Term atom)
+initAttempt :: (Atomic atom) => (Functor Choice) => LEnv (Term' atom) -> Choice (BindingSet (Term' atom)) -> UnifyChoice (Term' atom)
 initAttempt lenv = initAttempt' lenv (LEnv [] [])
 initAttempt' lenv flex choice = (\binds -> (UnifyAttempt binds (UnifyResult [] []) lenv flex)) <$> choice
-unify :: (Show (Term atom)) => (Atomic atom) => UnifyAttempt (Term atom) -> UnifyChoice (Term atom)
+unify :: (Show (Term' atom)) => (Atomic atom) => UnifyAttempt (Term' atom) -> UnifyChoice (Term' atom)
 unify attempt = "Unify2" <?> cfilter verifyAttempt $ ("Unify1" <?> unifyStep attempt)
 
-unifyStep :: (Show (Term atom)) => (Atomic atom) => UnifyAttempt (Term atom) -> UnifyChoice (Term atom)
+unifyStep :: (Show (Term' atom)) => (Atomic atom) => UnifyAttempt (Term' atom) -> UnifyChoice (Term' atom)
 unifyStep attempt =
   let
     upVars = attempt ^. frees . varsUp
@@ -69,22 +69,22 @@ unifyStep attempt =
          in
           if (verifyAtoms atomics) then unify res else cabsurd
 
-verifyAttempt :: (Atomic atom) => UnifyAttempt (Term atom) -> Bool
+verifyAttempt :: (Atomic atom) => UnifyAttempt (Term' atom) -> Bool
 verifyAttempt attempt = minject (attempt ^. outs . lowering) && msuject (attempt ^. outs . raising) -- TODO
-verifyAtoms :: (Atomic atom) => BindingSet (Term atom) -> Bool
+verifyAtoms :: (Atomic atom) => BindingSet (Term' atom) -> Bool
 verifyAtoms attempt = all (\(x, y) -> (x == y)) attempt
 
-verifyBinds :: (Atomic atom) => BindingSet (Term atom) -> Bool
+verifyBinds :: (Atomic atom) => BindingSet (Term' atom) -> Bool
 verifyBinds attempt = minject attempt
-verifyVars :: (Atomic atom) => BindingSet (Term atom) -> Bool
+verifyVars :: (Atomic atom) => BindingSet (Term' atom) -> Bool
 verifyVars attempt = iso attempt
 
-unifyMapLeft :: (Atomic atom) => UnifyAttempt (Term atom) -> (Term atom -> Term atom)
+unifyMapLeft :: (Atomic atom) => UnifyAttempt (Term' atom) -> (Term' atom -> Term' atom)
 unifyMapLeft term = mapToF (term ^. outs . lowering)
 
-unifyMapRight :: (Atomic atom) => UnifyAttempt (Term atom) -> (Term atom -> Term atom)
+unifyMapRight :: (Atomic atom) => UnifyAttempt (Term' atom) -> (Term' atom -> Term' atom)
 unifyMapRight term = mapToFR (term ^. outs . raising)
-unifyMaps :: (Atomic atom) => UnifyAttempt (Term atom) -> (Term atom -> Term atom, Term atom -> Term atom)
+unifyMaps :: (Atomic atom) => UnifyAttempt (Term' atom) -> (Term' atom -> Term' atom, Term' atom -> Term' atom)
 unifyMaps term =
   ( unifyMapLeft term
   , unifyMapRight term

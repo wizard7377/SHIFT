@@ -1,7 +1,9 @@
-module Rift (
-  module Rift.Core,
-  Term (..),
-) where
+module Rift
+  ( module Rift.Core,
+    Term (..),
+    Term',
+  )
+where
 
 -- \|
 --    The representation for Flat Types

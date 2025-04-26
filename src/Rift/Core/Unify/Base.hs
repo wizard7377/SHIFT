@@ -1,4 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Rift.Core.Unify.Base where
 
@@ -26,39 +28,41 @@ data LEnv a = LEnv
 
 makeLenses ''LEnv
 
-generate :: (Atomic atom) => (Applicative Choice) => Term atom -> Term atom -> Choice (BindingSet (Term atom))
+generate :: (Atomic atom) => (Applicative Choice) => Term' atom -> Term' atom -> Choice (BindingSet (Term' atom))
 generate up down =
   pure [(up, down)]
-    <||> pure
-      ( case (up, down) of
-          (Yud, Yud) -> []
-          (BCons Rule f0 t0, BCons Rule f1 t1) -> [(f0, f1), (t0, t1)]
-          (BCons Lamed b0 t0, BCons Lamed b1 t1) -> [(b0, b1), (t0, t1)]
-          (BCons Cons a0 b0, BCons Cons a1 b1) -> [(a0, a1), (b0, b1)]
-          _ -> []
-      )
+    <||> ( case (up, down) of
+            (TAtom _, _) -> cabsurd
+            (_, TAtom _) -> cabsurd
+            (TCons a0 a1, TCons b0 b1) -> (generate a0 b0) <> (generate a1 b1)
+         )
 
 data QTerm a = QTerm
-  { _term :: Term a
-  , _lameds :: [Term a]
+  { _term :: Term' a
+  , _lameds :: [Term' a]
   }
+  deriving (Eq)
 
+deriving instance (Show (Term' a)) => Show (QTerm a)
 makeLenses ''QTerm
-intros :: (Atomic atom) => Term atom -> QTerm atom
-unintros :: (Atomic atom) => QTerm atom -> Term atom
+intros :: (Atomic atom) => Term' atom -> QTerm atom
+unintros :: (Atomic atom) => QTerm atom -> Term' atom
 intros term = case term of
-  BCons Lamed b t -> over lameds (b :) (intros t)
+  Lamed (termToList -> vars) t -> QTerm t vars
   _ -> QTerm term []
 
 unintros term =
   case term of
     QTerm t [] -> t
-    QTerm t (b : bs) -> BCons Lamed b (unintros (QTerm t bs))
+    QTerm t (listToTerm -> Just vars) -> lamed vars t
+    _ -> undefined -- TODO
 
-genIntros :: (Atomic atom) => Term atom -> Choice (QTerm atom)
+{-
+genIntros :: (Atomic atom) => Term' atom -> Choice (QTerm atom)
 genIntros term =
   (pure $ QTerm term [])
     <|> ( case term of
-            BCons Lamed b t -> over lameds (b :) <$> (genIntros t)
+            Lamed b t -> over lameds (b :) <$> (genIntros t)
             _ -> cabsurd
         )
+-}

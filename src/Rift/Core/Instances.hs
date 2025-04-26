@@ -3,7 +3,7 @@ module Rift.Core.Instances where
 import Rift.Core.Base
 
 {-
-instance Token a => Unify (Term a) where
+instance Token a => Unify (Term' a) where
     unify ta tb = AnyOf [Simple (ta, tb), case (ta,tb) of {
         (Atom a0,Atom a1) -> if a0 == a1 then Trivial else EmptyNode ;
         ((List (h0:t0)),(List (h1:t1))) -> AllOf [(unify h0 h1), (unify (List t0) (List t1))] ;
@@ -17,11 +17,10 @@ instance Token a => Unify (Term a) where
     }]
 -}
 
-instance (Show box) => Show (Term box) where
-  show (Atom a) = show a
-  show (BCons Cons l0 l1) = show l0 ++ " . " ++ show l1
-  show (BCons Lamed b t) = "?" ++ show b ++ "#[" ++ show t ++ "]#"
-  show Yud = "*"
-  show (BCons Rule t f) = "#{" ++ show t ++ " : " ++ show f ++ "}#"
+instance (Show box) => Show (Term' box) where
+  show (Lamed b t) = "[" ++ show b ++ show t ++ "]"
+  show (Rule t f) = "{" ++ show t ++ " " ++ show f ++ "}"
+  show (TAtom a) = show a
+  show (Cons l0 l1) = "<" ++ show l0 ++ " " ++ show l1 ++ ">"
   -- show (Empty) = "()"
   show _ = "!"

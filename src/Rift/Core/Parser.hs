@@ -4,13 +4,14 @@
 {- | A basic debug parser for Rift
  - Note that this is /not/ a front end user facing thing, rather, this is just for quick and dirty debugging
 -}
-module Rift.Core.Parser (readTerm) where
+module Rift.Core.Parser (readTerm, readTermTest, readManyTerms, readTermsTest) where
 
 import Text.Megaparsec
 import Text.Megaparsec (MonadParsec (notFollowedBy, try), ParsecT, anySingle, choice, many, noneOf, oneOf, parseTest, single, some)
 import Text.Megaparsec.Char.Lexer (lexeme)
 
 import Control.Monad (void)
+import Data.Foldable (Foldable (..))
 import Data.Functor (($>))
 import Data.Functor.Identity
 import Data.List (singleton)
@@ -23,16 +24,17 @@ import Text.Megaparsec.Debug
 
 type ParserG a = ParsecT Void T.Text Identity a
 type Parser = ParsecT Void T.Text Identity TestTerm
-type Lexer = ParsecT Void T.Text Identity T.Text
+type Lexer a = ParsecT Void T.Text Identity (BasicAtom a)
 numbers :: [Char]
 numbers = ['0' .. '9']
 letters :: [Char]
 letters = ['a' .. 'z'] ++ ['A' .. 'Z']
 specialChars :: [Char]
-specialChars = "():?*!{}<>[]"
+specialChars = "()!{}<>[]%#; "
 otherChar :: Char -> Bool
 otherChar v = not (elem v numbers || elem v letters || elem v specialChars || v == ' ')
 
+{-
 glyphP :: Parser
 glyphP = do
   res <-
@@ -40,7 +42,21 @@ glyphP = do
       ( some (oneOf (letters ++ numbers))
           <|> some (satisfy otherChar)
       )
-  return $ Atom $ T.pack res
+  return $ AAtom $ T.pack res
+-}
+lexCore :: BasicAtom atom -> T.Text -> Lexer atom
+lexCore atom str = try $ do
+  void $ spaced $ (string "%" >> string str)
+  return atom
+lexT :: Lexer T.Text
+lexT =
+  try $
+    spaced $
+      choice
+        [ lexCore ALamed "?"
+        , lexCore ARule ":"
+        , (AAtom <$> T.pack <$> (some (noneOf specialChars)))
+        ]
 
 -- leftParen :: Lexer
 leftParen = spaced $ string "("
@@ -51,49 +67,62 @@ leftAngle = spaced $ string "<"
 rightAngle = spaced $ string ">"
 leftBrace = spaced $ string "{"
 rightBrace = spaced $ string "}"
-parens = between leftParen rightParen
-colon = spaced $ string ":"
-lyud = spaced $ string "*"
-llamed = spaced $ string "?"
 
-plamed = try $ do
-  llamed
+pcons = try $ do
   leftAngle
-  bounds <- many pterm
-  rightAngle
-  term <- pterm
-  return $ forEach (BCons Lamed) bounds term
-prule = try $ do
-  leftBrace
   t0 <- pterm
-  colon
   t1 <- pterm
-  rightBrace
-  return $ (BCons Rule) t0 t1
-plist :: Parser
+  rightAngle
+  return $ TCons t0 t1
+
 plist = try $ do
   leftParen
-  l <- some pterm
+  ts <- many pterm
   rightParen
-  return $ foldr (BCons Cons) Yud l
-pyud = try $ Yud <$ lyud
+  return $ foldr1 cons ts
+pright = try $ do
+  leftBracket
+  f <- pterm
+  ts <- pterm
+  rightBracket
+  return $ lamed f ts
+pleft = try $ do
+  leftBrace
+  f <- pterm
+  ts <- pterm
+  rightBrace
+  -- rightBrace
+  return $ rule f ts
 spaced :: ParserG a -> ParserG a
 -- spaced = lexeme space1
-spaced parser = do
-  space
+spaced parser = try $ do
   res <- parser
+  try $ space
   -- space ;
   return res
 pterm :: Parser
 pterm =
-  choice
-    [ prule
-    , plist
-    , plamed
-    , pyud
-    , glyphP
-    ]
+  spaced $
+    choice
+      [ plist <?> "list"
+      , pcons <?> "cons"
+      , pleft <?> "left"
+      , pright <?> "right"
+      , try $ TAtom <$> lexT
+      ]
+
+psys :: ParserG [TestTerm]
+psys = do
+  res <- endBy1 pterm (spaced $ string ";")
+  eof
+  return res
 
 -- | Note that lists are `()`, rules `{}`, and lameds `<>[]`
 readTerm :: T.Text -> Maybe (TestTerm)
 readTerm = parseMaybe pterm
+
+readManyTerms = parseMaybe psys
+readTermTest :: (Show TestTerm) => String -> IO ()
+readTermTest input = parseTest pterm (T.pack input)
+readTermsTest :: (Show TestTerm) => String -> IO ()
+readTermsTest input = parseTest psys (T.pack input)

@@ -1,3 +1,3 @@
 module Lift where
 
--- ^Language for Intuitionistic Flat Types
+-- ^ Language for Intuitionistic Flat Type

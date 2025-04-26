@@ -18,7 +18,7 @@ import Data.Functor.Identity (Identity)
 import Data.Typeable
 import Extra.Choice
 import Extra.Error (Error)
-import Rift (Term)
+import Rift (Term, Term')
 import Rift qualified
 import Sift.Base (LogicEnv, defaultEnv)
 
@@ -37,9 +37,9 @@ type LM s a = LMT s () Identity a
 -- | With an environment, and some sentences, generate a state @me@
 class EnterState me where
   -- enterState :: (Rift.Sentence sen Term) => LogicEnv -> [sen atom] -> me sen atom
-  enterState :: LogicEnv -> [Term atom] -> me atom
+  enterState :: LogicEnv -> [Term' atom] -> me atom
 
-testLMT :: (Monoid w, Monad m, EnterState s) => LMT (s atom) w m a -> [Term atom] -> m (w, Either Error a)
+testLMT :: (Monoid w, Monad m, EnterState s) => LMT (s atom) w m a -> [Term' atom] -> m (w, Either Error a)
 testLMT comp sens = runLMT comp defaultEnv (enterState defaultEnv sens)
 runLMT :: (Monad m, Monoid w) => LMT s w m a -> LogicEnv -> s -> m (w, Either Error a)
 runLMT = unLMT

@@ -16,6 +16,7 @@ module Extra.Basics (
   view,
   _1,
   _2,
+  amap,
 ) where
 
 import Control.Arrow qualified as Arrow
@@ -39,6 +40,8 @@ type Easy a = (Eq a, Show a)
 type ListLike box elem = (Functor box, Applicative box, Monad box, Foldable box, Traversable box, Semigroup (box elem), Monoid (box elem))
 type ArrayLike box = (Functor box, Applicative box, Monad box, Foldable box)
 
+amap :: (Applicative f) => f (a -> b) -> f a -> f b
+amap = (<*>)
 split :: a -> (a, a)
 split a = (a, a)
 combine :: (a -> b -> c) -> (a, b) -> c

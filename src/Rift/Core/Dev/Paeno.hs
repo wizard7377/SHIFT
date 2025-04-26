@@ -3,6 +3,7 @@ module Rift.Core.Dev.Paeno where
 import Control.Lens ((^.), _2)
 import Data.Text qualified as T
 import Rift.Core.Base
+import Rift.Core.Parser
 import Rift.Core.Parser (readTerm)
 import Rift.Core.Unify.Unify
 
@@ -13,48 +14,8 @@ justAssume v = case v of
 
 tRead :: String -> TestTerm
 tRead = justAssume . readTerm . T.pack
-
-basenat = tRead "N"
-t0 = tRead "{0 : N}"
-
--- it0 = introduce t0
-tt0 = tRead "?<n>{0 : N}"
-
--- itt0 = introduce tt0
-tt1 = tRead "?<n>{n : N}"
-
--- itt1 = introduce tt1
-t1 = tRead "?<n>{{(S n) : N} : {n : N}}"
-t2 = tRead "?<n>?<m>{(n = m) : ((S m) = (S n))}"
-p0 = tRead "{(S 0) : N}"
-m0 = tRead "{1 : N}"
-
-t3 = tRead "?<n>?<m> {{ {(n + m) : N} : {n : N} } : {m : N}}"
-
-lax0 = tRead "{T : *}"
-lax1 = tRead "?<A B>{{(A & B) : B} : A}"
-pax0 = tRead "{0 : N}"
-pax01 = tRead "?<n>{0 : N}"
-pax02 = tRead "?<n>{n : N}"
-pax1 = tRead "?<n>{{(s n) : N} : {n : N}}"
-pax2 = tRead "?<n>{(gt n 0) : {n : N}}"
-pax3 = tRead "?<m n>{((s m) = (s n)) : (n = m)}"
-
--- it0 = intros t0
--- itt0 = intros tt0
-
-memTestA0 = tRead "{x : y}"
-memTestA1 = tRead "{y : z}"
-memTestsA = (memTestA0, memTestA1)
-memTestB0 = tRead "?<y>{y : y}"
-memTestB1 = tRead "{a : z}"
-memTestsB = (memTestB0, memTestB1)
-memTestC0 = tRead "?<x>{x : y}"
-memTestC1 = tRead "?<z>{y : z}"
-memTestsC = (memTestC0, memTestC1)
-testValA = tRead "?<a b c d>{(a b) : 0}"
-
-yudTest0 = tRead "{T : *}"
-yudTest1 = tRead "?<x>{(x = x) : *}"
-
--- treet0 = uTree (unify (fst it0) (fst itt0)) (it0 ^. _2) (itt0 ^. _2)
+tReadL :: String -> [TestTerm]
+tReadL = justAssume . readManyTerms . T.pack
+sys0 = tReadL "[(x *) {(x ~ x) *}]; [(x y *) {(y ~ x) (x ~ y)}]; [(x y *) {[(a b) {(<x a> ~ <y b>) (a ~ b)}] (x ~ y)}]; [(x y *) {[(a b) {(<a x> ~ <b y>) (a ~ b)}] (x ~ y)}];"
+r0 = tRead "{((0 0) ~ (0 0)) *}"
+r1 = tRead "{((0 1) ~ (0 1)) *}"

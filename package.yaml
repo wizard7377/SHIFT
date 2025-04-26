@@ -52,6 +52,7 @@ dependencies:
   - prettyprinter
   - ansi-terminal
   - template-haskell
+  - comonad
 when:
   - condition: flag(dev) && (!flag(release))
     ghc-options:
@@ -61,6 +62,8 @@ when:
       - -Wtyped-holes
       - -Wdeferred-type-errors
       - -Wdeferred-out-of-scope-variables
+      - -O0
+      - -with-rtsopts="-v"
   - condition: flag(dev) && flag(release)
     ghc-options:
       - -Wall
