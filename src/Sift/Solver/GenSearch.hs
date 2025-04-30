@@ -10,7 +10,7 @@ module Sift.Solver.GenSearch where
 
 -- TODO apart from generally making this faster, also probs should do something for parital init
 
-import Control.Lens (makeLenses, over, set, view, (%=), (&), (+=), (.=), (.~), (^.), _1, _2)
+import Control.Lens (Lens', lens, makeLenses, over, set, view, (%=), (&), (+=), (.=), (.~), (^.), _1, _2)
 import Control.Monad (join)
 import Control.Monad.Identity (Identity (..))
 
@@ -44,9 +44,24 @@ import Sift.Types.Generate
 
 type LMGen atom a = LM (SearchState atom) a
 
+data FTerm atom = FTerm
+  { _term :: Term' atom
+  , _vars :: [Term' atom]
+  }
+  deriving (Eq, Show)
+
+makeLenses ''FTerm
+
+toFTerm :: (Atomic atom) => Term' atom -> FTerm atom
+toFTerm term =
+  FTerm
+    { _term = term
+    , _vars = []
+    }
+
 -- | The state of the Search monad with sentence `sen` on token `atom`
 data SearchState atom = SearchState
-  { _sentences :: [Term' atom]
+  { _sentences :: [FTerm atom]
   -- ^ All proven statements
   , _depth :: Int
   -- ^ Current depth to end
@@ -55,15 +70,21 @@ data SearchState atom = SearchState
   , _gen :: Generator
   }
 
+sentences :: Lens' (SearchState atom) [Term' atom]
+sentences = lens _sentences (\s v -> s{_sentences = v})
+depth :: Lens' (SearchState atom) Int
+depth = lens _depth (\s v -> s{_depth = v})
+vars :: Lens' (SearchState atom) Int
+vars = lens _vars (\s v -> s{_vars = v})
+gen :: Lens' (SearchState atom) Generator
+gen = lens _gen (\s v -> s{_gen = v})
 deriving instance (Show atom) => Show (SearchState atom)
-
-makeLenses ''SearchState
 
 instance EnterState SearchState where
   enterState :: LogicEnv -> [Term' atom] -> SearchState atom
   enterState env sens =
     SearchState
-      { _sentences = sens
+      { _sentences = toFTerm <$> sens
       , _depth = 0
       , _vars = 0
       , _gen = Generator 0
@@ -78,8 +99,8 @@ genSolve goal =
     let stateDepth = state ^. depth
     "Env" ?>> Sift.Base._depth env
     "State" ?>> state ^. sentences
-    let (sens :: [Term' atom]) = state ^. sentences
-    (newVals :: [[[Term' atom]]]) <- liftA2 genSolve' sens sens
+    let sens = state ^. sentences
+    newVals <- sequence $ genSolve' <$> sens <*> sens
     {-
     t0 <- traverse yudGenInner sens
     "t0" ?>> t0
@@ -97,11 +118,11 @@ genSolve goal =
     good <- resolve goal
     "good" ?>> good
     "new sens" ?>> newSens
+    depth += 1
     let res
           | good = return Solved
           | (edepth > stateDepth) =
-              (depth += 1)
-                >> genSolve goal
+              genSolve goal
           | otherwise = return Stopped
 
     res
@@ -119,38 +140,6 @@ genSolve' left right =
            in (return $ ("genSolve" <?> Extra.Choice.resolve rewrite))
         _ -> return []
 
-{-
-he :: (Atomic atom) => LMGen atom (VTerm atom)
-he = do
-  heGenV <- gets _gen
-  let (vatom, heGenV') = heGen heGenV
-  heGenV' <- gen .= heGenV'
-  return (AAtom vatom)
--}
-{-
-yudGenOuter :: (Atomic atom) => Term' atom -> LMGen atom (Term' atom)
-yudGenOuter term =
-  return $ rule term yud
-
-yudGenInner :: (Ord atom) => (Eq atom) => (Atomic atom) => Term' atom -> LMGen atom (Term' atom)
-yudGenInner term = do
-  let QTerm inner vars = intros term
-  let newTerm = unintros $ QTerm (rule inner yud) vars
-  return newTerm
-
-yudRedOuter :: (Ord atom) => (Eq atom) => (Atomic atom) => Term' atom -> LMGen atom [Term' atom]
-yudRedOuter (Rule a Yud) = do
-  return [a]
-yudRedOuter _ = return []
-yudRedInner :: (Ord atom) => (Eq atom) => (Atomic atom) => Term' atom -> LMGen atom [Term' atom]
-yudRedInner term =
-  let QTerm inner vars = intros term
-   in case inner of
-        (Rule a Yud) -> do
-          let newTerm = unintros $ QTerm a vars
-          return [newTerm]
-        _ -> return []
--}
 mem :: (Atomic atom) => Term' atom -> Term' atom -> LMGen atom [Term' atom]
 mem termA termB =
   let QTerm innerA varsA = intros termA

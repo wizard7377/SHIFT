@@ -16,6 +16,9 @@ flags:
   release:
     default: false
     manual: false
+  sanity:
+    default: false
+    manual: false
 
 extra-source-files:
   - README.md
@@ -36,6 +39,7 @@ other-extensions:
   - TemplateHaskell
   - UndecidableInstances
   - ConstraintKinds
+  - MonoLocalBinds
 description: Please see the README on GitHub at <https://github.com/githubuser/SHIFT#readme>
 
 dependencies:
@@ -53,7 +57,21 @@ dependencies:
   - ansi-terminal
   - template-haskell
   - comonad
+  - array
+
 when:
+  - condition: flag(sanity) && (!flag(dev))
+    ghc-options:
+      - -O0
+      - -fdefer-typed-holes
+      - -Wtyped-holes
+      - -W
+      - -Wno-duplicate-exports
+      - -Wno-unused-imports
+      - -Wno-unused-local-binds
+      - -Wno-unused-matches
+      - -Wno-dodgy-imports
+      - -Wno-dodgy-exports
   - condition: flag(dev) && (!flag(release))
     ghc-options:
       - -fdefer-typed-holes
@@ -63,7 +81,7 @@ when:
       - -Wdeferred-type-errors
       - -Wdeferred-out-of-scope-variables
       - -O0
-      - -with-rtsopts="-v"
+      - -g2
   - condition: flag(dev) && flag(release)
     ghc-options:
       - -Wall
@@ -81,6 +99,8 @@ when:
       - -O2
 
 library:
+  build-tools:
+    - alex
   source-dirs: src
   exposed-modules:
     - Rift

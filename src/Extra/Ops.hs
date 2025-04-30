@@ -40,6 +40,9 @@ infixl 4 </>
 (<|) :: (Monad m) => (a -> m b) -> m a -> m b
 (<|) = flip (|>)
 
+infixl 2 |>
+infixr 2 <|
+
 -- | The simple boolean implication function, that is \(a \to b\)
 implies :: Bool -> Bool -> Bool
 implies a b = a || not b

@@ -1,0 +1,10 @@
+cradle:
+  stack:
+    - path: "./src"
+      component: "SHIFT:lib"
+
+    - path: "./app/Main.hs"
+      component: "SHIFT:exe:SHIFT-exe"
+
+    - path: "./test"
+      component: "SHIFT:test:SHIFT-test"

@@ -2,3 +2,7 @@ snapshot: lts-23.19
 
 packages:
   - .
+
+build:
+  library-profiling: true
+  executable-profiling: true

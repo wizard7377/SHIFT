@@ -5,7 +5,7 @@
 
 module Sift.MonadOld where
 
-{-
+import Control.Comonad (Comonad (..))
 import Control.Monad
 import Control.Monad.Except (Except, ExceptT, MonadError (..))
 import Control.Monad.Reader (MonadReader (..))
@@ -16,19 +16,18 @@ import Data.Bifunctor (second)
 import Data.Functor ((<&>))
 import Data.Functor.Identity (Identity)
 import Data.Typeable
-import Extra.Choice
+import Extra ((<?>), (?>>))
 import Extra.Error (Error)
-import Rift (Term)
+import Rift (Term, Term')
 import Rift qualified
-import Rift.Core.Base (Atomic, Sentence)
 import Sift.Base (LogicEnv, defaultEnv)
 
 {- |
- The central and most general logic monad transformer.
- Takes in a `LogicEnv`, a state `s`, and a monad `m`, and is equipped with a writter `w` and a potential throw
+The central and most general logic monad transformer.
+Takes in a `LogicEnv`, a state `s`, and a monad `m`, and is equipped with a writter `w` and a potential throw
 -}
 newtype LMT s w m a = LMT
-  { unLMT :: LogicEnv -> s -> m (w, Choice (Either Error a))
+  { unLMT :: LogicEnv -> s -> m (w, (Either Error a))
   -- ^ The functional internals
   }
 
@@ -112,9 +111,10 @@ instance (Monoid w, Monad m) => MonadWriter w (LMT s w m) where
   tell :: w -> LMT s w m ()
   tell w = LMT $ \_ _ -> return (w, Right ())
   pass :: LMT s w m (a, w -> w) -> LMT s w m a
-  pass = _
+  pass = pass
   listen :: LMT s w m a -> LMT s w m (a, w)
-  listen input = _
+  listen input = listen input
+
 instance (Monoid w, Monad m) => MonadError Error (LMT s w m) where
   throwError :: Error -> LMT s w m a
   throwError e = LMT $ \_ _ -> return (mempty, Left e)
@@ -125,12 +125,16 @@ instance (Monoid w, Monad m) => MonadError Error (LMT s w m) where
       Left e -> unLMT (c e) env stateV
       Right v -> return (w1, Right v)
 
-class EnterState term state where
-  enterState :: LogicEnv -> [term] -> state
-testLMT :: (Monad m) => (Monoid w) => (EnterState (Term' atom) s) => LMT s w m a -> [Term' atom] -> m (w, Either Error a)
-testLMT comp states = runLMT comp defaultEnv (enterState defaultEnv states)
+-- | With an environment, and some sentences, generate a state @me@
+class EnterState me where
+  -- enterState :: (Rift.Sentence sen Term) => LogicEnv -> [sen atom] -> me sen atom
+  enterState :: LogicEnv -> [Term' atom] -> me atom
+
+testLMT :: (Comonad m, Monoid w, Monad m, EnterState s) => LMT (s atom) w m a -> [Term' atom] -> (w, Either Error a)
+testLMT comp sens = extract $ runLMT comp defaultEnv (enterState defaultEnv sens)
+
 runLMT :: (Monad m, Monoid w) => LMT s w m a -> LogicEnv -> s -> m (w, Either Error a)
 runLMT = unLMT
+
 mkLMT :: (Monoid w, Monad m) => (LogicEnv -> s -> m (w, Either Error a)) -> LMT s w m a
 mkLMT = LMT
--}

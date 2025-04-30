@@ -12,7 +12,7 @@ import Sift.Solver.GenSearch (SearchState (..), genSolve)
 dummyRun :: (Monoid w, EnterState s, Atomic tok, Monad m) => LMT (s tok) w m a -> m (w, Either Error a)
 dummyRun with = runLMT with defaultEnv (enterState defaultEnv [])
 
-dummyRun' :: (Monoid w, EnterState SearchState, Atomic atom, Monad m) => LMT (SearchState atom) w m a -> m (w, Either Error a)
+dummyRun' :: (Monoid w, Atomic atom, Monad m) => LMT (SearchState atom) w m a -> m (w, Either Error a)
 dummyRun' with = runLMT with defaultEnv (enterState defaultEnv [])
 
 dummyWith :: (Monoid w, EnterState s, Atomic tok, Monad m) => LMT (s tok) w m a -> [Term' tok] -> m (w, Either Error a)

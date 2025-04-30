@@ -17,6 +17,7 @@ module Extra.Basics (
   _1,
   _2,
   amap,
+  Type,
 ) where
 
 import Control.Arrow qualified as Arrow
@@ -24,6 +25,7 @@ import Control.Lens (over, set, view, (%~), (&), (.~), (^.), _1, _2)
 import Control.Lens qualified as L
 import Data.Bifunctor
 import Data.Data
+import Data.Kind (Type)
 import Data.Text qualified as T
 import Debug.Trace (trace, traceEvent, traceMarker, traceShow, traceShowId)
 import GHC.IO (unsafePerformIO)

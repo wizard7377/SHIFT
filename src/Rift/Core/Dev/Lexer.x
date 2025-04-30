@@ -1,0 +1,44 @@
+{
+module Rift.Core.Dev.Lexer(lexTest,LexToken(..)) where
+}
+
+
+%wrapper "basic"
+
+$special = [\.\[\]\(\)\{\}\<\>\%\;\_] 
+$term = [^ $white $special]
+tokens :- 
+  $white+ ;
+  "//".* ;
+  ";" { \s -> TokenSep }
+  \{ { \s -> LBrace } 
+  \} { \s -> RBrace } 
+  \< { \s -> LAngle } 
+  \> { \s -> RAngle } 
+  \[ { \s -> LBracket } 
+  \] { \s -> RBracket } 
+  \( { \s -> LParen } 
+  \) { \s -> RParen } 
+  \. { \s -> TokenCons } 
+  \_ { \s -> TokenWild }
+  "%LAMED" { \s -> TokenLamed }
+  $term+ { TokenValue }
+
+{
+lexTest = alexScanTokens
+data LexToken = 
+  LBrace
+  | RBrace 
+  | LBracket 
+  | RBracket
+  | LAngle 
+  | RAngle 
+  | LParen
+  | RParen
+  | TokenLamed
+  | TokenCons
+  | TokenSep
+  | TokenWild
+  | TokenValue String 
+  deriving (Show, Eq, Ord)
+}

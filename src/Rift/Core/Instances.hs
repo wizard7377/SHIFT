@@ -18,9 +18,8 @@ instance Token a => Unify (Term' a) where
 -}
 
 instance (Show box) => Show (Term' box) where
-  show (Lamed b t) = "[" ++ show b ++ show t ++ "]"
-  show (Rule t f) = "{" ++ show t ++ " " ++ show f ++ "}"
+  show (Lamed v b t) = "[" ++ show v ++ "] {" ++ show b ++ show t ++ "}"
   show (TAtom a) = show a
-  show (Cons l0 l1) = "<" ++ show l0 ++ " " ++ show l1 ++ ">"
+  show (Cons l0 l1) = "<" ++ show l0 ++ " . " ++ show l1 ++ ">"
   -- show (Empty) = "()"
   show _ = "!"

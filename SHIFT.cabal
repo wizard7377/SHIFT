@@ -53,6 +53,10 @@ flag release
   manual: False
   default: False
 
+flag sanity
+  manual: False
+  default: False
+
 library
   exposed-modules:
       Rift
@@ -62,6 +66,7 @@ library
   other-modules:
       Extra.Basics
       Extra.Choice
+      Extra.ChoiceOld
       Extra.Debug
       Extra.Decide
       Extra.Error
@@ -80,14 +85,20 @@ library
       Rift.Core.Base
       Rift.Core.Dev
       Rift.Core.Dev.Check
+      Rift.Core.Dev.Lexer
       Rift.Core.Dev.Paeno
+      Rift.Core.Dev.Parser
       Rift.Core.Funcs
       Rift.Core.Instances
-      Rift.Core.Parser
+      Rift.Core.Kernel
+      Rift.Core.ParserOld
       Rift.Core.Unify
       Rift.Core.Unify.Base
       Rift.Core.Unify.Dev
       Rift.Core.Unify.Unify
+      Rift.Core.UnifyOld.Base
+      Rift.Core.UnifyOld.Dev
+      Rift.Core.UnifyOld.Unify
       Rift.Names
       Rift.Names.Base
       Sift.Base
@@ -95,7 +106,6 @@ library
       Sift.Dev.Util
       Sift.Instances
       Sift.Monad
-      Sift.MonadNew
       Sift.MonadOld
       Sift.Solver
       Sift.Solver.BasicSearch
@@ -119,10 +129,14 @@ library
       TemplateHaskell
       UndecidableInstances
       ConstraintKinds
+      MonoLocalBinds
+  build-tools:
+      alex
   build-depends:
       HaTeX
     , QuickCheck
     , ansi-terminal
+    , array
     , base >=4.7 && <5
     , binary
     , comonad
@@ -135,8 +149,10 @@ library
     , template-haskell
     , text
   default-language: GHC2021
+  if flag(sanity) && (!flag(dev))
+    ghc-options: -O0 -fdefer-typed-holes -Wtyped-holes -W -Wno-duplicate-exports -Wno-unused-imports -Wno-unused-local-binds -Wno-unused-matches -Wno-dodgy-imports -Wno-dodgy-exports
   if flag(dev) && (!flag(release))
-    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wtyped-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -O0 -with-rtsopts="-v"
+    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wtyped-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -O0 -g2
   if flag(dev) && flag(release)
     ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   if flag(release)
@@ -161,12 +177,14 @@ executable SHIFT-exe
       TemplateHaskell
       UndecidableInstances
       ConstraintKinds
+      MonoLocalBinds
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       HaTeX
     , QuickCheck
     , SHIFT
     , ansi-terminal
+    , array
     , base >=4.7 && <5
     , binary
     , comonad
@@ -179,8 +197,10 @@ executable SHIFT-exe
     , template-haskell
     , text
   default-language: GHC2021
+  if flag(sanity) && (!flag(dev))
+    ghc-options: -O0 -fdefer-typed-holes -Wtyped-holes -W -Wno-duplicate-exports -Wno-unused-imports -Wno-unused-local-binds -Wno-unused-matches -Wno-dodgy-imports -Wno-dodgy-exports
   if flag(dev) && (!flag(release))
-    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wtyped-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -O0 -with-rtsopts="-v"
+    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wtyped-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -O0 -g2
   if flag(dev) && flag(release)
     ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   if flag(release)
@@ -206,12 +226,14 @@ test-suite SHIFT-test
       TemplateHaskell
       UndecidableInstances
       ConstraintKinds
+      MonoLocalBinds
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       HaTeX
     , QuickCheck
     , SHIFT
     , ansi-terminal
+    , array
     , base >=4.7 && <5
     , binary
     , comonad
@@ -224,8 +246,10 @@ test-suite SHIFT-test
     , template-haskell
     , text
   default-language: GHC2021
+  if flag(sanity) && (!flag(dev))
+    ghc-options: -O0 -fdefer-typed-holes -Wtyped-holes -W -Wno-duplicate-exports -Wno-unused-imports -Wno-unused-local-binds -Wno-unused-matches -Wno-dodgy-imports -Wno-dodgy-exports
   if flag(dev) && (!flag(release))
-    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wtyped-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -O0 -with-rtsopts="-v"
+    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wtyped-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -O0 -g2
   if flag(dev) && flag(release)
     ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   if flag(release)

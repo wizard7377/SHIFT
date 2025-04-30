@@ -32,10 +32,14 @@ mlookupV ((k, v) : xs) y = if v == y then Just k else mlookupV xs y
 mlookupV [] _ = Nothing
 infixl 2 @>
 infixl 2 >@
+
+-- | Map to function, first as input, second as output
 mapToF :: (Eq a) => HMap a -> a -> a
 mapToF m v = case mlookup m v of
   Just x -> x
   Nothing -> v
+
+-- | Map to function, second as input, first as output
 mapToFR :: (Eq a) => HMap a -> a -> a
 mapToFR m v = case mlookupV m v of
   Just x -> x
