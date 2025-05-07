@@ -40,6 +40,7 @@ other-extensions:
   - UndecidableInstances
   - ConstraintKinds
   - MonoLocalBinds
+  - Arrows
 description: Please see the README on GitHub at <https://github.com/githubuser/SHIFT#readme>
 
 dependencies:
@@ -58,6 +59,12 @@ dependencies:
   - template-haskell
   - comonad
   - array
+  - extra
+  - monad-loops
+  - List
+  - HUnit
+  - tasty
+  - tasty-hunit
 
 when:
   - condition: flag(sanity) && (!flag(dev))
@@ -77,10 +84,9 @@ when:
       - -fdefer-typed-holes
       - -fdefer-type-errors
       - -w
-      - -Wtyped-holes
+      - -Wno-typed-holes
       - -Wdeferred-type-errors
       - -Wdeferred-out-of-scope-variables
-      - -O0
       - -g2
   - condition: flag(dev) && flag(release)
     ghc-options:
@@ -99,14 +105,14 @@ when:
       - -O2
 
 library:
-  build-tools:
-    - alex
-  source-dirs: src
+  source-dirs:
+    - src
   exposed-modules:
     - Rift
     - Sift
     - Lift
     - Extra
+    - Tests
 
 executables:
   SHIFT-exe:
@@ -122,7 +128,8 @@ executables:
 tests:
   SHIFT-test:
     main: Spec.hs
-    source-dirs: test
+    source-dirs:
+      - test
     ghc-options:
       - -threaded
       - -rtsopts

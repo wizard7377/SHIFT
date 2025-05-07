@@ -1,6 +1,12 @@
 module Rift.Core.Instances where
 
+import Data.List (intercalate, intersperse)
+import Data.Text qualified as T
+import Extra.Debug
 import Rift.Core.Base
+import Rift.Core.Kernel
+import Rift.Core.Utility
+import System.Console.ANSI qualified as ANSI
 
 {-
 instance Token a => Unify (Term' a) where
@@ -17,9 +23,27 @@ instance Token a => Unify (Term' a) where
     }]
 -}
 
+instance Show TestToken where
+  show (TestToken (Left t)) = T.unpack t
+  show (TestToken (Right t)) = "_" ++ show t
+instance {-# OVERLAPPABLE #-} (Show box) => Show (Term box) where
+  show (TAtom atom) = show atom
+  show (TCons a0 a1) = "(" ++ show a0 ++ " . " ++ show a1 ++ ")"
+
+showRainbow :: (Show atom) => Int -> Term' atom -> String
+showRainbow i (Lamed v b t) = showColor' i "[" ++ showRainbow n v ++ showColor' i "] {" ++ showRainbow n b ++ " " ++ showRainbow n t ++ showColor' i "}"
+ where
+  n = i + 1
+showRainbow i x@(TCons a0 a1) = (showColor' i "(") ++ (intercalate (showColor' i " ") (showRainbow n <$> (parseCons x))) ++ showColor' i ")"
+ where
+  n = i + 1
+showRainbow i (TAtom atom) = resetCode ++ show atom
+ where
+  n = i + 1
+
+showListT :: (Show atom) => [Term' atom] -> String
+showListT v = if null v then ("{}") else "\n[\n\t" ++ (intercalate "\n\t" $ (showRainbow 1) <$> v) ++ "\n]"
 instance (Show box) => Show (Term' box) where
-  show (Lamed v b t) = "[" ++ show v ++ "] {" ++ show b ++ show t ++ "}"
-  show (TAtom a) = show a
-  show (Cons l0 l1) = "<" ++ show l0 ++ " . " ++ show l1 ++ ">"
-  -- show (Empty) = "()"
-  show _ = "!"
+  show = showRainbow 1
+
+-- showList v = (++ showListT v)

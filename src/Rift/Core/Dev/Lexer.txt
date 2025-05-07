@@ -5,7 +5,7 @@ module Rift.Core.Dev.Lexer(lexTest,LexToken(..)) where
 
 %wrapper "basic"
 
-$special = [\.\[\]\(\)\{\}\<\>\%\;\_] 
+$special = [\.\[\]\(\)\{\}\%\;\_] 
 $term = [^ $white $special]
 tokens :- 
   $white+ ;
@@ -13,8 +13,6 @@ tokens :-
   ";" { \s -> TokenSep }
   \{ { \s -> LBrace } 
   \} { \s -> RBrace } 
-  \< { \s -> LAngle } 
-  \> { \s -> RAngle } 
   \[ { \s -> LBracket } 
   \] { \s -> RBracket } 
   \( { \s -> LParen } 

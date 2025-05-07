@@ -7,14 +7,20 @@
 {-# LANGUAGE StarIsType #-}
 {-# LANGUAGE UndecidableInstances #-}
 
+-- {-# LANGUAGE UndecidableInstances #-}
+
 module Extra.Choice where
 
 import Control.Applicative
 import Control.Comonad
 import Control.Monad
+import Control.Monad.Error.Class (MonadError (..))
+import Control.Monad.RWS (MonadState)
+import Control.Monad.RWS.Class (MonadReader (..), MonadState (..), MonadWriter (..))
 import Control.Monad.Trans
 import Data.Foldable (Foldable (..))
 import Data.Functor.Identity (Identity (..))
+import Data.List (singleton)
 import Data.Maybe (catMaybes, isJust, mapMaybe)
 import Extra.Basics
 import Extra.List
@@ -26,11 +32,18 @@ class (MonadPlus m, Functor m, Applicative m, Monad m) => MonadChoice (m :: Type
 - This is the monad transformer version.
 - Given an inner monad `m`, and a value `a`, returns a type
 -}
-newtype ChoiceT (m :: Type -> Type) (a :: Type) = Choice (m ([] a))
 
-type Choice = ChoiceT Identity
+-- newtype ChoiceT (m :: Type -> Type) (a :: Type) = Choice (m [a])
 
-deriving instance (Show (m [a])) => Show (ChoiceT m a)
+newtype ChoiceT (m :: Type -> Type) (a :: Type) = Choice (m [a])
+
+type Choice = []
+
+-- type Choice = ChoiceT Identity
+
+-- type Choice' = ChoiceT Identity
+
+deriving instance (Show a, Show (m [a])) => Show (ChoiceT m a)
 
 deriving instance (Eq (m [a])) => Eq (ChoiceT m a)
 
@@ -45,25 +58,48 @@ instance (Applicative m) => Alternative (ChoiceT m) where
   empty = Choice $ pure []
   (Choice xs) <|> (Choice ys) = Choice $ (++) <$> xs <*> ys
 
-instance (Foldable m, Applicative m) => Monad (ChoiceT m) where
+instance (Applicative m) => Monad (ChoiceT m) where
   return = pure
   x >>= f =
-    let Choice choices = f <$> x
-        choices1 = foldl (<|>) empty choices
-        choices2 = foldl (<|>) empty choices1
-     in choices2
+    let choices = f <$> x
+        choices1 = join choices
+     in choices1
 
-instance (forall m. (Monad m) => Monad (ChoiceT m)) => MonadTrans ChoiceT where
-  lift :: (Monad m) => m a -> ChoiceT m a
-  lift x = Choice $ (: []) <$> x
+-- instance (forall m. (Monad m) => Monad (ChoiceT m)) => MonadTrans ChoiceT where
+--  lift :: (Monad m) => m a -> ChoiceT m a
+--  lift x = Choice $ (: []) <$> x
 
 instance (Semigroup a, Applicative m) => Semigroup (ChoiceT m a) where
   Choice xs <> Choice ys = Choice $ (<>) <$> xs <*> ys
 
 instance (Monoid a, Applicative m) => Monoid (ChoiceT m a) where
   mempty = Choice $ pure [mempty]
-  mappend xs ys = xs <> ys
 
+liftChoice :: (Functor m) => m a -> ChoiceT m a
+liftChoice x = liftC $ singleton <$> x
+liftC :: (Functor m) => m [a] -> ChoiceT m a
+liftC = Choice
+expandC :: (Functor m, Monad m, MonadTrans t) => ChoiceT m a -> ChoiceT (t m) a
+expandC (Choice xs) = Choice $ lift xs
+
+raiseC :: (Monad m, MonadTrans t) => m a -> ChoiceT (t m) a
+raiseC = expandC . liftChoice
+instance (Foldable m, MonadState s m) => MonadState s (ChoiceT m) where
+  get = liftChoice get
+  put = liftChoice . put
+
+instance (MonadReader r m, Foldable m) => MonadReader r (ChoiceT m) where
+  ask = liftChoice ask
+  local f (Choice xs) = Choice $ local f xs
+
+instance (MonadWriter w m, Foldable m) => MonadWriter w (ChoiceT m) where
+  tell = liftChoice . tell
+  listen (Choice xs) = _
+  pass (Choice xs) = _
+
+instance (MonadError e m, Foldable m) => MonadError e (ChoiceT m) where
+  throwError = liftChoice . throwError
+  catchError (Choice xs) f = Choice $ catchError xs (runChoiceT . f)
 instance (Foldable f) => Foldable (ChoiceT f) where
   foldMap :: (Monoid m) => (a -> m) -> ChoiceT f a -> m
   foldMap f (Choice xs) = foldMap (foldMap f) xs
@@ -126,6 +162,8 @@ solve = cfilter
 runChoiceT :: ChoiceT m a -> m [a]
 runChoiceT (Choice xs) = xs
 
+runChoice :: Choice a -> [a]
+runChoice xs = xs
 resolve' :: ChoiceT m a -> m [a]
 resolve' (Choice choice) = choice
 

@@ -29,7 +29,7 @@ data LogicEnv = LogicEnv
 defaultEnv :: LogicEnv
 defaultEnv =
   LogicEnv
-    { _depth = 4
+    { _depth = 24
     }
 
 {- | The solver atomic type.

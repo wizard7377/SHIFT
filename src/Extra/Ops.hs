@@ -2,6 +2,7 @@
 
 module Extra.Ops (
   (<$$>),
+  (<$$$>),
   (<*+>),
   (</>),
   (-?>),
@@ -27,6 +28,9 @@ infixl 4 <$$>
 (<$$>) :: (Functor f0) => (Functor f1) => (a -> b) -> f1 (f0 a) -> f1 (f0 b)
 (<$$>) = fmap . fmap
 
+infixl 4 <$$$>
+(<$$$>) :: (Functor f0) => (Functor f1) => (Functor f2) => (a -> b) -> f2 (f1 (f0 a)) -> f2 (f1 (f0 b))
+(<$$$>) = fmap . fmap . fmap
 (<*+>) = (<*>) . (<*>)
 infixl 4 </>
 (</>) :: (Monad m) => (a -> m b) -> m a -> m b

@@ -2,26 +2,29 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE QuantifiedConstraints #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Rift.Core.Base (
   {-# WARNING "Do not use kernel forms, use abstracted versions instead" #-} module Rift.Core.Kernel,
   Term',
   TestTerm,
+  TestToken (..),
   Sentence (..),
   Atomic,
   lamed,
   cons,
-  TestToken,
   --drule,
   pattern PCons,
   pattern Lamed,
+  pattern Atom,
   --pattern Rule,
   pattern Cons,
   termToList,
   listToTerm,
   mkCons,
   mkCons',
-  manyLamed
+  manyLamed,
+  recurseSome
 ) where
 
 import Rift.Core.Kernel
@@ -37,9 +40,10 @@ Note that this definition is quite minimal, concrete implementation details are 
 -}
 type Term' atom = Term (BasicAtom atom)
 
-type TestToken = Either Text Int 
-type TestTerm = Term' TestToken
+data TestToken = TestToken (Either Text Int) 
+  deriving (Eq, Ord, Data, Generic)
 
+type TestTerm = Term' TestToken 
 {- | The attomic class constraint
 Represents a collection of "packaged requirements" that all atoms must have
 All of these are fairly standard and should be implemented for most types anyway
@@ -49,13 +53,11 @@ type Atomic a = (Eq a, Ord a, Show a)
 -- type Atom a = (Eq a, Show a)
 
 -- | The class of all top level sentences, which can convert to `Term' tok`
-class Sentence sen term | sen -> term where
-  fromTerm :: term atom -> sen atom
-  toTerm :: sen atom -> term atom
+class Sentence sen atom | atom -> sen where
+  toTerm :: sen atom -> Term' atom
 
-instance Sentence a a where
-  fromTerm = id
-  toTerm = id
+instance Sentence Term atom where
+  toTerm = fmap AAtom
 
 mkAtom = TAtom
 
@@ -80,6 +82,8 @@ manyLamed [t] a0 a1 = lamed t a0 a1
 manyLamed (t : ts) a0 a1 = lamed t (manyLamed ts a0 a1) a1
 --drule = mkCons' ARule
 
+type family AtomOf term 
+type instance AtomOf (Term atom) = atom
 pattern PCons :: Term' atom -> Term' atom -> Term' atom -> Term' atom
 pattern PCons f a0 a1 <- TCons f (TCons a0 a1)
   where
@@ -94,11 +98,6 @@ pattern Cons a0 a1 <- (TCons a0 a1)
   where
     Cons a0 a1 = cons a0 a1
 
-pattern DLamed :: Term' atom -> Term' atom -> Term' atom
-pattern DLamed a0 a1 <- TCons (TAtom ALamed) (TCons a0 a1)
-  where
-    DLamed a0 a1 = _
-    --DLamed a0 a1 = lamed a0 a1
 
 pattern Lamed :: Term' atom -> Term' atom -> Term' atom -> Term' atom
 pattern Lamed a0 a1 a2 <- TCons (TAtom ALamed) (TCons a0 (TCons a1 a2))
@@ -132,3 +131,14 @@ listToTerm :: [Term' atom] -> Maybe (Term' atom)
 listToTerm [] = Nothing
 listToTerm [x] = Just x
 listToTerm (x : xs) = cons x <$> (listToTerm xs)
+
+recurseSome :: (Eq atom) => (Term atom -> Term atom) -> (Term atom -> Term atom)
+recurseSome f v = let v' = f v in
+  if v == v' then (
+    case v of
+      TCons a0 a1 -> TCons (recurseSome f a0) (recurseSome f a1)
+      TAtom _ -> v
+  )
+    else v'
+
+

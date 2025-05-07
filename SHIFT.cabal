@@ -63,7 +63,16 @@ library
       Sift
       Lift
       Extra
+      Tests
   other-modules:
+      Extra.Arrow
+      Extra.Arrow.Classes
+      Extra.Arrow.Kite
+      Extra.Arrow.Multi
+      Extra.Arrow.Reader
+      Extra.Arrow.State
+      Extra.Arrow.Trans
+      Extra.Arrow.Writer
       Extra.Basics
       Extra.Choice
       Extra.ChoiceOld
@@ -84,21 +93,18 @@ library
       Rift.Core
       Rift.Core.Base
       Rift.Core.Dev
-      Rift.Core.Dev.Check
-      Rift.Core.Dev.Lexer
+      Rift.Core.Dev.Forms
       Rift.Core.Dev.Paeno
       Rift.Core.Dev.Parser
+      Rift.Core.Dev.Util
       Rift.Core.Funcs
       Rift.Core.Instances
       Rift.Core.Kernel
-      Rift.Core.ParserOld
       Rift.Core.Unify
       Rift.Core.Unify.Base
       Rift.Core.Unify.Dev
       Rift.Core.Unify.Unify
-      Rift.Core.UnifyOld.Base
-      Rift.Core.UnifyOld.Dev
-      Rift.Core.UnifyOld.Unify
+      Rift.Core.Utility
       Rift.Names
       Rift.Names.Base
       Sift.Base
@@ -106,13 +112,13 @@ library
       Sift.Dev.Util
       Sift.Instances
       Sift.Monad
-      Sift.MonadOld
       Sift.Solver
       Sift.Solver.BasicSearch
       Sift.Solver.BasicSearch.Tree
       Sift.Solver.GenSearch
       Sift.Types
-      Sift.Types.Generate
+      Tests.Search
+      Tests.Unify
       Paths_SHIFT
   autogen-modules:
       Paths_SHIFT
@@ -130,10 +136,11 @@ library
       UndecidableInstances
       ConstraintKinds
       MonoLocalBinds
-  build-tools:
-      alex
+      Arrows
   build-depends:
-      HaTeX
+      HUnit
+    , HaTeX
+    , List
     , QuickCheck
     , ansi-terminal
     , array
@@ -142,17 +149,21 @@ library
     , comonad
     , containers
     , data-default
+    , extra
     , lens
     , megaparsec
+    , monad-loops
     , mtl
     , prettyprinter
+    , tasty
+    , tasty-hunit
     , template-haskell
     , text
   default-language: GHC2021
   if flag(sanity) && (!flag(dev))
     ghc-options: -O0 -fdefer-typed-holes -Wtyped-holes -W -Wno-duplicate-exports -Wno-unused-imports -Wno-unused-local-binds -Wno-unused-matches -Wno-dodgy-imports -Wno-dodgy-exports
   if flag(dev) && (!flag(release))
-    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wtyped-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -O0 -g2
+    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wno-typed-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -g2
   if flag(dev) && flag(release)
     ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   if flag(release)
@@ -178,9 +189,12 @@ executable SHIFT-exe
       UndecidableInstances
       ConstraintKinds
       MonoLocalBinds
+      Arrows
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      HaTeX
+      HUnit
+    , HaTeX
+    , List
     , QuickCheck
     , SHIFT
     , ansi-terminal
@@ -190,17 +204,21 @@ executable SHIFT-exe
     , comonad
     , containers
     , data-default
+    , extra
     , lens
     , megaparsec
+    , monad-loops
     , mtl
     , prettyprinter
+    , tasty
+    , tasty-hunit
     , template-haskell
     , text
   default-language: GHC2021
   if flag(sanity) && (!flag(dev))
     ghc-options: -O0 -fdefer-typed-holes -Wtyped-holes -W -Wno-duplicate-exports -Wno-unused-imports -Wno-unused-local-binds -Wno-unused-matches -Wno-dodgy-imports -Wno-dodgy-exports
   if flag(dev) && (!flag(release))
-    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wtyped-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -O0 -g2
+    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wno-typed-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -g2
   if flag(dev) && flag(release)
     ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   if flag(release)
@@ -210,6 +228,7 @@ test-suite SHIFT-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      GenSearch
       Paths_SHIFT
   autogen-modules:
       Paths_SHIFT
@@ -227,9 +246,12 @@ test-suite SHIFT-test
       UndecidableInstances
       ConstraintKinds
       MonoLocalBinds
+      Arrows
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      HaTeX
+      HUnit
+    , HaTeX
+    , List
     , QuickCheck
     , SHIFT
     , ansi-terminal
@@ -239,17 +261,21 @@ test-suite SHIFT-test
     , comonad
     , containers
     , data-default
+    , extra
     , lens
     , megaparsec
+    , monad-loops
     , mtl
     , prettyprinter
+    , tasty
+    , tasty-hunit
     , template-haskell
     , text
   default-language: GHC2021
   if flag(sanity) && (!flag(dev))
     ghc-options: -O0 -fdefer-typed-holes -Wtyped-holes -W -Wno-duplicate-exports -Wno-unused-imports -Wno-unused-local-binds -Wno-unused-matches -Wno-dodgy-imports -Wno-dodgy-exports
   if flag(dev) && (!flag(release))
-    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wtyped-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -O0 -g2
+    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wno-typed-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -g2
   if flag(dev) && flag(release)
     ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   if flag(release)

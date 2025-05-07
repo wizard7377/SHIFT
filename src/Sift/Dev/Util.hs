@@ -1,25 +1,45 @@
+{-# LANGUAGE PartialTypeSignatures #-}
+
 module Sift.Dev.Util where
 
+import Control.Comonad (Comonad (..))
+import Control.Exception (throw)
 import Control.Monad.Identity (Identity (runIdentity))
 import Data.Text (pack)
 import Extra.Error (Error)
-import Rift (Atomic, Term, Term')
-import Sift (LMT)
+import Rift (Atomic, Term, Term', TestTerm, TestToken)
+import Rift.Core (BasicAtom)
+import Rift.Core.Dev.Forms
+import Rift.Core.Dev (tRead)
+import Sift (LMT, LogicResult (..))
 import Sift.Base (LogicResult, defaultEnv)
-import Sift.Monad (EnterState (enterState), mkLMT, runLMT)
-import Sift.Solver.GenSearch (SearchState (..), genSolve)
+import Sift.Monad (EnterState (enterState), mkLMT, runLMT, runLMT')
+import Sift.Solver.GenSearch (SearchState (..), genSearch)
 
-dummyRun :: (Monoid w, EnterState s, Atomic tok, Monad m) => LMT (s tok) w m a -> m (w, Either Error a)
-dummyRun with = runLMT with defaultEnv (enterState defaultEnv [])
+dummyRun :: (EnterState s) => LMT (s atom) w m a -> m (Either Error [a], s atom, w)
+dummyRun with = runLMT' with defaultEnv (enterState defaultEnv [] [])
 
-dummyRun' :: (Monoid w, Atomic atom, Monad m) => LMT (SearchState atom) w m a -> m (w, Either Error a)
-dummyRun' with = runLMT with defaultEnv (enterState defaultEnv [])
+dummyWith :: (Monoid w, EnterState s, Atomic tok) => LMT (s tok) w m a -> [Term' tok] -> m (Either Error [a], s tok, w)
+dummyWith with given = runLMT' with defaultEnv (enterState defaultEnv given given)
 
-dummyWith :: (Monoid w, EnterState s, Atomic tok, Monad m) => LMT (s tok) w m a -> [Term' tok] -> m (w, Either Error a)
-dummyWith with given = runLMT with defaultEnv (enterState defaultEnv given)
+dummySolve :: (Monoid w, EnterState s, Atomic tok) => (Term' tok -> LMT (s tok) w m a) -> [Term' tok] -> Term' tok -> m (Either Error [a], s tok, w)
+dummySolve with given goal = dummyWith (with goal) given
 
--- dummySolve :: (Atomic tok) => Term' tok -> [Term' tok] -> ((), Either Error (LogicResult ()))
--- dummySolve goal given = runIdentity $ runLMT (genSolve goal) defaultEnv (enterState defaultEnv given)
+dummySolve2 with given goal = dummyWith (with (tRead given) (tRead goal)) []
+testRSolve :: (Monoid w, EnterState s) => (TestTerm -> LMT (s TestToken) w m a) -> [TestTerm] -> String -> m (Either Error [a], s TestToken, w)
+testRSolve with given goal = dummyWith (with $ tRead goal) given
 
-instance (Atomic atom, Monoid w, EnterState s, Show w, Show res) => Show (LMT (s atom) w Identity res) where
-  show = show . dummyRun
+testGenSolve :: (Ord a, Show a) => TestSolve a -> IO (_, _)
+testGenSolve test =
+  let
+    r0 = extract $ dummySolve genSearch ((_givens test) ++ (_system test)) (_goal test)
+   in
+    case r0 of
+      (Right v, s, w) -> _
+      _ -> throw _
+
+goodSolve :: (Comonad m) => m (Either Error [LogicResult], s tok, w) -> (Bool, s tok, w)
+goodSolve m =
+  let (res, state, writer) = extract m
+      isGood = case res of Left _ -> False; Right v -> any (== Solved) v
+   in (isGood, state, writer)

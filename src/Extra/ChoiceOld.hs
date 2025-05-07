@@ -1,95 +1,119 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE QuantifiedConstraints #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE StarIsType #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Extra.ChoiceOld where
 
 import Control.Applicative
+import Control.Comonad
+import Control.Monad
+import Control.Monad.Extra (mapMaybeM)
+import Control.Monad.Trans
+import Data.Foldable (Foldable (..))
 import Data.Functor.Identity (Identity (..))
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes, isJust, mapMaybe)
+import Debug.Trace (trace, traceId, traceShowId)
 import Extra.Basics
+import Extra.Debug
 import Extra.List
 import Extra.Ops
 
-{- | The model of choice
-For a given type `a`, the inner list represents a choice of `a`
-That is, it reperesents a non-deterministic choice of `a`, all possibilities
--}
-newtype ChoiceT m a = Choice (m [a])
+class (MonadPlus m, Functor m, Applicative m, Monad m) => MonadChoice (m :: Type -> Type)
 
+{- | The model of choice
+- This is the monad transformer version.
+- Given an inner monad `m`, and a value `a`, returns a type
+-}
+newtype ChoiceTT (a :: Type -> Type) (b :: Type -> Type) (c :: Type) = Choice (a [b c])
+
+type ChoiceT = ChoiceTT Identity
 type Choice = ChoiceT Identity
 
-deriving instance (Show (m [a])) => Show (ChoiceT m a)
+instance (Show (n a), Comonad m) => Show (ChoiceTT m n a) where
+  show (Choice xs) = "Choice " ++ show (extract xs)
+deriving instance (Eq (m [n a])) => Eq (ChoiceTT m n a)
 
-deriving instance (Eq (m [a])) => Eq (ChoiceT m a)
+instance (Functor f, Functor g) => Functor (ChoiceTT f g) where
+  fmap f (Choice xs) = Choice $ fmap (fmap $ fmap f) xs
 
--- | Change every instnace of the inner value
-instance Functor Choice where
-  fmap :: (a -> b) -> Choice a -> Choice b
-  fmap f (Choice choice) = Choice $ f <$$> choice
+instance (Applicative f, Applicative g) => Applicative (ChoiceTT f g) where
+  pure x = Choice $ pure [pure x]
+  (Choice fs) <*> (Choice xs) = Choice $ liftA2 (<*>) <$> fs <*> xs
 
--- | Take every possible function, and every possible input, and cross apply them, then take the sum (or) of their results
-instance Applicative Choice where
-  pure :: a -> Choice a
-  pure a = Choice (pure [a])
-  (<*>) :: Choice (a -> b) -> Choice a -> Choice b
-  (Choice func) <*> (Choice val) = Choice $ Identity $ ((runIdentity func) <*> (runIdentity val))
+instance (Applicative a, Applicative b) => Alternative (ChoiceTT a b) where
+  empty = Choice $ pure []
+  (Choice xs) <|> (Choice ys) = Choice $ (++) <$> xs <*> ys
 
-instance (Semigroup a) => Semigroup (Choice a) where
-  (<>) = choiceAnd
+instance (Applicative m, Monoid (m a), Monad m) => MonadPlus (ChoiceT m) where
+  mzero = Choice $ pure []
+  mplus (Choice xs) (Choice ys) = Choice $ (++) <$> xs <*> ys
 
-instance (Monoid a) => Monoid (Choice a) where
-  mempty = Choice (pure [mempty])
-  mappend = (<>)
+instance (Monad n) => Monad (ChoiceT n) where
+  xs >>= f = choiceBind xs f
 
--- | Simply add the choices together
-instance Alternative Choice where
-  empty = Choice mempty
-  (<|>) = choiceOr
+choiceBind :: (Monad n, Functor n, Applicative n) => ChoiceT n a -> (a -> ChoiceT n b) -> ChoiceT n b
+choiceBind !xs !f =
+  let
+    !r0 = f <| xs
+   in
+    r0
+instance (Monad a, Alternative a, Functor a, Foldable a) => MonadTrans (ChoiceT) where
+  lift :: (Monad m) => m v -> ChoiceT m v
+  lift x = Choice $ pure ((: []) x)
 
-{- | Take every single possible input, and feed it into the function, which will give @Choice (Choice a)@
-Then, simply flatten by `<|>`
--}
-instance Monad Choice where
-  (>>=) :: Choice a -> (a -> Choice b) -> Choice b
-  (Choice v0) >>= f =
-    let v1 = f <$$> v0
-        v2 = foldr (<|>) empty (runIdentity v1)
-     in v2
+instance (Semigroup a, Applicative m) => Semigroup (ChoiceT m a) where
+  Choice xs <> Choice ys = Choice $ (<>) <$> xs <*> ys
 
-instance Foldable Choice where
-  foldMap :: (Monoid m) => (a -> m) -> Choice a -> m
-  foldMap f (Choice choice) = foldMap f (runIdentity choice)
+instance (Monoid a, Applicative m) => Monoid (ChoiceT m a) where
+  mempty = Choice $ pure []
+
+-- instance (Traversable a, Traversable b) => Traversable (ChoiceTT a b) where
+--  traverse f (Choice xs) = Choice (f <| xs)
 
 -- instance Traversable Choice where
 
 -- | The simple choice, that is, (A | F)
-simple a = pure a
+simple :: (Applicative m) => a -> ChoiceT m a
+simple = pure
 
-trivial = Choice $ Identity [[]]
+trivial :: (Monoid (m [a])) => ChoiceT m a
+trivial = Choice mempty
 
-cabsurd = Choice $ Identity []
+cabsurd :: (Applicative m) => ChoiceT m a
+cabsurd = Choice $ pure []
 
-choiceAnd :: (Semigroup a) => Choice a -> Choice a -> Choice a
-choiceAnd (Choice as) (Choice bs) = Choice $ (<>) <$> as <*> bs
+choiceAnd :: (Semigroup a, Semigroup (m a), Applicative m) => ChoiceT m a -> ChoiceT m a -> ChoiceT m a
+choiceAnd = (<>)
 
-choiceOr :: Choice a -> Choice a -> Choice a
-choiceOr (Choice as) (Choice bs) = Choice $ (++) <$> as <*> bs
+choiceOr :: (Applicative m) => ChoiceT m a -> ChoiceT m a -> ChoiceT m a
+choiceOr = (<|>)
 
-choice :: [a] -> Choice a
-choice input = Choice $ Identity input
+choice :: (Applicative m, Applicative n) => [a] -> ChoiceTT m n a
+choice input = Choice $ pure ([] <> (pure <$> input))
 
-capply :: (a -> b) -> Choice a -> Choice b
-capply f (Choice as) = Choice $ f <$$> as
+capply :: (Functor m) => (a -> b) -> ChoiceT m a -> ChoiceT m b
+capply f (Choice as) = Choice $ f <$$$> as
 
-cfilterMap :: (a -> Maybe b) -> Choice a -> Choice b
-cfilterMap f (Choice as) = Choice $ catMaybes <$> (f <$>) <$> as
+-- TODO TODO TODO
+cfilterMap :: (Functor m) => (n a -> (Maybe (n b))) -> ChoiceTT m n a -> ChoiceTT m n b
+cfilterMap f (Choice as) = Choice $ mapMaybe f <$> as
+cfilter :: (Functor m, Monad m) => (n a -> Bool) -> ChoiceTT m n a -> ChoiceTT m n a
+cfilter f (Choice as) =
+  let
+    ff = (\x -> if f x then Just x else Nothing)
+   in
+    cfilterMap ff (Choice as)
 
-cfilter f (Choice as) = choice $ filter f (runIdentity as)
+-- cfilter f (Choice as) = choice $ filter f as
 
-(<&&>) :: (Semigroup a) => Choice a -> Choice a -> Choice a
-(<||>) :: (Semigroup a) => Choice a -> Choice a -> Choice a
-(<&&>) = choiceAnd
+(<&&>) :: (Semigroup a, Applicative m) => ChoiceT m a -> ChoiceT m a -> ChoiceT m a
+(<||>) :: (Applicative m) => ChoiceT m a -> ChoiceT m a -> ChoiceT m a
+(<&&>) = (<>)
 
 (<||>) = choiceOr
 
@@ -97,8 +121,14 @@ infixl 9 <&&>
 
 infixl 8 <||>
 
-solve :: (a -> Bool) -> Choice a -> Choice a
-solve prop (Choice choice) = Choice $ filter prop <$> choice
+solve :: (Functor m, Monad m) => (n a -> Bool) -> ChoiceTT m n a -> ChoiceTT m n a
+solve = cfilter
 
-resolve :: Choice a -> [a]
-resolve (Choice choice) = runIdentity $ choice
+runChoiceT :: ChoiceTT m n a -> m [n a]
+runChoiceT (Choice xs) = xs
+
+resolve' :: ChoiceTT m n a -> m [n a]
+resolve' (Choice choice) = choice
+
+resolve :: (Comonad m, Comonad n) => ChoiceTT m n a -> [a]
+resolve (Choice choice) = extract <$> extract choice
