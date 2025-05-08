@@ -25,7 +25,7 @@ import Data.Typeable
 import Extra
 import Extra.Choice
 import Extra.Error (Error)
-import Rift (Term, Term')
+import Rift (Term)
 import Rift qualified
 import Sift.Base (LogicEnv, defaultEnv)
 
@@ -74,7 +74,7 @@ type LM s = LMT s () Identity
 -- | Takes in some sentence type, and a `me` type, and returns calss of values which can be made from the sentences
 class EnterState (me :: Type -> Type) where
   -- enterState :: (Rift.Sentence sen Term) => LogicEnv -> [sen atom] -> me sen atom
-  enterState :: LogicEnv -> [Term' atom] -> [Term' atom] -> me atom
+  enterState :: LogicEnv -> [Term atom] -> [Term atom] -> me atom
 
 runLMT = unLMT
 mkLMT = LMT

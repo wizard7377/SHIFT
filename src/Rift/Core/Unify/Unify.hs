@@ -21,7 +21,7 @@ import Rift.Core.Unify.Base hiding (frees)
 unify :: (Atomic atom) => UnificationEnv atom -> Choice (UnificationResult atom)
 unify env =
   case split4 (\x -> x ^. _1 `elem` env ^. varsUp) (\y -> y ^. _2 `elem` env ^. varsDown) (("Env" <?@> env) ^. binds) of
-    (atoms, [], [], vars) -> "Branch 1" <?@> if miso (atoms) && miso (vars) && all (uncurry (==)) atoms then [mempty] else []
+    (atoms, [], [], vars) -> "Branch 1" <?@> if miso atoms && miso vars && all (uncurry (==)) atoms then [mempty] else []
     (atoms, [], lowers, levelers) ->
       let
         uniF = mapToF lowers

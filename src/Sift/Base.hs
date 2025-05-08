@@ -39,7 +39,7 @@ defaultEnv =
 -}
 data SAtom atom where
   Simple :: atom -> SAtom atom
-  He :: Term' atom -> SAtom atom
+  He ::Term atom -> SAtom atom
   deriving (Show, Eq, Ord)
 
-type STerm atom = Term' (SAtom atom)
+type STerm atom =Term (SAtom atom)

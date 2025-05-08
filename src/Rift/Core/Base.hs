@@ -6,15 +6,14 @@
 
 module Rift.Core.Base (
   {-# WARNING "Do not use kernel forms, use abstracted versions instead" #-} module Rift.Core.Kernel,
-  Term',
+  Term,
   TestTerm,
   TestToken (..),
-  Sentence (..),
   Atomic,
   lamed,
   cons,
   --drule,
-  pattern PCons,
+  pattern Cons3,
   pattern Lamed,
   pattern Atom,
   --pattern Rule,
@@ -22,7 +21,7 @@ module Rift.Core.Base (
   termToList,
   listToTerm,
   mkCons,
-  mkCons',
+  mkCons3,
   manyLamed,
   recurseSome
 ) where
@@ -35,15 +34,27 @@ import Data.Text as T hiding (cons)
 import GHC.Generics (Generic)
 import Text.Show.Functions ()
 
-{- | The type of all abstract terms in SHIFt
-Note that this definition is quite minimal, concrete implementation details are hidden from difference parts of the compiler by the @atom@ parameter
--}
-type Term' atom = Term (BasicAtom atom)
+{-| The type of all abstract terms in SHIFT 
+ - @Term@ itself is parameterized over a set of atoms, ת, which define the lexicon of whatever system is being used 
+ - For instance, if we define the atomic type to be `Text`, we are stating that we are dealing with a lexicon of all text values. 
+ -
+ - In addition to this, we also know define a ל primitive, which must exist for the system to be useful
+ -
+ - This is defined to seperate the internals of `PrimTerm` from the rest of the system. 
+ - To further this, each of the constructors of `PrimTerm` has both a pattern synomn as well as a simple functional constructor 
+ - These also abstract the specific nature, at least in the case of ל. 
+ - That is, instead of having to use the actual `PrimLamed`, we instead use a ternary constructor
+ - The equalivents are:
+ - * For `PrimLamed`, `Lamed` and `lamed`
+ - * For `PrimCons`, `Cons` and `cons``
+ - * For `PrimAtom`, `Atom` and `atom`
+ - -}
+type Term = PrimTerm
 
-data TestToken = TestToken (Either Text Int) 
+data TestToken = TestToken (Either Text Int)
   deriving (Eq, Ord, Data, Generic)
 
-type TestTerm = Term' TestToken 
+type TestTerm = Term TestToken
 {- | The attomic class constraint
 Represents a collection of "packaged requirements" that all atoms must have
 All of these are fairly standard and should be implemented for most types anyway
@@ -51,93 +62,85 @@ All of these are fairly standard and should be implemented for most types anyway
 type Atomic a = (Eq a, Ord a, Show a)
 
 -- type Atom a = (Eq a, Show a)
+instance TermLike atom (Term atom) where
+  toTerm = id
 
--- | The class of all top level sentences, which can convert to `Term' tok`
-class Sentence sen atom | atom -> sen where
-  toTerm :: sen atom -> Term' atom
+{-# DEPRECATED #-}
+mkAtom = PrimAtom
 
-instance Sentence Term atom where
-  toTerm = fmap AAtom
+-- |The functional version of `PrimAtom`, equavilent to `Atom`
+atom :: atom -> Term atom
+atom = PrimAtom
 
-mkAtom = TAtom
+{-# DEPRECATED #-}
+mkCons3 :: Term atom -> Term atom -> Term atom -> Term atom
+mkCons3 f a0 a1 = PrimCons f (PrimCons a0 a1)
 
-atom :: atom -> Term' atom
-atom = TAtom . AAtom
+{-# DEPRECATED #-}
+mkCons :: Term atom -> Term atom -> Term atom
+mkCons = PrimCons
+-- |The functional version of `PrimCons`, equaivelent to `Cons`
+cons :: Term atom -> Term atom -> Term atom
+cons = PrimCons
 
-mkCons :: Term' atom -> Term' atom -> Term' atom -> Term' atom
-mkCons f a0 a1 = TCons f (TCons a0 a1)
-
-mkCons' :: (BasicAtom atom) -> Term' atom -> Term' atom -> Term' atom
-mkCons' f = mkCons (TAtom f)
-
-cons :: Term' atom -> Term' atom -> Term' atom
-cons = TCons
-
-lamed :: Term' atom -> Term' atom -> Term' atom -> Term' atom
-lamed frees a0 a1 = TCons (TAtom ALamed) (TCons frees (TCons a0 a1))
+-- |The functional version of `PrimLamed`, equaivelent to `Lamed`
+lamed ::
+  -- |The variable
+  Term atom ->
+  -- |The consequent
+  Term atom ->
+  -- |The precedent
+  Term atom ->
+  -- |The result
+  Term atom
+lamed frees a0 a1 = PrimCons PrimLamed (PrimCons frees (PrimCons a0 a1))
 
 -- FOR TESTS ONLY, THIS IS A PARTIAL FUNCTION
-manyLamed :: [Term' atom] -> Term' atom -> Term' atom -> Term' atom
+manyLamed :: [Term atom] -> Term atom -> Term atom -> Term atom
 manyLamed [t] a0 a1 = lamed t a0 a1
 manyLamed (t : ts) a0 a1 = lamed t (manyLamed ts a0 a1) a1
 --drule = mkCons' ARule
 
-type family AtomOf term 
-type instance AtomOf (Term atom) = atom
-pattern PCons :: Term' atom -> Term' atom -> Term' atom -> Term' atom
-pattern PCons f a0 a1 <- TCons f (TCons a0 a1)
+pattern Cons3 :: Term atom -> Term atom -> Term atom -> Term atom
+pattern Cons3 f a0 a1 <- PrimCons f (PrimCons a0 a1)
   where
-    PCons f a0 a1 = mkCons f a0 a1
+    Cons3 f a0 a1 = mkCons3 f a0 a1
 
-pattern Atom :: atom -> Term' atom
-pattern Atom a0 <- TAtom (AAtom a0)
+-- |The pattern synonym for atom
+pattern Atom :: atom -> Term atom
+pattern Atom a0 <- PrimAtom a0
   where
-    Atom a0 = TAtom (AAtom a0)
-pattern Cons :: Term' atom -> Term' atom -> Term' atom
-pattern Cons a0 a1 <- (TCons a0 a1)
+    Atom a0 = PrimAtom a0
+
+-- |The pattern sysnonym for cons
+pattern Cons :: Term atom -> Term atom -> Term atom
+pattern Cons a0 a1 <- (PrimCons a0 a1)
   where
     Cons a0 a1 = cons a0 a1
 
 
-pattern Lamed :: Term' atom -> Term' atom -> Term' atom -> Term' atom
-pattern Lamed a0 a1 a2 <- TCons (TAtom ALamed) (TCons a0 (TCons a1 a2))
+-- |The pattern synoynm for lamed
+pattern Lamed :: Term atom -> Term atom -> Term atom -> Term atom
+pattern Lamed a0 a1 a2 <- PrimCons PrimLamed (PrimCons a0 (PrimCons a1 a2))
   where
     Lamed a0 a1 a2 = lamed a0 a1 a2
 
---pattern Rule :: Term' atom -> Term' atom -> Term' atom
---pattern Rule a0 a1 <- TCons (TAtom ARule) (TCons a0 a1)
---  where
---    Rule a0 a1 = drule a0 a1
-
-{-
-pattern Cons :: Term' atom -> Term' atom -> Term' atom
-pattern Cons a0 a1 <- TCons (TAtom ACons) (TCons a0 a1)
-  where
-    Cons a0 a1 = cons a0 a1
-
--}
--- pattern Yud :: Term' atom
--- pattern Yud <- TAtom AYud
---  where
---    Yud = TAtom AYud
-
--- yud :: Term' atom
--- yud = TAtom AYud
-termToList :: Term' atom -> [Term' atom]
-termToList (TCons a0 a1) = (:) a0 $ termToList a1
+termToList :: Term atom -> [Term atom]
+termToList (PrimCons a0 a1) = (:) a0 $ termToList a1
 termToList _ = []
 
-listToTerm :: [Term' atom] -> Maybe (Term' atom)
+listToTerm :: [Term atom] -> Maybe (Term atom)
 listToTerm [] = Nothing
 listToTerm [x] = Just x
-listToTerm (x : xs) = cons x <$> (listToTerm xs)
+listToTerm (x : xs) = cons x <$> listToTerm xs
 
+-- |For some mapping, recursivly apply it, and only stop if we reach the bottom or the mapping changes the value
 recurseSome :: (Eq atom) => (Term atom -> Term atom) -> (Term atom -> Term atom)
 recurseSome f v = let v' = f v in
   if v == v' then (
     case v of
-      TCons a0 a1 -> TCons (recurseSome f a0) (recurseSome f a1)
-      TAtom _ -> v
+      PrimCons a0 a1 -> PrimCons (recurseSome f a0) (recurseSome f a1)
+      PrimAtom _ -> v
   )
     else v'
 

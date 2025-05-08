@@ -67,6 +67,7 @@ library
   other-modules:
       Extra.Arrow
       Extra.Arrow.Classes
+      Extra.Arrow.Instances
       Extra.Arrow.Kite
       Extra.Arrow.Multi
       Extra.Arrow.Reader

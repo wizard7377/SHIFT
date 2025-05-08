@@ -1,3 +1,4 @@
+{-# LANGUAGE Arrows #-}
 {-# LANGUAGE ExplicitNamespaces #-}
 {-# LANGUAGE LambdaCase #-}
 
@@ -23,4 +24,11 @@ instance (Arrow a) => C.Category (MultiArrowT a) where
   id :: (Arrow a) => MultiArrowT a x x
   id = MultiArrow $ arr singleton . id
   (.) :: (Arrow a) => MultiArrowT a b c -> MultiArrowT a x b -> MultiArrowT a x c
-  (MultiArrow f) . (MultiArrow g) = _
+  (MultiArrow f) . (MultiArrow g) = proc x -> do
+    r0 <- g -< x
+    case r0 of
+      (y : ys) -> do
+        z <- f -< y
+        zs <- f -< ys
+        A.returnA -< z : zs
+      [] -> A.returnA -< []

@@ -7,10 +7,9 @@ import Control.Exception (throw)
 import Control.Monad.Identity (Identity (runIdentity))
 import Data.Text (pack)
 import Extra.Error (Error)
-import Rift (Atomic, Term, Term', TestTerm, TestToken)
-import Rift.Core (BasicAtom)
-import Rift.Core.Dev.Forms
+import Rift (Atomic, Term, TestTerm, TestToken)
 import Rift.Core.Dev (tRead)
+import Rift.Core.Dev.Forms
 import Sift (LMT, LogicResult (..))
 import Sift.Base (LogicResult, defaultEnv)
 import Sift.Monad (EnterState (enterState), mkLMT, runLMT, runLMT')
@@ -19,10 +18,10 @@ import Sift.Solver.GenSearch (SearchState (..), genSearch)
 dummyRun :: (EnterState s) => LMT (s atom) w m a -> m (Either Error [a], s atom, w)
 dummyRun with = runLMT' with defaultEnv (enterState defaultEnv [] [])
 
-dummyWith :: (Monoid w, EnterState s, Atomic tok) => LMT (s tok) w m a -> [Term' tok] -> m (Either Error [a], s tok, w)
+dummyWith :: (Monoid w, EnterState s, Atomic tok) => LMT (s tok) w m a -> [Term tok] -> m (Either Error [a], s tok, w)
 dummyWith with given = runLMT' with defaultEnv (enterState defaultEnv given given)
 
-dummySolve :: (Monoid w, EnterState s, Atomic tok) => (Term' tok -> LMT (s tok) w m a) -> [Term' tok] -> Term' tok -> m (Either Error [a], s tok, w)
+dummySolve :: (Monoid w, EnterState s, Atomic tok) => (Term tok -> LMT (s tok) w m a) -> [Term tok] -> Term tok -> m (Either Error [a], s tok, w)
 dummySolve with given goal = dummyWith (with goal) given
 
 dummySolve2 with given goal = dummyWith (with (tRead given) (tRead goal)) []

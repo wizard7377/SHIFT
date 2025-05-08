@@ -50,7 +50,7 @@ sc =
     (L.skipLineComment $ T.pack "//")
     (L.skipBlockCommentNested (T.pack "/*") (T.pack "*/"))
 symbol s = L.symbol sc $ T.pack s
-lexeme l = L.lexeme sc $ l
+lexeme = L.lexeme sc
 parseCons :: Parser TestTerm
 parseLamed :: Parser TestTerm
 parseToken :: Parser TestTerm
@@ -62,7 +62,7 @@ parseCons = label "List" $ do
   t1 <- someTill pterm (symbol ")")
   return $ foldr1 cons (t0 : t1)
 
-lamed' :: Term' atom -> (Term' atom, Term' atom) -> Term' atom
+lamed' :: Term atom -> (Term atom, Term atom) -> Term atom
 lamed' base (v, t) = lamed v base t
 parseLamed = label "Lamed" $ do
   symbol "["
@@ -77,42 +77,38 @@ parseLamed = label "Lamed" $ do
 
 parseToken = label "Token" $ do
   tok <- lexeme $ some (noneOf "(){}[]; ")
-  v <- case tok of
+  case tok of
     "_" -> do
       (i :: Int) <- get
-      let v = TAtom (AAtom (TestToken $ Right i))
+      let v = Atom (TestToken $ Right i)
       put (i + 1)
       return v
-    str -> return $ TAtom (AAtom (TestToken $ Left $ T.pack str))
-  return v
+    str -> return $ Atom (TestToken $ Left $ T.pack str)
 
 psys' :: Parser [TestTerm]
 psys' = label "System" $ do
   optional sc
-  res <- endBy1 pterm $ symbol ";"
-  return res
+  endBy1 pterm $ symbol ";"
 
 psys = do
-  res <- psys'
-  pure res
+  psys'
 pterm = label "Term" $ choice [try parseLamed, try parseCons, parseToken]
 
 pfile :: Parser [[TestTerm]]
 pfile = label "File" $ do
-  res <- endBy1 psys' $ symbol ";;;"
-  pure res
+  endBy1 psys' $ symbol ";;;"
 parseOf :: Parser r -> T.Text -> Maybe r
-parseOf parser input = case evalState (runParserT parser "TEST" (input)) 0 of
+parseOf parser input = case evalState (runParserT parser "TEST" input) 0 of
   Left e -> trace (errorBundlePretty e) Nothing
   Right res -> Just res
 
 -- | Note that lists are `()`, rules `{}`, and lameds `<>[]`
 readTerm :: String -> Maybe TestTerm
-readTerm = (parseOf pterm) . T.pack
+readTerm = parseOf pterm . T.pack
 
-readTerm' = (parseOf (pterm <* eof)) . T.pack
-readManyTerms = (parseOf psys) . T.pack
-readManyTerms' = (parseOf (pfile)) . T.pack
+readTerm' = parseOf (pterm <* eof) . T.pack
+readManyTerms = parseOf psys . T.pack
+readManyTerms' = parseOf pfile . T.pack
 
 parseTestOne = readTerm'
 parseTestMany = readManyTerms'

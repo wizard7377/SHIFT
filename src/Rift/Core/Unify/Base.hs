@@ -16,12 +16,15 @@ import Extra.Map
 import Rift.Core.Base
 import Rift.Core.Instances
 
-{- | A simple alias
-Note that to avoid the confusing "left" and "right" terms commenly used, the terms top (general or first) and bottom (specific or second)
-That is, it is of the form `(Top, Bottom)`.
-A "lowering" refers to the operation from `x` to `y`, with respect to `(x,y)`, as it goes from top to bottom A raising refers to `y` to `x`
+{- | The type of free terms, central to the algorithm ג and specifically the מ rule
+ - This has a `Term` part, `_term`, as well as a set of frees, `_frees`
+ -
 -}
-data FTerm a = FTerm {_term :: Term' a, _frees :: [Term' a]}
+data FTerm a = FTerm {
+  -- |The fundemental inner term
+  _term :: Term a, 
+  -- |The list of variables in the term
+  _frees :: [Term a]}
 
 deriving instance (Eq a) => Eq (FTerm a)
 
@@ -33,21 +36,32 @@ instance (Show atom) => Show (FTerm atom) where
   show = showFTerm
 
 -- showList x = (++ showFListT x)
-simpleF :: Term' atom -> FTerm atom
+simpleF :: Term atom -> FTerm atom
 simpleF t = FTerm t []
-addFrees :: (Atomic atom) => FTerm atom -> [Term' atom] -> FTerm atom
+addFrees :: (Atomic atom) => FTerm atom -> [Term atom] -> FTerm atom
 addFrees (FTerm t fs) new = FTerm t (fs <> new)
-replaceTerm :: (Atomic atom) => FTerm atom -> Term' atom -> FTerm atom
+replaceTerm :: (Atomic atom) => FTerm atom -> Term atom -> FTerm atom
 replaceTerm (FTerm _ fs) new = FTerm new fs
 type BindingSet a = HMap a
 
+{-| The unification enviroment and result
+ - This not only encodes the list of variables, but also the existing bindings
+ - Note that to avoid the confusing "lhs" and "rhs" terminology often used with unification, instead the terms "top" and "bottom" are used 
+ - This not only helps us with avoid the confusion, it also provides an intution, where the "botttom" tries to catch the "top", with appropiate "raising" and "lowering" motion
+ - -}
 data UnificationEnv a = Unification
-  { _binds :: BindingSet a
+  { 
+    -- |The binding set (simply a morphism) on the terms 
+    -- Note we have @(Top,Bottom)@
+    _binds :: BindingSet a
+    -- |The set of up vars
   , _varsUp :: [a]
+  -- |The set of down vars
   , _varsDown :: [a]
   }
   deriving (Show, Eq)
 
+{-# DEPRECATED #-}
 data UnificationResult a = UnificationResult
   { _lowering :: BindingSet a
   , _raising :: BindingSet a
@@ -60,14 +74,14 @@ makeLenses ''UnificationEnv
 makeLenses ''UnificationResult
 
 type UnificationAttempt a = Choice (UnificationResult a)
-generate :: (Atomic atom, Show (Term (BasicAtom atom))) => Term' atom -> Term' atom -> Choice (BindingSet (Term' atom))
+generate :: (Atomic atom) => Term atom -> Term atom -> Choice (BindingSet (Term atom))
 generate up down =
   "Generated"
     <?@> ( pure [(up, down)]
             <|> ( case (up, down) of
                     (Atom _, _) -> empty
                     (_, Atom _) -> empty
-                    (Cons a0 a1, Cons b0 b1) -> (<>) <$> (generate a0 b0) <*> (generate a1 b1)
+                    (Cons a0 a1, Cons b0 b1) -> (<>) <$> generate a0 b0 <*> generate a1 b1
                     (_, _) -> empty
                 )
          )

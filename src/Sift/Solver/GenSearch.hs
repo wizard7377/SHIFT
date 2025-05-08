@@ -49,7 +49,7 @@ type LMGen atom a = LM (SearchState atom) a
 
 -- | The state of the Search monad with sentence `sen` on token `atom`
 data SearchState atom = SearchState
-  { _sentences :: [Term' atom]
+  { _sentences :: [Term atom]
   , _scratch :: [FTerm atom]
   -- ^ All proven statements
   , _depth :: Int
@@ -61,14 +61,14 @@ depth :: Lens' (SearchState atom) Int
 depth = lens _depth (\s d -> s{_depth = d})
 scratch :: Lens' (SearchState atom) [FTerm atom]
 scratch = lens _scratch (\s d -> s{_scratch = d})
-sentences :: Lens' (SearchState atom) [Term' atom]
+sentences :: Lens' (SearchState atom) [Term atom]
 sentences = lens _sentences (\s d -> s{_sentences = d})
 vars :: Lens' (SearchState atom) Int
 vars = lens _vars (\s d -> s{_vars = d})
 deriving instance (Show atom) => Show (SearchState atom)
 
 instance EnterState SearchState where
-  enterState :: LogicEnv -> [Term' atom] -> [Term' atom] -> SearchState atom
+  enterState :: LogicEnv -> [Term atom] -> [Term atom] -> SearchState atom
   enterState env sens scratch =
     SearchState
       { _sentences = sens
@@ -83,12 +83,12 @@ showSens :: (Show atom) => SearchState atom -> String
 showSens = showTerms . _scratch
 genSearch ::
   (Atomic atom) =>
-  Term' atom ->
+  Term atom ->
   LMGen atom LogicResult
 genSearch = genSearch'
 genSearch' ::
   (Atomic atom) =>
-  Term' atom ->
+  Term atom ->
   LMGen atom LogicResult
 genSearch' goal = do
   depths <- gets _depth
@@ -111,7 +111,7 @@ genSearch' goal = do
 resolved ::
   (Atomic atom) =>
   [FTerm atom] ->
-  Term' atom ->
+  Term atom ->
   Bool
 resolved vals goal =
   any

@@ -1,7 +1,7 @@
 module Rift
   ( module Rift.Core,
     Term (..),
-    Term',
+   Term,
   )
 where
 
