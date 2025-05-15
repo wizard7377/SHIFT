@@ -19,6 +19,8 @@ module Extra.Basics (
   amap,
   Type,
   Constraint,
+  Data,
+  Generic,
 ) where
 
 import Control.Arrow qualified as Arrow
@@ -29,6 +31,7 @@ import Data.Data
 import Data.Kind (Constraint, Type)
 import Data.Text qualified as T
 import Debug.Trace (trace, traceEvent, traceMarker, traceShow, traceShowId)
+import GHC.Generics (Generic)
 import GHC.IO (unsafePerformIO)
 import GHC.Stack (HasCallStack)
 import GHC.Stack qualified as Stack

@@ -2,8 +2,6 @@ module Sift.Solver.BasicSearch where
 
 -- import Extra.Choice (Choice (AllOf, AnyOf, EmptyNode, Simple, Trivial))
 import Rift
-import Sift.Base (LogicEnv)
-import Sift.Base qualified (LogicEnv (..))
 import Sift.Monad ()
 import Sift.Monad hiding (_depth)
 import Sift.Monad qualified as Sift
@@ -30,15 +28,15 @@ instance Sentence sen tok => EnterState (SearchState sen tok) where
     _vars = 0
   }
 -}
-type PosSearch a = Choice (Term' a)
+type PosSearch a = Choice (Term'' a)
 type LMS tok a = forall sen. Sentence sen tok  => LM (SearchState sen tok) a
-type SearchAction a = Token a =>Term a -> LMS a (PosSearch a)
+type SearchAction a = Token a =>Term' a -> LMS a (PosSearch a)
 yudGen :: SearchAction a
 yudRed :: SearchAction a
 yudGen val = return $ Simple $ Rule val Yud --TODO
 yudRed (Rule val Yud) = return $ Simple val
 yudRed _ = return EmptyNode
-transSolveBasic ::Term a ->Term a -> LMS a (PosSearch a)
+transSolveBasic ::Term' a ->Term' a -> LMS a (PosSearch a)
 transSolveBasic iterm0 iterm1 =
   let
     (term0,bounds0) = intros term0

@@ -19,23 +19,7 @@ extra-source-files:
     README.md
     CHANGELOG.md
 extra-doc-files:
-    paper/algo.tex
-    paper/citations.bib
-    paper/macros.tex
-    paper/preamble.tex
-    paper/valuedtypes.aux
-    paper/valuedtypes.bbl
-    paper/valuedtypes.bcf
-    paper/valuedtypes.blg
-    paper/valuedtypes.fdb_latexmk
-    paper/valuedtypes.fls
-    paper/valuedtypes.log
-    paper/valuedtypes.out
-    paper/valuedtypes.pdf
-    paper/valuedtypes.run.xml
-    paper/valuedtypes.synctex.gz
-    paper/valuedtypes.tdo
-    paper/valuedtypes.tex
+    docs/MetaLamed.md
 
 source-repository head
   type: git
@@ -69,6 +53,7 @@ library
       Extra.Arrow.Classes
       Extra.Arrow.Instances
       Extra.Arrow.Kite
+      Extra.Arrow.List
       Extra.Arrow.Multi
       Extra.Arrow.Reader
       Extra.Arrow.State
@@ -88,6 +73,9 @@ library
       Extra.Types
       Lift.Base
       Lift.Base.Core
+      Lift.Base.Core.Symbol
+      Lift.Base.Core.Symbol.SymbolTable
+      Lift.Base.Core.Symbol.Types
       Lift.Base.Dift
       Lift.Base.Mift
       Lift.Base.Pift
@@ -106,8 +94,12 @@ library
       Rift.Core.Unify.Dev
       Rift.Core.Unify.Unify
       Rift.Core.Utility
-      Rift.Names
-      Rift.Names.Base
+      Rift.Forms
+      Rift.Forms.LogicEnv
+      Rift.Forms.Proof
+      Rift.Forms.Proof.Abstract
+      Rift.Forms.Proof.Types
+      Rift.Forms.Sentence
       Sift.Base
       Sift.Dev
       Sift.Dev.Util
@@ -118,6 +110,7 @@ library
       Sift.Solver.BasicSearch.Tree
       Sift.Solver.GenSearch
       Sift.Types
+      Tests.Arrows
       Tests.Search
       Tests.Unify
       Paths_SHIFT
@@ -149,7 +142,9 @@ library
     , binary
     , comonad
     , containers
+    , criterion
     , data-default
+    , deepseq
     , extra
     , lens
     , megaparsec
@@ -204,7 +199,9 @@ executable SHIFT-exe
     , binary
     , comonad
     , containers
+    , criterion
     , data-default
+    , deepseq
     , extra
     , lens
     , megaparsec
@@ -261,7 +258,67 @@ test-suite SHIFT-test
     , binary
     , comonad
     , containers
+    , criterion
     , data-default
+    , deepseq
+    , extra
+    , lens
+    , megaparsec
+    , monad-loops
+    , mtl
+    , prettyprinter
+    , tasty
+    , tasty-hunit
+    , template-haskell
+    , text
+  default-language: GHC2021
+  if flag(sanity) && (!flag(dev))
+    ghc-options: -O0 -fdefer-typed-holes -Wtyped-holes -W -Wno-duplicate-exports -Wno-unused-imports -Wno-unused-local-binds -Wno-unused-matches -Wno-dodgy-imports -Wno-dodgy-exports
+  if flag(dev) && (!flag(release))
+    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wno-typed-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -g2
+  if flag(dev) && flag(release)
+    ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  if flag(release)
+    ghc-options: -w -O2
+
+benchmark SHIFT-perf
+  type: exitcode-stdio-1.0
+  main-is: Bench.hs
+  other-modules:
+      Paths_SHIFT
+  autogen-modules:
+      Paths_SHIFT
+  hs-source-dirs:
+      perf
+  other-extensions:
+      AllowAmbiguousTypes
+      FunctionalDependencies
+      PatternGuards
+      OverloadedStrings
+      LambdaCase
+      QuantifiedConstraints
+      PartialTypeSignatures
+      TemplateHaskell
+      UndecidableInstances
+      ConstraintKinds
+      MonoLocalBinds
+      Arrows
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      HUnit
+    , HaTeX
+    , List
+    , QuickCheck
+    , SHIFT
+    , ansi-terminal
+    , array
+    , base >=4.7 && <5
+    , binary
+    , comonad
+    , containers
+    , criterion
+    , data-default
+    , deepseq
     , extra
     , lens
     , megaparsec

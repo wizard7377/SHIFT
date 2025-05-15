@@ -25,13 +25,13 @@ tReadLL input = (justAssume . readManyTerms') input
 readSys' :: FilePath -> [[TestTerm]]
 readSys' path = tReadLL $ unsafePerformIO $ readFile path
 readSys = readSys'
-genTest :: [String] -> String -> FTerm (TestToken)
-genTest [] str = FTerm (tRead str) []
+genTest :: [String] -> String -> FTerm TestTerm
+genTest [] str = ((tRead str), [])
 genTest (x : xs) str =
   let
-    term = genTest xs str
+    (term, frees) = genTest xs str
    in
-    addFrees term [tRead x]
+    (term, tRead x : frees)
 
 selectAt :: [[a]] -> [Int] -> [a]
 selectAt l = concatMap (l !!)

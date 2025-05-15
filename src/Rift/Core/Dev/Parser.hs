@@ -1,5 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE PartialTypeSignatures #-}
+{-# LANGUAGE QuantifiedConstraints #-}
 
 module Rift.Core.Dev.Parser where
 
@@ -60,20 +61,20 @@ parseCons = label "List" $ do
   symbol "("
   t0 <- pterm
   t1 <- someTill pterm (symbol ")")
-  return $ foldr1 cons (t0 : t1)
+  return $ foldr1 Cons (t0 : t1)
 
-lamed' :: Term atom -> (Term atom, Term atom) -> Term atom
-lamed' base (v, t) = lamed v base t
+lamed' :: (AnyTerm term) => term -> (term, term) -> term
+lamed' base (v, t) = Lamed v t base
 parseLamed = label "Lamed" $ do
   symbol "["
   vars <- many pterm
   symbol "]"
   symbol "{"
-  t0 <- pterm
   ts <- count (length vars) pterm
+  t0 <- pterm
   symbol "}"
-  let combo = zip (reverse vars) ts
-  return $ foldl lamed' t0 combo
+  let combo = zip vars ts
+  return $ foldr (flip lamed') t0 combo
 
 parseToken = label "Token" $ do
   tok <- lexeme $ some (noneOf "(){}[]; ")
@@ -92,11 +93,13 @@ psys' = label "System" $ do
 
 psys = do
   psys'
-pterm = label "Term" $ choice [try parseLamed, try parseCons, parseToken]
+pterm = label "Term'" $ choice [try parseLamed, try parseCons, parseToken]
 
 pfile :: Parser [[TestTerm]]
 pfile = label "File" $ do
-  endBy1 psys' $ symbol ";;;"
+  res <- (endBy1 psys' $ symbol ";;;")
+  try eof
+  return res
 parseOf :: Parser r -> T.Text -> Maybe r
 parseOf parser input = case evalState (runParserT parser "TEST" input) 0 of
   Left e -> trace (errorBundlePretty e) Nothing

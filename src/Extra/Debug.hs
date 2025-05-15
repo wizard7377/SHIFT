@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TemplateHaskellQuotes #-}
 
@@ -25,11 +26,17 @@ showColor i a = colorCode (getColor i) ++ show a ++ resetCode
 showColor' :: Int -> String -> String
 showColor' i a = colorCode (getColor i) ++ a ++ resetCode
 
+traceF :: String -> a -> a
+#ifdef debug
+traceF = trace
+#else 
+traceF = traceEvent 
+#endif
 -- | Trace a value, and add a snippet of text so that it's easier to track
 traceWithStr :: (Show a) => String -> a -> String
 traceWithStr msg a = (colorCode ANSI.Red ++ msg ++ ": " ++ colorCode ANSI.Yellow ++ show a ++ resetCode)
 
-traceWith msg a = traceEvent (traceWithStr msg a) a
+traceWith msg a = traceF (traceWithStr msg a) a
 traceWithM :: (Applicative f) => (Show a) => String -> a -> f a
 traceWithM msg a = traceM (traceWithStr msg a) *> pure a
 (<?>) :: (Show a) => String -> a -> a
@@ -37,10 +44,10 @@ msg <?> val = traceWith msg val
 msg <?@> val = val
 (?>) :: String -> a -> a
 (>?>) :: (Show a) => String -> a -> (b -> b)
-msg >?> val = \x -> seq (traceEvent msg val) x
+msg >?> val = \x -> seq (traceF msg val) x
 msg >?@> val = id
 (?@>) :: String -> a -> a
-msg ?> val = traceEvent msg val
+msg ?> val = seq (traceF msg) val
 msg ?@> val = val
 (?>>) :: (Applicative f) => (Show a) => String -> a -> f a
 msg ?>> val = traceWithM msg val

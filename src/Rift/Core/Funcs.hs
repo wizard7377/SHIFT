@@ -1,4 +1,5 @@
 {-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE QuantifiedConstraints #-}
 
 module Rift.Core.Funcs where
 
@@ -15,14 +16,14 @@ import Rift.Core.Unify
 Note that this is _not_ the same thing as `<$>` as using `<$>` would only replace _atoms_ not complex terms
 -}
 replace ::
-  (Atomic atom) =>
+  (AnyTerm term, TermLike term) =>
   -- | The term to look for
-  Term atom ->
+  term ->
   -- | The value to replace with
-  Term atom ->
+  term ->
   -- | The actual term being searched
-  Term atom ->
-  Term atom
+  term ->
+  term
 replace from to within =
   case within of
     _ | within == from -> to
@@ -31,5 +32,5 @@ replace from to within =
  where
   this = replace from to
 
-replaceAll :: (Atomic atom) => HMap (Term atom) -> Term atom -> Term atom
+replaceAll :: (AnyTerm term, TermLike term) => HMap term -> term -> term
 replaceAll mapping term = foldr (uncurry replace) term mapping

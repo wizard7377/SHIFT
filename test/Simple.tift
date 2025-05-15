@@ -1,7 +1,24 @@
 // Metamath axioms
 * ;
-[A B _]{A B (=> A B) *} ;
-[A B]{(=> A (=> B A)) * *} ;
-[A B C]{(=> (=> A (=> B C)) (=> (=> A B) (=> A C))) * * *} ;
-[A B C]{(=> (=> (~ A) (~ B)) (=> B A)) * * *} ;
+// MP
+[A B _ _]{* * (=> A B) A B} ;
+// Introduction of a precedent
+[A B]{* * (=> A (=> B A))} ;
+// Transposition
+[A B C]{* * *(=> (=> A (=> B C)) (=> (=> A B) (=> A C)))} ;
+// Contraposition
+[A B C]{* * * (=> (=> (¬ A) (¬ B)) (=> B A))} ;
 ;;; 
+
+// Introduction of the primitive Λ
+[x A _]{* * (Λ x A) [x]{* A}} ;
+// Splitting of the Λ
+(Λ x Λ A Λ B (=> (Λ x (=> A B) (=> (Λ x A) (Λ x B))))) ;
+// Simple equality
+(Λ x (= x x)) ;
+(Λ x Λ y (=> (= x y) (= y x))) ;
+;;;
+
+// Zero nat 
+(Nat 0) ;
+

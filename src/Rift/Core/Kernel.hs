@@ -1,9 +1,19 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE ImpredicativeTypes #-}
+{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE QuantifiedConstraints #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Rift.Core.Kernel (
-  PrimTerm (..),
-  TermLike (..),
+  Term (..),
+  pattern Atom,
+  pattern Cons,
+  pattern BasicLamed,
+  {-# WARNING "Should not be used outside of implementations" #-}
+  PrimTermCon (..),
+  AnyTerm,
 ) where
 
 import Data.Data
@@ -12,22 +22,36 @@ import Extra
 import GHC.Generics
 
 type family Fundemental :: k -> Type
+data PrimTermCon term atom where
+  PrimLamedCon :: PrimTermCon term atom
+  PrimAtomCon :: atom -> PrimTermCon term atom
+  PrimConsCon :: term -> term -> PrimTermCon term atom
+  deriving (Eq, Ord)
 
--- | The class of all top level sentences, which can convert to @Term@ tok
-class TermLike atom term | term -> atom where
-  toTerm :: term -> PrimTerm atom
+{-| The basic class of terms 
+ - Fundementally, each term is something that has a way to plate to and from a nullary ל constructor, a unary ת constructor, and binary כ constructor
+ - -}
+class Term term where
+  type AtomOf term :: Type
+  viewTerm :: term -> PrimTermCon term (AtomOf term)
+  makeTerm :: PrimTermCon term (AtomOf term) -> term
 
-{- | The basic primitive types of terms, with only 3 basic constructors
- Note that ל is not given as an atom, merely for the sake of effeciancy
- Also note that the ל construct is not explicitly given, it is defined purely as any expression of the form (ל . α . β . γ) where "." is `PrimCons`.
- In this instance, α is the qualification, β is the head (result) and γ is the body (precedent).
- This is roughly equivalent to \( \Gamma \alpha (\gamma \arrow \beta) \)
--}
-data PrimTerm atom where
-  -- | The ל symbol, as documented above
-  PrimLamed :: PrimTerm atom
-  -- | The form of all other atoms, ת
-  PrimAtom :: atom -> PrimTerm atom
-  -- | The cons constructor, כ
-  PrimCons :: PrimTerm atom -> PrimTerm atom -> PrimTerm atom
-  deriving (Functor, Foldable, Traversable, Data, Generic, Ord, Eq)
+type AnyTerm term = Term term
+
+-- | The pattern synonym for atom
+pattern Atom :: (Term term) => AtomOf term -> term
+pattern Atom a0 <- (viewTerm -> PrimAtomCon a0)
+  where
+    Atom a0 = makeTerm (PrimAtomCon a0)
+
+-- | The pattern sysnonym for cons
+pattern Cons :: (Term term) => term -> term -> term
+pattern Cons t0 t1 <- (viewTerm -> PrimConsCon t0 t1)
+  where
+    Cons a0 a1 = makeTerm (PrimConsCon a0 a1)
+
+-- | The pattern synoynm for lamed
+pattern BasicLamed :: (Term term) => term
+pattern BasicLamed <- (viewTerm -> PrimLamedCon)
+  where
+    BasicLamed = makeTerm PrimLamedCon

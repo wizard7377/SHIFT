@@ -1,34 +1,47 @@
-{-# LANGUAGE Arrows #-}
-{-# LANGUAGE ExplicitNamespaces #-}
-{-# LANGUAGE LambdaCase #-}
+module Extra.Arrow.Multi where
 
-module Extra.Arrow.Multi (MultiArrow (..), type (+>)) where
-
-import Control.Arrow (Arrow (..), (>>>))
+import Control.Arrow ((>>>))
 import Control.Arrow qualified as A
-import Control.Category (Category (id, (.)))
 import Control.Category qualified as C
-import Data.Bifunctor (Bifunctor (..))
-import Data.Functor.Identity qualified as F
+import Data.Kind
 import Data.List (singleton)
-import Prelude hiding (id, (.))
+import Extra.Arrow.List
+import Extra.Arrow.Trans (ArrowTrans (..))
 
--- | The multi-arrow, a non-deterministic computation
-newtype MultiArrowT t a b = MultiArrow {runMultiArrow :: t a [b]}
+listCase :: [a] -> Either () (a, [a])
+listCase [] = Left ()
+listCase (x : xs) = Right (x, xs)
+newtype ArrowMultiT (t :: k0 -> Type -> Type) (a :: k0) (b :: Type) = ArrowMulti {runMultiT :: t a [b]}
+instance (ArrowList cat, A.Arrow cat, C.Category cat) => C.Category (ArrowMultiT cat) where
+  id :: ArrowMultiT cat a a
+  id = ArrowMulti $ A.arr $ C.id >>> singleton
+  (.) :: ArrowMultiT cat b c -> ArrowMultiT cat a b -> ArrowMultiT cat a c
+  (ArrowMulti g) . (ArrowMulti f) =
+    let
+      a0 = f >>> arrL id >>> g
+     in
+      ArrowMulti a0
 
-type MultiArrow = MultiArrowT (->)
-infixr 0 +>
-type a +> b = MultiArrow a b
-
-instance (Arrow a) => C.Category (MultiArrowT a) where
-  id :: (Arrow a) => MultiArrowT a x x
-  id = MultiArrow $ arr singleton . id
-  (.) :: (Arrow a) => MultiArrowT a b c -> MultiArrowT a x b -> MultiArrowT a x c
-  (MultiArrow f) . (MultiArrow g) = proc x -> do
-    r0 <- g -< x
-    case r0 of
-      (y : ys) -> do
-        z <- f -< y
-        zs <- f -< ys
-        A.returnA -< z : zs
-      [] -> A.returnA -< []
+{-
+instance (ArrowList ar) => A.Arrow (ArrowMultiT ar) where
+  arr :: (ArrowList ar) => (b -> c) -> ArrowMultiT ar b c
+  arr = liftArrow . A.arr
+  (***) ::
+    (ArrowList ar) =>
+    ArrowMultiT ar b c ->
+    ArrowMultiT ar b' c' ->
+    ArrowMultiT ar (b, b') (c, c')
+  (ArrowMulti f) *** (ArrowMulti g) = ArrowMulti $ (f A.*** g) >>> A.arr (uncurry zip)
+-}
+instance (A.Arrow ar, ArrowList ar) => ArrowTrans ArrowMultiT ar where
+  liftArrow :: (A.Arrow ar) => ar b c -> ArrowMultiT ar b c
+  liftArrow f = ArrowMulti $ f >>> A.arr singleton
+instance (ArrowList ar) => ArrowList (ArrowMultiT ar) where
+  arrL :: (ArrowList ar) => (a -> [b]) -> ArrowMultiT ar a b
+  arrL = ArrowMulti . A.arr
+  mapL ::
+    (ArrowList ar) =>
+    ([b] -> [c]) ->
+    ArrowMultiT ar a b ->
+    ArrowMultiT ar a c
+  mapL f (ArrowMulti ar) = ArrowMulti $ ar >>> arrL (singleton . f)
