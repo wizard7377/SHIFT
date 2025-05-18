@@ -12,14 +12,13 @@ import Control.Monad.Identity (Identity (runIdentity))
 import Criterion
 import Data.Default (Default)
 import Data.Text (pack)
-import Extra.Error (Error)
-import Rift (Atomic, LogicEnv, Sentence (..), Term', TermOf, TestTerm, TestToken, Theory, defaultEnv, getSentences, theory)
+import Extra.Error (Error (TODO))
+import Rift (Atomic, LogicEnv, LogicResult (..), Sentence (..), Term', TermOf, TestTerm, TestToken, Theory, defaultEnv, getSentences, theory)
 import Rift.Core.Base (Term, TermLike)
 import Rift.Core.Dev (tRead)
 import Rift.Core.Dev.Forms
-import Sift (LMT, LogicResult (..))
-import Sift.Monad (EnterState (..), applyEnv, mkLMT, runLMT, runLMT')
-import Sift.Solver.GenSearch (SearchState (..), genSearch)
+import Sift.Monad (EnterState (..), LMT, applyEnv, mkLMT, runLMT, runLMT')
+import Sift.Solver (SearchState (..), genSearch)
 
 testRun :: (Monad m, Rift.TermOf (Rift.LogicEnv r) ~ Sift.Monad.TermOf s, Default r, Monoid w, EnterState s, Theory (LogicEnv r), Theory r) => LMT r w s m a -> m (Either Error a, s, w)
 testRun with = applyEnv with Rift.defaultEnv
@@ -45,4 +44,40 @@ benchSolve ::
   [term] ->
   v ->
   Benchmarkable
-benchSolve comp givens goal = nf (\x -> testRunWith (comp x) givens) goal
+benchSolve comp givens = nf (\x -> testRunWith (comp x) givens)
+benchSolve' ::
+  (Monad m, Monoid (), EnterState s, Theory (LogicEnv [term]), Rift.TermOf (Rift.LogicEnv [term]) ~ Sift.Monad.TermOf s) =>
+  (v -> LMT [term] () s m a) ->
+  [term] ->
+  v ->
+  Benchmarkable
+benchSolve' comp givens = whnf (\x -> testRunWith (comp x) givens)
+requireSolve ::
+  (Monad m, Monoid w, Comonad m, EnterState s, Theory (LogicEnv [term]), Rift.TermOf (Rift.LogicEnv [term]) ~ Sift.Monad.TermOf s) =>
+  (v -> LMT [term] w s m (Rift.LogicResult term)) ->
+  [term] ->
+  v ->
+  IO (s, w)
+requireSolve comp givens goal = do
+  (result, state, w) <- pure $ extract $ testRunWith (comp goal) givens
+  case result of
+    Left err -> throw err
+    Right (Rift.Solved result) -> return (state, w)
+    _ -> throw TODO
+requireSolve' ::
+  (Monad m, Monoid (), Comonad m, EnterState s, Theory (LogicEnv [term]), Rift.TermOf (Rift.LogicEnv [term]) ~ Sift.Monad.TermOf s) =>
+  (v -> LMT [term] () s m (Rift.LogicResult term)) ->
+  [term] ->
+  v ->
+  IO (s, ())
+requireSolve' comp givens goal = do
+  (result, state, w) <- pure $ extract $ testRunWith (comp goal) givens
+  case result of
+    Left err -> throw err
+    Right (Rift.Solved proof) -> return (state, w)
+    _ -> throw TODO
+
+getResult :: (Monad m, Monoid w) => m (Either Error a, s, w) -> m (Either Error a)
+getResult m = do
+  (result, _, _) <- m
+  return result

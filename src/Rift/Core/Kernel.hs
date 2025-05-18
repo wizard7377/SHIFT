@@ -49,9 +49,12 @@ pattern Cons :: (Term term) => term -> term -> term
 pattern Cons t0 t1 <- (viewTerm -> PrimConsCon t0 t1)
   where
     Cons a0 a1 = makeTerm (PrimConsCon a0 a1)
-
 -- | The pattern synoynm for lamed
 pattern BasicLamed :: (Term term) => term
 pattern BasicLamed <- (viewTerm -> PrimLamedCon)
   where
     BasicLamed = makeTerm PrimLamedCon
+
+{-# INLINE Cons #-} 
+{-# INLINE BasicLamed #-} 
+{-# INLINE Atom #-} 

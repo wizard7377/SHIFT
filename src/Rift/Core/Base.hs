@@ -27,6 +27,7 @@ module Rift.Core.Base (
   manyLamed,
   TermLike,
   recurseSome,
+  poccurs,
   {-# WARNING "Don't use kernel forms, abstract instead" #-} module Rift.Core.Kernel
 ) where
 
@@ -106,7 +107,7 @@ pattern Lamed :: Term term => term -> term -> term -> term
 pattern Lamed v a b <- Cons BasicLamed (Cons v (Cons a b))
   where
     Lamed v a b = Cons BasicLamed (Cons v (Cons a b))
-
+{-# INLINE Lamed #-}
 termToList :: Term term => term -> [term]
 termToList (Cons a0 a1) = (:) a0 $ termToList a1
 termToList _ = []
@@ -127,4 +128,14 @@ recurseSome f v = let v' = f v in
   )
     else v'
 
-
+-- |Check if a given term occurs within another term
+poccurs :: (Eq term, Term term) => 
+  -- |The larger term
+  term -> 
+  -- |The smaller term
+  term -> Bool 
+poccurs term value = 
+  (value == term) || (case term of
+    Cons a0 a1 -> (poccurs term a0) || (poccurs term a1)
+    Atom _ -> False
+    BasicLamed -> False)

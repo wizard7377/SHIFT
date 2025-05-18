@@ -30,7 +30,7 @@ traceF :: String -> a -> a
 #ifdef debug
 traceF = trace
 #else 
-traceF = traceEvent 
+traceF = const id
 #endif
 -- | Trace a value, and add a snippet of text so that it's easier to track
 traceWithStr :: (Show a) => String -> a -> String

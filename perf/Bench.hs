@@ -1,5 +1,9 @@
-import Test.Tasty (defaultMain)
-import Tests.Unify
+module Main where
+
+import Criterion (bgroup)
+import Criterion.Main (defaultMain)
+import Test.Tasty (testGroup)
+import Tests
 
 main :: IO ()
-main = defaultMain unifyTests
+main = defaultMain [searchBench]

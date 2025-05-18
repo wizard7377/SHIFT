@@ -1,1 +1,3 @@
-module Tests where
+module Tests (module Tests.Search) where
+
+import Tests.Search

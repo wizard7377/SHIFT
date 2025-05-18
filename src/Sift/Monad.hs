@@ -6,7 +6,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-noncanonical-monad-instances #-}
 
-module Sift.Monad where
+module Sift.Monad (LMT (..), runLMT, runLMT', mkLMT, mkLMT', applyEnv, EnterState (..), LM (..)) where
 
 import Control.Applicative (liftA)
 import Control.Monad
@@ -52,16 +52,19 @@ bindLMT comp f = LMT $ \env s -> do
     Right x -> do
       (res', s'', w') <- runLMT (f x) env s'
       pure (res', s'', w <> w')
+{-# INLINE bindLMT #-}
 
 -- unLMT :: (ExceptT Error (RWS.RWST (Rift.LogicEnv r) w s m)) a
 
 instance (Monad m, Semigroup w) => Functor (LMT r w s m) where
+  {-# INLINE fmap #-}
   fmap :: (a -> b) -> LMT r w s m a -> LMT r w s m b
   fmap f (LMT xs) = LMT $ \env s -> do
     (res, s', w) <- xs env s
     pure (fmap f res, s', w)
 
 instance (Monad m, Monoid w) => Applicative (LMT r w s m) where
+  {-# INLINE (<*>) #-}
   pure :: a -> LMT r w s m a
   pure a = LMT $ \_ s -> pure (Right a, s, mempty)
   (<*>) ::
@@ -78,6 +81,7 @@ instance (Monad m, Monoid w) => Applicative (LMT r w s m) where
         pure (fmap f res', s'', w <> w')
 
 instance (Monad m, Monoid w) => Monad (LMT r w s m) where
+  {-# INLINE (>>=) #-}
   (>>=) ::
     LMT r w s m a ->
     (a -> LMT r w s m b) ->

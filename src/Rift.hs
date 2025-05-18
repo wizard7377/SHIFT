@@ -9,6 +9,5 @@ where
 --    The representation for Flat Types
 import Rift.Core
 import Rift.Forms
-import Rift.Names
 
 -- ^ Flat Intermediate Representation

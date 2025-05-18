@@ -49,17 +49,8 @@ library
       Extra
       Tests
   other-modules:
-      Extra.Arrow
-      Extra.Arrow.Classes
-      Extra.Arrow.Instances
-      Extra.Arrow.Kite
-      Extra.Arrow.List
-      Extra.Arrow.Multi
-      Extra.Arrow.Reader
-      Extra.Arrow.State
-      Extra.Arrow.Trans
-      Extra.Arrow.Writer
       Extra.Basics
+      Extra.Boolean
       Extra.Choice
       Extra.ChoiceOld
       Extra.Debug
@@ -68,16 +59,36 @@ library
       Extra.List
       Extra.Map
       Extra.Ops
+      Extra.Todo
       Extra.Tree
       Extra.Tuple
       Extra.Types
+      Hift
+      Hift.Query
       Lift.Base
       Lift.Base.Core
+      Lift.Base.Core.Forms
+      Lift.Base.Core.Forms.Axiom
+      Lift.Base.Core.Forms.Message
+      Lift.Base.Core.Forms.Module
+      Lift.Base.Core.Forms.Proof
+      Lift.Base.Core.Monad
+      Lift.Base.Core.Monad.Monad
+      Lift.Base.Core.Monad.Parse
+      Lift.Base.Core.Monad.Symbol
+      Lift.Base.Core.ParseEnv
+      Lift.Base.Core.Source
+      Lift.Base.Core.Source.Core
       Lift.Base.Core.Symbol
       Lift.Base.Core.Symbol.SymbolTable
       Lift.Base.Core.Symbol.Types
+      Lift.Base.Core.Symbol.Typeset
       Lift.Base.Dift
       Lift.Base.Mift
+      Lift.Base.Mift.Common
+      Lift.Base.Mift.Lexer
+      Lift.Base.Mift.Parser
+      Lift.Base.Mift.Types
       Lift.Base.Pift
       Rift.Core
       Rift.Core.Base
@@ -86,16 +97,20 @@ library
       Rift.Core.Dev.Paeno
       Rift.Core.Dev.Parser
       Rift.Core.Dev.Util
-      Rift.Core.Funcs
       Rift.Core.Instances
       Rift.Core.Kernel
+      Rift.Core.Ops
+      Rift.Core.Ops.Mem
       Rift.Core.Unify
       Rift.Core.Unify.Base
-      Rift.Core.Unify.Dev
       Rift.Core.Unify.Unify
       Rift.Core.Utility
       Rift.Forms
+      Rift.Forms.Language
       Rift.Forms.LogicEnv
+      Rift.Forms.LogicRes
+      Rift.Forms.ParseEnv
+      Rift.Forms.ParseRes
       Rift.Forms.Proof
       Rift.Forms.Proof.Abstract
       Rift.Forms.Proof.Types
@@ -103,14 +118,10 @@ library
       Sift.Base
       Sift.Dev
       Sift.Dev.Util
-      Sift.Instances
       Sift.Monad
       Sift.Solver
-      Sift.Solver.BasicSearch
-      Sift.Solver.BasicSearch.Tree
-      Sift.Solver.GenSearch
-      Sift.Types
-      Tests.Arrows
+      Sift.Solver.Search
+      Sift.Solver.Types
       Tests.Search
       Tests.Unify
       Paths_SHIFT
@@ -159,9 +170,9 @@ library
   if flag(sanity) && (!flag(dev))
     ghc-options: -O0 -fdefer-typed-holes -Wtyped-holes -W -Wno-duplicate-exports -Wno-unused-imports -Wno-unused-local-binds -Wno-unused-matches -Wno-dodgy-imports -Wno-dodgy-exports
   if flag(dev) && (!flag(release))
-    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wno-typed-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -g2
+    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wno-typed-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -fprof-auto -g2
   if flag(dev) && flag(release)
-    ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+    ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -fdefer-typed-holes
   if flag(release)
     ghc-options: -w -O2
 
@@ -216,9 +227,9 @@ executable SHIFT-exe
   if flag(sanity) && (!flag(dev))
     ghc-options: -O0 -fdefer-typed-holes -Wtyped-holes -W -Wno-duplicate-exports -Wno-unused-imports -Wno-unused-local-binds -Wno-unused-matches -Wno-dodgy-imports -Wno-dodgy-exports
   if flag(dev) && (!flag(release))
-    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wno-typed-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -g2
+    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wno-typed-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -fprof-auto -g2
   if flag(dev) && flag(release)
-    ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+    ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -fdefer-typed-holes
   if flag(release)
     ghc-options: -w -O2
 
@@ -227,11 +238,92 @@ test-suite SHIFT-test
   main-is: Spec.hs
   other-modules:
       GenSearch
+      Extra
+      Extra.Basics
+      Extra.Boolean
+      Extra.Choice
+      Extra.ChoiceOld
+      Extra.Debug
+      Extra.Decide
+      Extra.Error
+      Extra.List
+      Extra.Map
+      Extra.Ops
+      Extra.Todo
+      Extra.Tree
+      Extra.Tuple
+      Extra.Types
+      Hift
+      Hift.Query
+      Lift
+      Lift.Base
+      Lift.Base.Core
+      Lift.Base.Core.Forms
+      Lift.Base.Core.Forms.Axiom
+      Lift.Base.Core.Forms.Message
+      Lift.Base.Core.Forms.Module
+      Lift.Base.Core.Forms.Proof
+      Lift.Base.Core.Monad
+      Lift.Base.Core.Monad.Monad
+      Lift.Base.Core.Monad.Parse
+      Lift.Base.Core.Monad.Symbol
+      Lift.Base.Core.ParseEnv
+      Lift.Base.Core.Source
+      Lift.Base.Core.Source.Core
+      Lift.Base.Core.Symbol
+      Lift.Base.Core.Symbol.SymbolTable
+      Lift.Base.Core.Symbol.Types
+      Lift.Base.Core.Symbol.Typeset
+      Lift.Base.Dift
+      Lift.Base.Mift
+      Lift.Base.Mift.Common
+      Lift.Base.Mift.Lexer
+      Lift.Base.Mift.Parser
+      Lift.Base.Mift.Types
+      Lift.Base.Pift
+      Rift
+      Rift.Core
+      Rift.Core.Base
+      Rift.Core.Dev
+      Rift.Core.Dev.Forms
+      Rift.Core.Dev.Paeno
+      Rift.Core.Dev.Parser
+      Rift.Core.Dev.Util
+      Rift.Core.Instances
+      Rift.Core.Kernel
+      Rift.Core.Ops
+      Rift.Core.Ops.Mem
+      Rift.Core.Unify
+      Rift.Core.Unify.Base
+      Rift.Core.Unify.Unify
+      Rift.Core.Utility
+      Rift.Forms
+      Rift.Forms.Language
+      Rift.Forms.LogicEnv
+      Rift.Forms.LogicRes
+      Rift.Forms.ParseEnv
+      Rift.Forms.ParseRes
+      Rift.Forms.Proof
+      Rift.Forms.Proof.Abstract
+      Rift.Forms.Proof.Types
+      Rift.Forms.Sentence
+      Sift
+      Sift.Base
+      Sift.Dev
+      Sift.Dev.Util
+      Sift.Monad
+      Sift.Solver
+      Sift.Solver.Search
+      Sift.Solver.Types
+      Tests
+      Tests.Search
+      Tests.Unify
       Paths_SHIFT
   autogen-modules:
       Paths_SHIFT
   hs-source-dirs:
       test
+      src
   other-extensions:
       AllowAmbiguousTypes
       FunctionalDependencies
@@ -251,7 +343,6 @@ test-suite SHIFT-test
     , HaTeX
     , List
     , QuickCheck
-    , SHIFT
     , ansi-terminal
     , array
     , base >=4.7 && <5
@@ -275,9 +366,9 @@ test-suite SHIFT-test
   if flag(sanity) && (!flag(dev))
     ghc-options: -O0 -fdefer-typed-holes -Wtyped-holes -W -Wno-duplicate-exports -Wno-unused-imports -Wno-unused-local-binds -Wno-unused-matches -Wno-dodgy-imports -Wno-dodgy-exports
   if flag(dev) && (!flag(release))
-    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wno-typed-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -g2
+    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wno-typed-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -fprof-auto -g2
   if flag(dev) && flag(release)
-    ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+    ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -fdefer-typed-holes
   if flag(release)
     ghc-options: -w -O2
 
@@ -303,7 +394,7 @@ benchmark SHIFT-perf
       ConstraintKinds
       MonoLocalBinds
       Arrows
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -O2
   build-depends:
       HUnit
     , HaTeX
@@ -333,8 +424,8 @@ benchmark SHIFT-perf
   if flag(sanity) && (!flag(dev))
     ghc-options: -O0 -fdefer-typed-holes -Wtyped-holes -W -Wno-duplicate-exports -Wno-unused-imports -Wno-unused-local-binds -Wno-unused-matches -Wno-dodgy-imports -Wno-dodgy-exports
   if flag(dev) && (!flag(release))
-    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wno-typed-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -g2
+    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wno-typed-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -fprof-auto -g2
   if flag(dev) && flag(release)
-    ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+    ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -fdefer-typed-holes
   if flag(release)
     ghc-options: -w -O2

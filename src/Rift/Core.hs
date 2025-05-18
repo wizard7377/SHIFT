@@ -5,14 +5,14 @@ module Rift.Core (
   module Base,
   module Dev,
   module Instances,
-  module Funcs,
   module Parser,
   module Unify,
+  module Ops,
 ) where
 
 import Rift.Core.Base as Base
-import Rift.Core.Dev as Dev
+import Rift.Core.Dev as Dev hiding (FTerm)
 import Rift.Core.Dev.Parser as Parser
-import Rift.Core.Funcs as Funcs
 import Rift.Core.Instances as Instances
-import Rift.Core.Unify as Unify
+import Rift.Core.Ops as Ops
+import Rift.Core.Unify as Unify hiding (FTerm)

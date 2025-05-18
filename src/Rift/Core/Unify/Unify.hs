@@ -31,7 +31,7 @@ unify binds env =
         newVars = env ^. varsUp \\ lowerVars
         e1 = varsUp .~ newVars $ env
        in
-        "Branch 2" <?@> (<>) <$> pure (UnificationResult lowers [] lowerVars []) <*> unify newBinds e1
+        (("Branch 2" <?@> (<>)) (UnificationResult lowers [] lowerVars []) <$> unify newBinds e1)
     (atoms, raisers, lowers, levelers) ->
       let
         uniF = mapToFR raisers
@@ -42,4 +42,4 @@ unify binds env =
         newVars = env ^. varsDown \\ raiseVars
         e1 = varsDown .~ newVars $ env
        in
-        "Branch 3" <?@> (<>) <$> pure (UnificationResult [] raisers [] raiseVars) <*> unify newBinds e1
+        (("Branch 3" <?@> (<>)) (UnificationResult [] raisers [] raiseVars) <$> unify newBinds e1)

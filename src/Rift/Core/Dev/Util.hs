@@ -6,11 +6,11 @@ import Extra
 import Rift.Core.Base
 import Rift.Core.Dev.Parser
 import Rift.Core.Unify.Base
-import Rift.Core.Unify.Dev
 import Rift.Core.Unify.Unify
 import System.IO.Unsafe (unsafePerformIO)
 import Text.Megaparsec (parseTest)
 
+type FTerm term = (term, [term])
 justAssume :: Maybe a -> a
 justAssume v = case v of
   Just val -> val

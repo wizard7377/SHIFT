@@ -1,5 +1,7 @@
-import Test.Tasty (defaultMain)
-import Tests.Unify
+module Main where
+
+import Test.Tasty (defaultMain, testGroup)
+import Tests
 
 main :: IO ()
-main = defaultMain unifyTests
+main = defaultMain $ testGroup "SHIFT tests" [searchTests]

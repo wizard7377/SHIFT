@@ -9,6 +9,9 @@ import Data.Default
 import Extra
 import Rift.Forms.Sentence (Sentence, Theory (..))
 
+defaultDepth :: Int
+defaultDepth = 6
+
 {- | The type of the logic env
  Note that it is parameterized over the type of the _theory_, not the type of the terms or sentences
  As such, it should almost always be given the context of `Theory`
@@ -16,6 +19,7 @@ import Rift.Forms.Sentence (Sentence, Theory (..))
 data LogicEnv t = LogicEnv
   { _depth :: Int
   -- ^ The maxiumum depth
+  , _unfoldStart :: Int
   , _theory :: t
   -- ^ The given statements assumed to be true
   }
@@ -23,7 +27,7 @@ data LogicEnv t = LogicEnv
 
 makeLenses ''LogicEnv
 defaultEnv :: (Default s) => LogicEnv s
-defaultEnv = LogicEnv 8 def
+defaultEnv = LogicEnv defaultDepth 8 def
 
 instance (Theory t) => Theory (LogicEnv t) where
   type TermOf (LogicEnv t) = TermOf t

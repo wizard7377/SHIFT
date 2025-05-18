@@ -7,7 +7,6 @@ import Rift.Core.Base
 import Rift.Core.Dev.Parser
 import Rift.Core.Dev.Util
 import Rift.Core.Unify.Base
-import Rift.Core.Unify.Dev
 import Rift.Core.Unify.Unify
 import System.IO.Unsafe (unsafePerformIO)
 import Text.Megaparsec (parseTest)
