@@ -19,6 +19,7 @@ module Extra.Basics (
   amap,
   Type,
   Constraint,
+  Typeable,
   Data,
   Generic,
 ) where

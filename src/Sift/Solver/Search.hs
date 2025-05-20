@@ -39,6 +39,7 @@ import Extra.Choice qualified
 import Extra.Error (Error)
 import Extra.List (forEach, subParts)
 import Extra.Map
+import Extra.Monad (recurseM)
 import Extra.Tuple
 import Rift qualified
 import Sift.Base qualified as Base
@@ -80,7 +81,7 @@ genSearch term = do
   env <- ask
   let sentences = (\(Rift.Sentence t p) -> STerm t [] $ Rift.Given p) <$> Rift.getSentences (env ^. Rift.theory)
   unfold <- asks (^. Rift.unfoldStart)
-  nsentences <- mconcat (replicate unfold $ unfoldStartGen sentences)
+  nsentences <- (recurseM unfold unfoldStartGen sentences)
   genSearch' term
 genSearch' ::
   (Rift.Term term, Rift.TermLike term, Monoid w) =>
@@ -96,8 +97,8 @@ genSearch' goal = do
   results' <- sequence ((mem <$> provens <*> scratches) <> (mem <$> scratches <*> provens))
   let results = nub $ concat results'
   depth .= depths + 1
-  proven .= (nub $ provens <> scratches)
-  scratch .= (nub $ results <> scratches)
+  proven .= nub (provens <> scratches)
+  scratch .= nub (results <> scratches)
   ( if (resolved (results <> provens <> scratches) goal)
       then do ("Solved" ?> return (Rift.Solved goal))
       else (if depths < maxDepth then (do "Go again" ?> genSearch' goal) else "Stopped" ?> return Rift.Stopped)
@@ -139,7 +140,7 @@ mem top bottom =
 
 mem' :: (Rift.Term term, Eq term, Ord term, Show term, Monoid w) => STerm term -> STerm term -> LM t w (SearchState term) [STerm term]
 mem' top@(STerm (Rift.Lamed var upFrom upTo) freeUp proofA) bottom@(STerm down freeDown proofB) =
-  let mr = set fterm <$> (Rift.mem (top ^. fterm) (bottom ^. fterm)) <*> pure top
-   in pure $ (set proof (proofA <> proofB)) <$> mr
+  let mr = Rift.mem' upFrom upTo (var : freeUp) down freeDown
+   in pure $ (\(Rift.FTerm t v) -> STerm t v (Rift.Mem proofA proofB)) <$> mr
 mem' _ _ = pure []
 {-# INLINE mem' #-}

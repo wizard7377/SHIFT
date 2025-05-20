@@ -9,3 +9,4 @@ paper/**
 !paper/**/*.tex
 !paper/**/*.bib
 tags
+src/Rift/Core/Unify/Unify.hs

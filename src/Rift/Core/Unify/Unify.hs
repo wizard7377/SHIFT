@@ -1,3 +1,4 @@
+{-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Rift.Core.Unify.Unify where
@@ -20,8 +21,10 @@ import Rift.Core.Unify.Base hiding (frees)
 -}
 unify :: (Term term, TermLike term) => BindingSet term -> UnificationEnv term -> [UnificationResult term]
 unify binds env =
+  -- Note that if F is free and L is literal, the order of the tuple is (L -> L, L -> F, F -> L, F -> F)
   case split4 (\x -> x ^. _1 `elem` env ^. varsUp) (\y -> y ^. _2 `elem` env ^. varsDown) (binds) of
     (atoms, [], [], []) -> "Branch 0" <?@> (if all (uncurry (==)) atoms then pure simpleResult else mempty)
+    -- ???
     (atoms, [], [], vars) -> "Branch 1" <?@> (if miso atoms && miso vars && all (uncurry (==)) atoms then pure simpleResult else mempty)
     (atoms, [], lowers, levelers) ->
       let
@@ -31,7 +34,7 @@ unify binds env =
         newVars = env ^. varsUp \\ lowerVars
         e1 = varsUp .~ newVars $ env
        in
-        (("Branch 2" <?@> (<>)) (UnificationResult lowers [] lowerVars []) <$> unify newBinds e1)
+        (("Branch 2" <?> (<>)) (UnificationResult lowers [] lowerVars []) <$> unify newBinds e1)
     (atoms, raisers, lowers, levelers) ->
       let
         uniF = mapToFR raisers
@@ -42,4 +45,4 @@ unify binds env =
         newVars = env ^. varsDown \\ raiseVars
         e1 = varsDown .~ newVars $ env
        in
-        (("Branch 3" <?@> (<>)) (UnificationResult [] raisers [] raiseVars) <$> unify newBinds e1)
+        (("Branch 3" <?> (<>)) (UnificationResult [] raisers [] raiseVars) <$> unify newBinds e1)

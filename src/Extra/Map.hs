@@ -34,18 +34,28 @@ mlookupV ((k, v) : xs) y = if v == y then Just k else mlookupV xs y
 mlookupV [] _ = Nothing
 infixl 2 @>
 infixl 2 >@
+mapToF :: (Eq a) => HMap a -> a -> a
+mapToF m v = mapToF' m [] v
+mapToFR :: (Eq a) => HMap a -> a -> a
+mapToFR m v = mapToFR' m [] v
 
 -- | Map to function, first as input, second as output
-mapToF :: (Eq a) => HMap a -> a -> a
-mapToF m v = case mlookup m v of
-  Just x -> x
-  Nothing -> v
+mapToF' :: (Eq a) => HMap a -> [a] -> a -> a
+mapToF' m u v =
+  if (v `elem` u)
+    then v
+    else case mlookup m v of
+      Just x -> mapToFR' m (v : u) x
+      Nothing -> v
 
 -- | Map to function, second as input, first as output
-mapToFR :: (Eq a) => HMap a -> a -> a
-mapToFR m v = case mlookupV m v of
-  Just x -> x
-  Nothing -> v
+mapToFR' :: (Eq a) => HMap a -> [a] -> a -> a
+mapToFR' m u v =
+  if (v `elem` u)
+    then v
+    else case mlookupV m v of
+      Just x -> mapToF' m (v : u) x
+      Nothing -> v
 
 (@>) :: (Bifunctor b) => (Functor f) => (Eq a) => HMap a -> f (b a a) -> f (b a a)
 (>@) :: (Bifunctor b) => (Functor f) => (Eq a) => HMap a -> f (b a a) -> f (b a a)

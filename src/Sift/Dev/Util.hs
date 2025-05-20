@@ -13,6 +13,7 @@ import Criterion
 import Data.Default (Default)
 import Data.Text (pack)
 import Extra.Error (Error (TODO))
+import GHC.Exts (Any)
 import Rift (Atomic, LogicEnv, LogicResult (..), Sentence (..), Term', TermOf, TestTerm, TestToken, Theory, defaultEnv, getSentences, theory)
 import Rift.Core.Base (Term, TermLike)
 import Rift.Core.Dev (tRead)
@@ -77,7 +78,7 @@ requireSolve' comp givens goal = do
     Right (Rift.Solved proof) -> return (state, w)
     _ -> throw TODO
 
-getResult :: (Monad m, Monoid w) => m (Either Error a, s, w) -> m (Either Error a)
+getResult :: forall m a. (Monad m) => forall w s. (Monoid w) => m (Either Error a, w, s) -> m (Either Error a)
 getResult m = do
   (result, _, _) <- m
   return result

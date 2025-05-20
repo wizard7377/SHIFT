@@ -13,6 +13,7 @@ data FTerm term = FTerm
   { _term :: term
   , _frees :: [term]
   }
+  deriving (Show, Eq, Ord, Data, Typeable, Generic)
 
 toFTerm :: (a, [a]) -> FTerm a
 toFTerm (t, fs) = FTerm t fs

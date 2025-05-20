@@ -58,6 +58,7 @@ library
       Extra.Error
       Extra.List
       Extra.Map
+      Extra.Monad
       Extra.Ops
       Extra.Todo
       Extra.Tree
@@ -65,31 +66,30 @@ library
       Extra.Types
       Hift
       Hift.Query
-      Lift.Base
-      Lift.Base.Core
-      Lift.Base.Core.Forms
-      Lift.Base.Core.Forms.Axiom
-      Lift.Base.Core.Forms.Message
-      Lift.Base.Core.Forms.Module
-      Lift.Base.Core.Forms.Proof
-      Lift.Base.Core.Monad
-      Lift.Base.Core.Monad.Monad
-      Lift.Base.Core.Monad.Parse
-      Lift.Base.Core.Monad.Symbol
-      Lift.Base.Core.ParseEnv
-      Lift.Base.Core.Source
-      Lift.Base.Core.Source.Core
-      Lift.Base.Core.Symbol
-      Lift.Base.Core.Symbol.SymbolTable
-      Lift.Base.Core.Symbol.Types
-      Lift.Base.Core.Symbol.Typeset
-      Lift.Base.Dift
-      Lift.Base.Mift
-      Lift.Base.Mift.Common
-      Lift.Base.Mift.Lexer
-      Lift.Base.Mift.Parser
-      Lift.Base.Mift.Types
-      Lift.Base.Pift
+      Lift.Core
+      Lift.Core.Forms
+      Lift.Core.Forms.Axiom
+      Lift.Core.Forms.Message
+      Lift.Core.Forms.Module
+      Lift.Core.Forms.Proof
+      Lift.Core.Monad
+      Lift.Core.Monad.Monad
+      Lift.Core.Monad.Parse
+      Lift.Core.Monad.Symbol
+      Lift.Core.ParseEnv
+      Lift.Core.Source
+      Lift.Core.Source.Core
+      Lift.Core.Symbol
+      Lift.Core.Symbol.SymbolTable
+      Lift.Core.Symbol.Types
+      Lift.Core.Symbol.Typeset
+      Lift.Dift
+      Lift.Mift
+      Lift.Mift.Common
+      Lift.Mift.Lexer
+      Lift.Mift.Parser
+      Lift.Mift.Types
+      Lift.Pift
       Rift.Core
       Rift.Core.Base
       Rift.Core.Dev
@@ -109,12 +109,11 @@ library
       Rift.Forms.Language
       Rift.Forms.LogicEnv
       Rift.Forms.LogicRes
-      Rift.Forms.ParseEnv
-      Rift.Forms.ParseRes
       Rift.Forms.Proof
       Rift.Forms.Proof.Abstract
       Rift.Forms.Proof.Types
-      Rift.Forms.Sentence
+      Rift.Forms.Search
+      Rift.Forms.Theory
       Sift.Base
       Sift.Dev
       Sift.Dev.Util
@@ -122,7 +121,8 @@ library
       Sift.Solver
       Sift.Solver.Search
       Sift.Solver.Types
-      Tests.Search
+      Tests.Mem
+      Tests.Searching
       Tests.Unify
       Paths_SHIFT
   autogen-modules:
@@ -235,95 +235,14 @@ executable SHIFT-exe
 
 test-suite SHIFT-test
   type: exitcode-stdio-1.0
-  main-is: Spec.hs
+  main-is: Main.hs
   other-modules:
       GenSearch
-      Extra
-      Extra.Basics
-      Extra.Boolean
-      Extra.Choice
-      Extra.ChoiceOld
-      Extra.Debug
-      Extra.Decide
-      Extra.Error
-      Extra.List
-      Extra.Map
-      Extra.Ops
-      Extra.Todo
-      Extra.Tree
-      Extra.Tuple
-      Extra.Types
-      Hift
-      Hift.Query
-      Lift
-      Lift.Base
-      Lift.Base.Core
-      Lift.Base.Core.Forms
-      Lift.Base.Core.Forms.Axiom
-      Lift.Base.Core.Forms.Message
-      Lift.Base.Core.Forms.Module
-      Lift.Base.Core.Forms.Proof
-      Lift.Base.Core.Monad
-      Lift.Base.Core.Monad.Monad
-      Lift.Base.Core.Monad.Parse
-      Lift.Base.Core.Monad.Symbol
-      Lift.Base.Core.ParseEnv
-      Lift.Base.Core.Source
-      Lift.Base.Core.Source.Core
-      Lift.Base.Core.Symbol
-      Lift.Base.Core.Symbol.SymbolTable
-      Lift.Base.Core.Symbol.Types
-      Lift.Base.Core.Symbol.Typeset
-      Lift.Base.Dift
-      Lift.Base.Mift
-      Lift.Base.Mift.Common
-      Lift.Base.Mift.Lexer
-      Lift.Base.Mift.Parser
-      Lift.Base.Mift.Types
-      Lift.Base.Pift
-      Rift
-      Rift.Core
-      Rift.Core.Base
-      Rift.Core.Dev
-      Rift.Core.Dev.Forms
-      Rift.Core.Dev.Paeno
-      Rift.Core.Dev.Parser
-      Rift.Core.Dev.Util
-      Rift.Core.Instances
-      Rift.Core.Kernel
-      Rift.Core.Ops
-      Rift.Core.Ops.Mem
-      Rift.Core.Unify
-      Rift.Core.Unify.Base
-      Rift.Core.Unify.Unify
-      Rift.Core.Utility
-      Rift.Forms
-      Rift.Forms.Language
-      Rift.Forms.LogicEnv
-      Rift.Forms.LogicRes
-      Rift.Forms.ParseEnv
-      Rift.Forms.ParseRes
-      Rift.Forms.Proof
-      Rift.Forms.Proof.Abstract
-      Rift.Forms.Proof.Types
-      Rift.Forms.Sentence
-      Sift
-      Sift.Base
-      Sift.Dev
-      Sift.Dev.Util
-      Sift.Monad
-      Sift.Solver
-      Sift.Solver.Search
-      Sift.Solver.Types
-      Tests
-      Tests.Search
-      Tests.Unify
       Paths_SHIFT
   autogen-modules:
       Paths_SHIFT
   hs-source-dirs:
       test
-      src
   other-extensions:
       AllowAmbiguousTypes
       FunctionalDependencies
@@ -343,6 +262,7 @@ test-suite SHIFT-test
     , HaTeX
     , List
     , QuickCheck
+    , SHIFT
     , ansi-terminal
     , array
     , base >=4.7 && <5

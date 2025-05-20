@@ -5,12 +5,12 @@ import Data.Text qualified as T
 import Extra
 import Rift.Core.Base
 import Rift.Core.Dev.Parser
+import Rift.Core.Ops.Mem
 import Rift.Core.Unify.Base
 import Rift.Core.Unify.Unify
 import System.IO.Unsafe (unsafePerformIO)
-import Text.Megaparsec (parseTest)
+import Text.Megaparsec (parseMaybe, parseTest)
 
-type FTerm term = (term, [term])
 justAssume :: Maybe a -> a
 justAssume v = case v of
   Just val -> val
@@ -26,12 +26,27 @@ readSys' :: FilePath -> [[TestTerm]]
 readSys' path = tReadLL $ unsafePerformIO $ readFile path
 readSys = readSys'
 genTest :: [String] -> String -> FTerm TestTerm
-genTest [] str = ((tRead str), [])
+genTest [] str = (FTerm (tRead str) [])
 genTest (x : xs) str =
   let
-    (term, frees) = genTest xs str
+    FTerm term frees = genTest xs str
    in
-    (term, tRead x : frees)
+    FTerm term (tRead x : frees)
 
 selectAt :: [[a]] -> [Int] -> [a]
 selectAt l = concatMap (l !!)
+
+unifyTest :: (Term term, Ord term, Show term) => [term] -> [term] -> term -> term -> [UnificationResult term]
+unifyTest binds1 binds2 term1 term2 =
+  let
+    binds = generate term1 term2
+    env = initEnv binds1 binds2
+    result = (Prelude.flip unify) env <| binds
+   in
+    result
+
+instance Read (TestTerm) where
+  readsPrec _ str =
+    case readTerm str of
+      Just x -> [(x, "")]
+      Nothing -> []
