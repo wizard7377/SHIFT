@@ -1,4 +1,5 @@
-module Rift.Core.Unify (module Rift.Core.Unify.Unify, module Rift.Core.Unify.Base) where
+module Rift.Core.Unify (module Rift.Core.Unify.Infer, module Rift.Core.Unify.Util, module Rift.Core.Unify.Base) where
 
 import Rift.Core.Unify.Base
-import Rift.Core.Unify.Unify
+import Rift.Core.Unify.Infer
+import Rift.Core.Unify.Util

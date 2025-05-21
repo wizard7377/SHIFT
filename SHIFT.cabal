@@ -56,6 +56,7 @@ library
       Extra.Debug
       Extra.Decide
       Extra.Error
+      Extra.Lens
       Extra.List
       Extra.Map
       Extra.Monad
@@ -103,7 +104,10 @@ library
       Rift.Core.Ops.Mem
       Rift.Core.Unify
       Rift.Core.Unify.Base
-      Rift.Core.Unify.Unify
+      Rift.Core.Unify.Infer
+      Rift.Core.Unify.Util
+      Rift.Core.UnifyNew.Base
+      Rift.Core.UnifyNew.Unify
       Rift.Core.Utility
       Rift.Forms
       Rift.Forms.Language

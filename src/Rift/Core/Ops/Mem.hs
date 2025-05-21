@@ -6,8 +6,8 @@ import Data.List ((\\))
 import Extra
 import Rift.Core.Base qualified as Rift
 import Rift.Core.Kernel qualified as Rift
+import Rift.Core.Unify qualified as Rift
 import Rift.Core.Unify.Base qualified as Rift
-import Rift.Core.Unify.Unify qualified as Rift
 
 data FTerm term = FTerm
   { _term :: term

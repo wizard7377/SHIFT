@@ -1,7 +1,7 @@
 {-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Rift.Core.Unify.Unify where
+module Rift.Core.UnifyNew.Unify where
 
 import Control.Applicative
 import Control.Lens (makeLenses, (&), (<>~))
@@ -13,7 +13,7 @@ import Extra.Choice
 import Extra.Map
 import Extra.Tuple hiding (split)
 import Rift.Core.Base hiding (frees)
-import Rift.Core.Unify.Base hiding (frees)
+import Rift.Core.UnifyNew.Base hiding (frees)
 
 {- | A unification.
  The upper values are the ones that need to match the lower values.

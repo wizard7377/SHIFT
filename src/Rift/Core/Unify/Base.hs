@@ -1,73 +1,88 @@
-{-# LANGUAGE QuantifiedConstraints #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Rift.Core.Unify.Base where
 
-import Control.Applicative (Alternative (..))
-import Control.Lens (makeLenses)
-import Control.Lens.Operators
-import Data.Functor.Identity (Identity)
-import Data.List (intercalate)
-import Extra hiding (empty)
-import Extra.Basics
-import Extra.Choice
-import Extra.Map
-import Rift.Core.Base
-import Rift.Core.Instances
+import Control.Applicative
+import Control.Lens (Lens', makeLenses)
+import Control.Monad
+import Control.Monad.State
+import Control.Monad.Writer
+import Data.List
+import Extra
 
-type BindingSet a = HMap a
+-- | The state of a term, where it being bound always features the variable first
+data TermState a = Free a | Bound a a
+  deriving (Show, Eq, Data, Typeable, Generic, Ord)
 
-{- | The unification enviroment and result
- - This not only encodes the list of variables, but also the existing bindings
- - Note that to avoid the confusing "lhs" and "rhs" terminology often used with unification, instead the terms "top" and "bottom" are used
- - This not only helps us with avoid the confusion, it also provides an intution, where the "botttom" tries to catch the "top", with appropiate "raising" and "lowering" motion
- -
--}
-data UnificationEnv a = Unification
-  { _varsUp :: [a]
-  -- ^ The set of up vars
-  , _varsDown :: [a]
-  -- ^ The set of down vars
+data UnifyState term = UnifyState
+  { _upState :: [TermState term]
+  , _sharedState :: [TermState term]
+  , _downState :: [TermState term]
   }
-  deriving (Show, Eq)
+  deriving (Ord, Data, Typeable, Generic)
 
-data UnificationResult a = UnificationResult
-  { _lowering :: BindingSet a
-  , _raising :: BindingSet a
-  , _upBinds :: [a]
-  , _downBinds :: [a]
+deriving instance (Show term) => Show (UnifyState term)
+deriving instance (Eq term) => Eq (UnifyState term)
+data UnifyResult term = UnifyResult
+  { _upToDown :: HMap term
+  , _downToUp :: HMap term
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Data, Typeable, Generic, Ord)
 
-makeLenses ''UnificationEnv
-makeLenses ''UnificationResult
+makeLenses ''UnifyState
+makeLenses ''UnifyResult
 
-type UnificationAttempt a = Choice (UnificationResult a)
-generate :: (Term term) => term -> term -> Choice (BindingSet term)
-generate up down =
-  "Generated"
-    <?@> ( pure [(up, down)]
-            <|> ( case (up, down) of
-                    (Atom _, _) -> empty
-                    (_, Atom _) -> empty
-                    (Cons a0 a1, Cons b0 b1) -> (<>) <$> generate a0 b0 <*> generate a1 b1
-                    (_, _) -> empty
-                )
-         )
+mapDown :: (Eq term) => UnifyResult term -> term -> term
+mapDown = mapDownUp' []
+mapUp :: (Eq term) => UnifyResult term -> term -> term
+mapUp = mapUpDown' []
+mapUpDown' :: (Eq term) => [term] -> UnifyResult term -> term -> term
+mapUpDown' used res from =
+  if (from `elem` used)
+    then from
+    else case lookup from (res ^. upToDown) of
+      Just to -> mapDownUp' (from : used) res to
+      Nothing -> from
+mapDownUp' :: (Eq term) => [term] -> UnifyResult term -> term -> term
+mapDownUp' used res from =
+  if (from `elem` used)
+    then from
+    else case lookup from (res ^. upToDown) of
+      Just to -> mapUpDown' (from : used) res to
+      Nothing -> from
 
-initEnv :: (Term term) => [term] -> [term] -> UnificationEnv term
-initEnv up down =
-  Unification
-    { _varsUp = up
-    , _varsDown = down
-    }
+instance Semigroup (UnifyResult t) where
+  (UnifyResult a b) <> (UnifyResult c d) = UnifyResult (a <> c) (b <> d)
+instance Monoid (UnifyResult t) where
+  mempty = UnifyResult mempty mempty
+instance (Eq t) => Semigroup (UnifyState t) where
+  (UnifyState a b c) <> (UnifyState d e f) =
+    UnifyState (a <> d) (b <> e) (c <> f)
 
-instance Semigroup (UnificationResult a) where
-  (UnificationResult a0 b0 c0 d0) <> (UnificationResult a1 b1 c1 d1) = UnificationResult (a0 <> a1) (b0 <> b1) (c0 <> c1) (d0 <> d1)
+newtype MUnify t r = MUnify {runUnify :: (StateT (UnifyState t) Choice) r}
+instance Monad (MUnify t) where
+  (MUnify m) >>= f = MUnify $ m >>= runUnify . f
 
-instance Monoid (UnificationResult a) where
-  mempty = UnificationResult mempty mempty mempty mempty
+instance Functor (MUnify t) where
+  fmap f (MUnify m) = MUnify $ fmap f m
+instance Applicative (MUnify t) where
+  pure = MUnify . pure
+  (MUnify m) <*> (MUnify n) = MUnify $ m <*> n
 
-simpleResult = UnificationResult [] [] [] []
+instance MonadState (UnifyState t) (MUnify t) where
+  get = MUnify $ get
+  put s = MUnify $ put $ s
+
+instance (Eq t, Semigroup r) => Semigroup (MUnify t r) where
+  (MUnify m) <> (MUnify n) = MUnify $ (<>) <$> m <*> n
+instance (Eq t, Monoid r) => Monoid (MUnify t r) where
+  mempty = MUnify $ return mempty
+
+instance Alternative (MUnify t) where
+  empty = MUnify $ empty
+  (MUnify a) <|> (MUnify b) = MUnify $ a <|> b
+
+instance MonadPlus (MUnify t)
+
+runUnifyM :: MUnify t r -> UnifyState t -> [(r, UnifyState t)]
+runUnifyM (MUnify m) = runChoice <$> runStateT m
