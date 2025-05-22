@@ -1,73 +1,97 @@
-{-# LANGUAGE QuantifiedConstraints #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Rift.Core.Unify.Base where
 
-import Control.Applicative (Alternative (..))
-import Control.Lens (makeLenses)
-import Control.Lens.Operators
-import Data.Functor.Identity (Identity)
-import Data.List (intercalate)
-import Extra hiding (empty)
-import Extra.Basics
-import Extra.Choice
-import Extra.Map
+import Control.Applicative
+import Control.Category (Category (..))
+import Control.Lens (Lens', makeLenses)
+import Control.Lens.Indexed (indexing)
+import Control.Monad
+import Control.Monad.State
+import Control.Monad.Writer
+import Data.List
+import Data.Maybe (catMaybes)
+import Extra
 import Rift.Core.Base
-import Rift.Core.Instances
 
-type BindingSet a = HMap a
+-- | The state of a term, where it being bound always features the variable first
+data TermState a
+  = Free a
+  | Bound a a
+  deriving (Show, Eq, Data, Typeable, Generic, Ord)
 
-{- | The unification enviroment and result
- - This not only encodes the list of variables, but also the existing bindings
- - Note that to avoid the confusing "lhs" and "rhs" terminology often used with unification, instead the terms "top" and "bottom" are used
- - This not only helps us with avoid the confusion, it also provides an intution, where the "botttom" tries to catch the "top", with appropiate "raising" and "lowering" motion
- -
--}
-data UnificationEnv a = Unification
-  { _varsUp :: [a]
-  -- ^ The set of up vars
-  , _varsDown :: [a]
-  -- ^ The set of down vars
+data UnifyState term = UnifyState
+  { _upState :: [TermState term]
+  , _downState :: [TermState term]
   }
-  deriving (Show, Eq)
+  deriving (Ord, Data, Typeable, Generic)
 
-data UnificationResult a = UnificationResult
-  { _lowering :: BindingSet a
-  , _raising :: BindingSet a
-  , _upBinds :: [a]
-  , _downBinds :: [a]
-  }
-  deriving (Show, Eq)
+deriving instance (Show term) => Show (UnifyState term)
+deriving instance (Eq term) => Eq (UnifyState term)
 
-makeLenses ''UnificationEnv
-makeLenses ''UnificationResult
+makeLenses ''UnifyState
 
-type UnificationAttempt a = Choice (UnificationResult a)
-generate :: (Term term) => term -> term -> Choice (BindingSet term)
-generate up down =
-  "Generated"
-    <?@> ( pure [(up, down)]
-            <|> ( case (up, down) of
-                    (Atom _, _) -> empty
-                    (_, Atom _) -> empty
-                    (Cons a0 a1, Cons b0 b1) -> (<>) <$> generate a0 b0 <*> generate a1 b1
-                    (_, _) -> empty
-                )
-         )
+mapUp :: (TermLike term) => UnifyState term -> term -> term
+mapUp = mapUp' []
+mapUp' used state x =
+  if (Left x `elem` used)
+    then x
+    else case getAt (state ^. upState) x of
+      Just (Free y) -> y
+      Just (Bound _ y) -> mapDown' (Left x : used) state y
+      Nothing -> x
 
-initEnv :: (Term term) => [term] -> [term] -> UnificationEnv term
-initEnv up down =
-  Unification
-    { _varsUp = up
-    , _varsDown = down
-    }
+mapDown :: (TermLike term) => UnifyState term -> term -> term
+mapDown = mapDown' []
+mapDown' used state y =
+  if (Right y `elem` used)
+    then y
+    else case getAt (state ^. downState) y of
+      Just (Free x) -> x
+      Just (Bound x _) -> mapUp' (Right y : used) state x
+      Nothing -> y
+isFree :: (Eq term) => term -> [TermState term] -> Bool
+isFree _ [] = False
+isFree x (Free y : xs) =
+  if x == y
+    then True
+    else isFree x xs
+getBinds :: (Eq term) => term -> [TermState term] -> [term]
+getBinds x term = catMaybes $ fmap (\case Bound x' y -> if x == x' then Just y else Nothing; _ -> Nothing) term
+setBind :: (Eq term) => term -> term -> [TermState term] -> ([TermState term], Bool)
+setBind _ _ [] = ([], False)
+setBind x y (Free z : xs) =
+  if x == z
+    then (((Bound x y) : xs), True)
+    else setBind x y xs
+getAt :: (Eq term) => [TermState term] -> term -> Maybe (TermState term)
+getAt [] _ = Nothing
+getAt (Free x : xs) y =
+  if x == y
+    then Just (Free x)
+    else getAt xs y
+getAt (Bound x y : xs) z =
+  if x == z
+    then Just (Bound x y)
+    else getAt xs z
 
-instance Semigroup (UnificationResult a) where
-  (UnificationResult a0 b0 c0 d0) <> (UnificationResult a1 b1 c1 d1) = UnificationResult (a0 <> a1) (b0 <> b1) (c0 <> c1) (d0 <> d1)
+setAt :: (Eq term) => term -> TermState term -> [TermState term] -> [TermState term]
+setAt _ _ [] = []
+setAt y z (Free x : xs) =
+  if x == y
+    then z : xs
+    else Free x : setAt y z xs
+setAt z w (Bound x y : xs) =
+  if x == z
+    then w : xs
+    else Bound x y : setAt z w xs
 
-instance Monoid (UnificationResult a) where
-  mempty = UnificationResult mempty mempty mempty mempty
+instance (Eq term) => Semigroup (UnifyState term) where
+  UnifyState a c <> UnifyState d f =
+    UnifyState (a <> d) (c <> f)
+instance (Eq term) => Monoid (UnifyState term) where
+  mempty = UnifyState [] []
 
-simpleResult = UnificationResult [] [] [] []
+type UnifyState' t = Choice (UnifyState t)
+type Unification t = (TermLike t) => (Term t) => t -> t -> UnifyState t -> UnifyState' t

@@ -6,8 +6,8 @@ import Data.List ((\\))
 import Extra
 import Rift.Core.Base qualified as Rift
 import Rift.Core.Kernel qualified as Rift
+import Rift.Core.Unify qualified as Rift
 import Rift.Core.Unify.Base qualified as Rift
-import Rift.Core.Unify.Unify qualified as Rift
 
 data FTerm term = FTerm
   { _term :: term
@@ -24,16 +24,12 @@ mem top@(FTerm (Rift.Lamed var upFrom upTo) freeUp) bottom@(FTerm down freeDown)
 mem' :: (Rift.Term term, Rift.TermLike term) => term -> term -> [term] -> term -> [term] -> [FTerm term]
 mem' upFrom upTo freeUp down freeDown =
   let
-    uni = Rift.generate upFrom down
-    vUp = freeUp
-    vDown = freeDown
-    env = (pure Rift.initEnv) <*> pure freeUp <*> pure freeDown
-    ur = concat $ Rift.unify <$> uni <*> env
+    ur = Rift.unify (upFrom, freeUp) (down, freeDown)
     res =
       ( \ures ->
           let
-            mapping = mapToF $ ures ^. Rift.lowering
-            newvars = vUp \\ ures ^. Rift.upBinds
+            mapping = Rift.mapUp ures
+            newvars = Rift.getFree (ures ^. Rift.upState)
            in
             FTerm (Rift.recurseSome mapping upTo) newvars
       )

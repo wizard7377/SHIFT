@@ -1,4 +1,8 @@
 module Lift.Mift.Types where
 
-data MiftTerm a where
-  MiftList :: [MiftTerm a] -> MiftTerm a
+import Lift.Core.Symbol.Types
+
+data MiftTerm where
+  MiftAtom :: Symbol -> MiftTerm
+  MiftList :: [MiftTerm] -> MiftTerm
+  MiftLamed :: MiftTerm

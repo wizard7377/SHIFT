@@ -23,6 +23,9 @@ data STerm term = STerm
   }
   deriving (Generic, Data)
 
+instance (Rift.Term term) => Rift.FTermLike (STerm term) term where
+  fterm = lens _term (\(STerm t fs i) t' -> STerm t' fs i)
+  ffrees = lens _frees (\(STerm t fs i) fs' -> STerm t fs' i)
 deriving instance (Eq a) => Eq (STerm a)
 deriving instance (Ord a) => Ord (STerm a)
 

@@ -1,6 +1,7 @@
 module Main (main) where
 
---import Lib
+-- import Lib
+import Hift qualified
 
 main :: IO ()
-main = return ()
+main = Hift.runMain
