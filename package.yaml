@@ -66,6 +66,7 @@ dependencies:
   - tasty
   - tasty-hunit
   - deepseq
+  - optparse-applicative
 
 when:
   - condition: flag(sanity) && (!flag(dev))
@@ -114,6 +115,7 @@ library:
     - Rift
     - Sift
     - Lift
+    - Hift
     - Extra
     - Tests
 

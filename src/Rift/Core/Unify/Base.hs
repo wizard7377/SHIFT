@@ -1,88 +1,97 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Rift.Core.Unify.Base where
 
 import Control.Applicative
+import Control.Category (Category (..))
 import Control.Lens (Lens', makeLenses)
+import Control.Lens.Indexed (indexing)
 import Control.Monad
 import Control.Monad.State
 import Control.Monad.Writer
 import Data.List
+import Data.Maybe (catMaybes)
 import Extra
+import Rift.Core.Base
 
 -- | The state of a term, where it being bound always features the variable first
-data TermState a = Free a | Bound a a
+data TermState a
+  = Free a
+  | Bound a a
   deriving (Show, Eq, Data, Typeable, Generic, Ord)
 
 data UnifyState term = UnifyState
   { _upState :: [TermState term]
-  , _sharedState :: [TermState term]
   , _downState :: [TermState term]
   }
   deriving (Ord, Data, Typeable, Generic)
 
 deriving instance (Show term) => Show (UnifyState term)
 deriving instance (Eq term) => Eq (UnifyState term)
-data UnifyResult term = UnifyResult
-  { _upToDown :: HMap term
-  , _downToUp :: HMap term
-  }
-  deriving (Show, Eq, Data, Typeable, Generic, Ord)
 
 makeLenses ''UnifyState
-makeLenses ''UnifyResult
 
-mapDown :: (Eq term) => UnifyResult term -> term -> term
-mapDown = mapDownUp' []
-mapUp :: (Eq term) => UnifyResult term -> term -> term
-mapUp = mapUpDown' []
-mapUpDown' :: (Eq term) => [term] -> UnifyResult term -> term -> term
-mapUpDown' used res from =
-  if (from `elem` used)
-    then from
-    else case lookup from (res ^. upToDown) of
-      Just to -> mapDownUp' (from : used) res to
-      Nothing -> from
-mapDownUp' :: (Eq term) => [term] -> UnifyResult term -> term -> term
-mapDownUp' used res from =
-  if (from `elem` used)
-    then from
-    else case lookup from (res ^. upToDown) of
-      Just to -> mapUpDown' (from : used) res to
-      Nothing -> from
+mapUp :: (TermLike term) => UnifyState term -> term -> term
+mapUp = mapUp' []
+mapUp' used state x =
+  if (Left x `elem` used)
+    then x
+    else case getAt (state ^. upState) x of
+      Just (Free y) -> y
+      Just (Bound _ y) -> mapDown' (Left x : used) state y
+      Nothing -> x
 
-instance Semigroup (UnifyResult t) where
-  (UnifyResult a b) <> (UnifyResult c d) = UnifyResult (a <> c) (b <> d)
-instance Monoid (UnifyResult t) where
-  mempty = UnifyResult mempty mempty
-instance (Eq t) => Semigroup (UnifyState t) where
-  (UnifyState a b c) <> (UnifyState d e f) =
-    UnifyState (a <> d) (b <> e) (c <> f)
+mapDown :: (TermLike term) => UnifyState term -> term -> term
+mapDown = mapDown' []
+mapDown' used state y =
+  if (Right y `elem` used)
+    then y
+    else case getAt (state ^. downState) y of
+      Just (Free x) -> x
+      Just (Bound x _) -> mapUp' (Right y : used) state x
+      Nothing -> y
+isFree :: (Eq term) => term -> [TermState term] -> Bool
+isFree _ [] = False
+isFree x (Free y : xs) =
+  if x == y
+    then True
+    else isFree x xs
+getBinds :: (Eq term) => term -> [TermState term] -> [term]
+getBinds x term = catMaybes $ fmap (\case Bound x' y -> if x == x' then Just y else Nothing; _ -> Nothing) term
+setBind :: (Eq term) => term -> term -> [TermState term] -> ([TermState term], Bool)
+setBind _ _ [] = ([], False)
+setBind x y (Free z : xs) =
+  if x == z
+    then (((Bound x y) : xs), True)
+    else setBind x y xs
+getAt :: (Eq term) => [TermState term] -> term -> Maybe (TermState term)
+getAt [] _ = Nothing
+getAt (Free x : xs) y =
+  if x == y
+    then Just (Free x)
+    else getAt xs y
+getAt (Bound x y : xs) z =
+  if x == z
+    then Just (Bound x y)
+    else getAt xs z
 
-newtype MUnify t r = MUnify {runUnify :: (StateT (UnifyState t) Choice) r}
-instance Monad (MUnify t) where
-  (MUnify m) >>= f = MUnify $ m >>= runUnify . f
+setAt :: (Eq term) => term -> TermState term -> [TermState term] -> [TermState term]
+setAt _ _ [] = []
+setAt y z (Free x : xs) =
+  if x == y
+    then z : xs
+    else Free x : setAt y z xs
+setAt z w (Bound x y : xs) =
+  if x == z
+    then w : xs
+    else Bound x y : setAt z w xs
 
-instance Functor (MUnify t) where
-  fmap f (MUnify m) = MUnify $ fmap f m
-instance Applicative (MUnify t) where
-  pure = MUnify . pure
-  (MUnify m) <*> (MUnify n) = MUnify $ m <*> n
+instance (Eq term) => Semigroup (UnifyState term) where
+  UnifyState a c <> UnifyState d f =
+    UnifyState (a <> d) (c <> f)
+instance (Eq term) => Monoid (UnifyState term) where
+  mempty = UnifyState [] []
 
-instance MonadState (UnifyState t) (MUnify t) where
-  get = MUnify $ get
-  put s = MUnify $ put $ s
-
-instance (Eq t, Semigroup r) => Semigroup (MUnify t r) where
-  (MUnify m) <> (MUnify n) = MUnify $ (<>) <$> m <*> n
-instance (Eq t, Monoid r) => Monoid (MUnify t r) where
-  mempty = MUnify $ return mempty
-
-instance Alternative (MUnify t) where
-  empty = MUnify $ empty
-  (MUnify a) <|> (MUnify b) = MUnify $ a <|> b
-
-instance MonadPlus (MUnify t)
-
-runUnifyM :: MUnify t r -> UnifyState t -> [(r, UnifyState t)]
-runUnifyM (MUnify m) = runChoice <$> runStateT m
+type UnifyState' t = Choice (UnifyState t)
+type Unification t = (TermLike t) => (Term t) => t -> t -> UnifyState t -> UnifyState' t

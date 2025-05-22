@@ -36,9 +36,9 @@ genTest (x : xs) str =
 selectAt :: [[a]] -> [Int] -> [a]
 selectAt l = concatMap (l !!)
 
-unifyTest :: (Term term, Ord term, Show term) => [term] -> [term] -> term -> term -> [UnifyResult term]
+unifyTest :: (Term term, Ord term, Show term) => [term] -> [term] -> term -> term -> [UnifyState term]
 unifyTest binds1 binds2 term1 term2 =
-  _
+  unify (FTerm term1 binds1) (FTerm term2 binds2)
 
 --  let
 --    binds = generate term1 term2

@@ -26,6 +26,7 @@ import Extra.Basics
 import Extra.List
 import Extra.Ops
 
+type Choice :: Type -> Type
 newtype Choice a = Choice [a]
   deriving (Data, Typeable, Generic)
 instance (Show a) => Show (Choice a) where
@@ -67,9 +68,14 @@ instance Foldable Choice where
 
 instance Traversable Choice where
   traverse f (Choice xs) = Choice <$> traverse f xs
-  sequenceA (Choice xs) = Choice <$> sequenceA xs
 
 runChoice :: Choice a -> [a]
 runChoice (Choice xs) = xs
 mkChoice :: [a] -> Choice a
 mkChoice = Choice
+
+cabsurd :: Choice a
+cabsurd = Choice []
+
+cexists :: Choice a -> Bool
+cexists (Choice xs) = not $ null xs

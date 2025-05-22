@@ -105,22 +105,14 @@ genSearch' goal = do
     )
 
 resolved ::
+  forall term.
   (Rift.Term term, Rift.TermLike term) =>
   [STerm term] ->
   term ->
   Bool
 resolved vals goal =
   "Called"
-    ?> any
-      ( \(STerm t v i) ->
-          let
-            bindc = "Bindc" <?> Rift.generate goal t
-            env = "env" <?> Rift.initEnv [] v
-            unifyResultChoice = "Result" <?> concat $ Rift.unify <$> bindc <*> pure env
-           in
-            (not (null unifyResultChoice))
-      )
-      vals
+    ?> cexists (Rift.unify (Rift.FTerm goal []) <$> mkChoice vals)
 
 -- | The basic mem rule
 mem ::

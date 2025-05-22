@@ -46,6 +46,7 @@ library
       Rift
       Sift
       Lift
+      Hift
       Extra
       Tests
   other-modules:
@@ -65,7 +66,10 @@ library
       Extra.Tree
       Extra.Tuple
       Extra.Types
-      Hift
+      Hift.Hift
+      Hift.Opts
+      Hift.Opts.Forms
+      Hift.Opts.Types
       Hift.Query
       Lift.Core
       Lift.Core.Forms
@@ -165,6 +169,7 @@ library
     , megaparsec
     , monad-loops
     , mtl
+    , optparse-applicative
     , prettyprinter
     , tasty
     , tasty-hunit
@@ -222,6 +227,7 @@ executable SHIFT-exe
     , megaparsec
     , monad-loops
     , mtl
+    , optparse-applicative
     , prettyprinter
     , tasty
     , tasty-hunit
@@ -281,6 +287,7 @@ test-suite SHIFT-test
     , megaparsec
     , monad-loops
     , mtl
+    , optparse-applicative
     , prettyprinter
     , tasty
     , tasty-hunit
@@ -339,6 +346,7 @@ benchmark SHIFT-perf
     , megaparsec
     , monad-loops
     , mtl
+    , optparse-applicative
     , prettyprinter
     , tasty
     , tasty-hunit

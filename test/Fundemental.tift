@@ -1,0 +1,7 @@
+// Fundemental operations
+* ;
+[x]{* (= x x)} ;
+[x y _]{* * (= x y) (= y x)} ;
+[x y z _]{* * (= x y) (= y z) (= x z)} ;
+;;;
+
