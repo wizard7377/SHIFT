@@ -14,6 +14,7 @@ import Data.List
 import Data.Maybe (catMaybes)
 import Extra
 import Rift.Core.Base
+import Prelude hiding ((.))
 
 -- | The state of a term, where it being bound always features the variable first
 data TermState a
@@ -21,6 +22,7 @@ data TermState a
   | Bound a a
   deriving (Show, Eq, Data, Typeable, Generic, Ord)
 
+makePrisms ''TermState
 data UnifyState term = UnifyState
   { _upState :: [TermState term]
   , _downState :: [TermState term]
@@ -32,8 +34,17 @@ deriving instance (Eq term) => Eq (UnifyState term)
 
 makeLenses ''UnifyState
 
+replaceDown :: (TermLike term) => term -> term -> UnifyState term -> UnifyState term
+replaceDown old new state =
+  let
+    r0 = state & upState . each . _Bound . _2 %~ (change old new)
+    r1 = r0 & downState . each . _Free %~ (change old new)
+    r2 = r0 & downState . each . _Bound . _2 %~ (change old new)
+   in
+    r2
 mapUp :: (TermLike term) => UnifyState term -> term -> term
 mapUp = mapUp' []
+mapUp' :: (TermLike term) => [Either term term] -> UnifyState term -> term -> term
 mapUp' used state x =
   if (Left x `elem` used)
     then x
@@ -44,6 +55,7 @@ mapUp' used state x =
 
 mapDown :: (TermLike term) => UnifyState term -> term -> term
 mapDown = mapDown' []
+mapDown' :: (TermLike term) => [Either term term] -> UnifyState term -> term -> term
 mapDown' used state y =
   if (Right y `elem` used)
     then y
@@ -57,6 +69,7 @@ isFree x (Free y : xs) =
   if x == y
     then True
     else isFree x xs
+isFree x (Bound y _ : xs) = isFree x xs
 getBinds :: (Eq term) => term -> [TermState term] -> [term]
 getBinds x term = catMaybes $ fmap (\case Bound x' y -> if x == x' then Just y else Nothing; _ -> Nothing) term
 setBind :: (Eq term) => term -> term -> [TermState term] -> ([TermState term], Bool)
@@ -84,6 +97,17 @@ setAt y z (Free x : xs) =
     else Free x : setAt y z xs
 setAt z w (Bound x y : xs) =
   if x == z
+    then w : xs
+    else Bound x y : setAt z w xs
+
+setAtB :: (Eq term) => term -> TermState term -> [TermState term] -> [TermState term]
+setAtB _ _ [] = []
+setAtB y z (Free x : xs) =
+  if x == y
+    then z : xs
+    else Free x : setAt y z xs
+setAtB z w (Bound x y : xs) =
+  if y == z
     then w : xs
     else Bound x y : setAt z w xs
 

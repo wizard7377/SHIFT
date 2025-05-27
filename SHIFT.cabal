@@ -20,6 +20,8 @@ extra-source-files:
     CHANGELOG.md
 extra-doc-files:
     docs/MetaLamed.md
+    pl/Reference.pl
+    pl/Reference.pl~
 
 source-repository head
   type: git
@@ -57,11 +59,13 @@ library
       Extra.Debug
       Extra.Decide
       Extra.Error
+      Extra.Exports
       Extra.Lens
       Extra.List
       Extra.Map
       Extra.Monad
       Extra.Ops
+      Extra.TestHelp
       Extra.Todo
       Extra.Tree
       Extra.Tuple
@@ -72,6 +76,8 @@ library
       Hift.Opts.Types
       Hift.Query
       Lift.Core
+      Lift.Core.Dev
+      Lift.Core.Dev.Parse
       Lift.Core.Forms
       Lift.Core.Forms.Axiom
       Lift.Core.Forms.Message
@@ -102,12 +108,15 @@ library
       Rift.Core.Dev.Paeno
       Rift.Core.Dev.Parser
       Rift.Core.Dev.Util
+      Rift.Core.Generate
       Rift.Core.Instances
+      Rift.Core.Interface
       Rift.Core.Kernel
       Rift.Core.Ops
       Rift.Core.Ops.Mem
       Rift.Core.Unify
       Rift.Core.Unify.Base
+      Rift.Core.Unify.Conclude
       Rift.Core.Unify.Infer
       Rift.Core.Unify.Util
       Rift.Core.UnifyNew.Base
@@ -165,7 +174,7 @@ library
     , data-default
     , deepseq
     , extra
-    , lens
+    , lens >5
     , megaparsec
     , monad-loops
     , mtl
@@ -179,7 +188,7 @@ library
   if flag(sanity) && (!flag(dev))
     ghc-options: -O0 -fdefer-typed-holes -Wtyped-holes -W -Wno-duplicate-exports -Wno-unused-imports -Wno-unused-local-binds -Wno-unused-matches -Wno-dodgy-imports -Wno-dodgy-exports
   if flag(dev) && (!flag(release))
-    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wno-typed-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -fprof-auto -g2
+    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wno-typed-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -fprof-late -g2
   if flag(dev) && flag(release)
     ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -fdefer-typed-holes
   if flag(release)
@@ -223,7 +232,7 @@ executable SHIFT-exe
     , data-default
     , deepseq
     , extra
-    , lens
+    , lens >5
     , megaparsec
     , monad-loops
     , mtl
@@ -237,13 +246,13 @@ executable SHIFT-exe
   if flag(sanity) && (!flag(dev))
     ghc-options: -O0 -fdefer-typed-holes -Wtyped-holes -W -Wno-duplicate-exports -Wno-unused-imports -Wno-unused-local-binds -Wno-unused-matches -Wno-dodgy-imports -Wno-dodgy-exports
   if flag(dev) && (!flag(release))
-    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wno-typed-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -fprof-auto -g2
+    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wno-typed-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -fprof-late -g2
   if flag(dev) && flag(release)
     ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -fdefer-typed-holes
   if flag(release)
     ghc-options: -w -O2
 
-test-suite SHIFT-test
+test-suite spec
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
@@ -283,7 +292,7 @@ test-suite SHIFT-test
     , data-default
     , deepseq
     , extra
-    , lens
+    , lens >5
     , megaparsec
     , monad-loops
     , mtl
@@ -297,15 +306,15 @@ test-suite SHIFT-test
   if flag(sanity) && (!flag(dev))
     ghc-options: -O0 -fdefer-typed-holes -Wtyped-holes -W -Wno-duplicate-exports -Wno-unused-imports -Wno-unused-local-binds -Wno-unused-matches -Wno-dodgy-imports -Wno-dodgy-exports
   if flag(dev) && (!flag(release))
-    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wno-typed-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -fprof-auto -g2
+    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wno-typed-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -fprof-late -g2
   if flag(dev) && flag(release)
     ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -fdefer-typed-holes
   if flag(release)
     ghc-options: -w -O2
 
-benchmark SHIFT-perf
+benchmark timer
   type: exitcode-stdio-1.0
-  main-is: Bench.hs
+  main-is: Main.hs
   other-modules:
       Paths_SHIFT
   autogen-modules:
@@ -342,7 +351,7 @@ benchmark SHIFT-perf
     , data-default
     , deepseq
     , extra
-    , lens
+    , lens >5
     , megaparsec
     , monad-loops
     , mtl
@@ -356,7 +365,7 @@ benchmark SHIFT-perf
   if flag(sanity) && (!flag(dev))
     ghc-options: -O0 -fdefer-typed-holes -Wtyped-holes -W -Wno-duplicate-exports -Wno-unused-imports -Wno-unused-local-binds -Wno-unused-matches -Wno-dodgy-imports -Wno-dodgy-exports
   if flag(dev) && (!flag(release))
-    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wno-typed-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -fprof-auto -g2
+    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wno-typed-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -fprof-late -g2
   if flag(dev) && flag(release)
     ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -fdefer-typed-holes
   if flag(release)

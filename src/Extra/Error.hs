@@ -11,7 +11,6 @@ data Error
   = MatchError Text
   | Other Text
   | OutOfBounds
-  | SymbolNotFound
   | MonadFailing T.Text
   | TODO
   deriving (Eq, Show, Ord)

@@ -18,8 +18,7 @@ import Lift.Core.Symbol.Types
 data Module t = Module
   { _moduleName :: ModuleName
   , _moduleSource :: SourceRange
-  , _axioms :: Map.Map SymbolName (Statement t)
-  , _theorems :: Map.Map SymbolName (Statement t)
+  , _statements :: Map.Map SymbolName (Statement t)
   , _proofs :: Map.Map SymbolName (Proof t)
   , _symboltable :: SymbolTable
   , _queries :: Todo

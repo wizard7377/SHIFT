@@ -3,8 +3,11 @@
 
 module Lift.Mift.Parser where
 
+import Control.Lens (use)
 import Control.Monad.Error.Class (MonadError (..))
 import Control.Monad.RWS (MonadState (..), MonadTrans (..))
+import Data.Default
+import Data.Foldable (traverse_)
 import Data.List (singleton)
 import Extra hiding (choice)
 import Lift.Core
@@ -37,11 +40,14 @@ psymbol = do
   sym
 
 -- | Parse simple definitions
-pdefinesym :: (Monad m, MonadFail m) => PFMT t m sym
+pdefinesym :: (Monad m, MonadFail m) => PFMT t m ()
 pdefinesym = do
-  keyword "define"
+  keyword "create"
   res <- plistOf (withPos lexeme)
-  _
+  currentModule <- use currentModule
+  let syms = (\(sym, loc) -> ((QName currentModule sym), mkSymbol sym loc def)) <$> res
+  traverse_ (lift . (uncurry $ createSymbol)) syms
+  pure ()
 
 pterm :: PFMT t m (MiftTerm)
 pterm =
@@ -64,10 +70,14 @@ plistOfLen n e = do
   res <- count n e
   keyword "end" <|> keyword "}"
   pure res
-pdecl = _
+pdecl =
+  choice
+    [ pdefinesym <* pender
+    ]
 pmod = _
 pfile = _
 pinclude = _
 paxiom = _
 pproof = _
 ptheorem = _
+pender = keyword "end" <|> keyword ";"

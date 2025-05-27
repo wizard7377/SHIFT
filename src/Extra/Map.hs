@@ -22,6 +22,8 @@ type Map a b = [Image a b]
 -- | A mapping from @a@ to itself
 type HMap a = Map a a
 
+change :: (Eq a) => a -> a -> (a -> a)
+change from to within = if from == within then to else within
 image :: a -> b -> Image a b
 image a b = (a, b)
 (>->) :: a -> b -> Image a b

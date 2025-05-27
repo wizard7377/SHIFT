@@ -41,3 +41,6 @@ data SymbolData
 makeLenses ''QName
 makeLenses ''Symbol
 makeLenses ''SymbolData
+
+mkSymbol :: T.Text -> SourceRange -> SymbolData -> Symbol
+mkSymbol = Symbol

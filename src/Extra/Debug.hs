@@ -26,9 +26,10 @@ showColor i a = colorCode (getColor i) ++ show a ++ resetCode
 showColor' :: Int -> String -> String
 showColor' i a = colorCode (getColor i) ++ a ++ resetCode
 
+{-# INLINE traceF #-}
 traceF :: String -> a -> a
 #ifdef debug
-traceF = trace
+traceF !msg val = trace msg val
 #else 
 traceF = const id
 #endif

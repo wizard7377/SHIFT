@@ -4,6 +4,7 @@ import Control.Lens (At (..), Lens', (%~), (&), (.>), (<.), (?~), (^.), (^?), (^
 import Control.Monad.Error.Class (MonadError (..))
 import Control.Monad.RWS
 import Data.Map qualified as Map
+import Extra.Error (Error (..))
 import Lift.Core.Forms.Module
 import Lift.Core.Monad.Monad
 import Lift.Core.Monad.Parse (LiftError (..))
@@ -19,6 +20,12 @@ getSymbol (QName modpath symname) = do
   case res of
     Just (Just symbol) -> pure symbol
     _ -> lift $ throwError SymbolNotFound
+createSymbol (QName modpath symname) sym = do
+  state <- get
+  let res = state ^? universe . symbolLens (QName modpath symname)
+  case res of
+    Just (Just symbol) -> lift $ throwError (SymbolAlreadyExists)
+    _ -> setSymbol (QName modpath symname) sym
 
 setSymbol :: forall t m. (Monad m, MonadFail m) => QName -> Symbol -> FMT t m Symbol
 setSymbol (QName modpath symname) sym = do

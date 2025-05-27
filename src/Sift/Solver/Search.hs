@@ -1,6 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DeepSubsumption #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# HLINT ignore "Use mapMaybe" #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE LiberalTypeSynonyms #-}
@@ -23,6 +24,8 @@ import Control.Monad.Identity (Identity (..))
 
 -- import Extra.Choice (Choice (AllOf, AnyOf, EmptyNode, Simple, Trivial))
 
+import Control.Applicative
+import Control.Monad.Extra (ifM)
 import Control.Monad.RWS (MonadReader (..))
 import Control.Monad.Reader
 import Control.Monad.State
@@ -32,7 +35,7 @@ import Data.List.Extra (nub)
 import Data.Maybe (catMaybes, isJust, mapMaybe, maybeToList)
 import Data.Traversable
 import Debug.Trace (traceShow, traceShowId)
-import Extra
+import Extra hiding (flip)
 import Extra.Basics
 import Extra.Choice hiding (resolve)
 import Extra.Choice qualified
@@ -52,39 +55,43 @@ import Sift.Solver.Types
 
 -- TODO temporary
 
-unfoldStartGen :: forall t w term. (Rift.Term term, Rift.TermLike term, Monoid w, Rift.TermOf t ~ term, Rift.Theory t) => [STerm term] -> LM t w (SearchState term) [STerm term]
-unfoldStartGen starts =
+{-# SCC genSearch #-}
+{-# SCC genSearch' #-}
+{-# SCC mem #-}
+{-# SCC mem' #-}
+unfoldStartGen :: forall t w term. (Rift.Term term, Rift.TermLike term, Monoid w, Rift.TermOf t ~ term, Rift.Theory t) => Choice (STerm term) -> LM t w (SearchState term) (Choice (STerm term))
+unfoldStartGen = unfoldStartGen' 0
+unfoldStartGen' :: forall t w term. (Rift.Term term, Rift.TermLike term, Monoid w, Rift.TermOf t ~ term, Rift.Theory t) => Int -> Choice (STerm term) -> LM t w (SearchState term) (Choice (STerm term))
+unfoldStartGen' i starts =
   do
     env <- ask
     let unfoldStart = (env ^. Rift.unfoldStart)
     let theory = env ^. Rift.theory
     let sentences = (\(Rift.Sentence t p) -> STerm t [] $ Rift.Given p) <$> Rift.getSentences theory
     res <-
-      ( ( ( \(x :: [STerm term]) (y :: [STerm term]) -> do
-              lr <- sequence $ mem <$> y <*> x
-              rr <- sequence $ mem <$> x <*> y
-              let res = mconcat lr <> mconcat rr
-              pure res
-          ) ::
-            ([STerm term] -> [STerm term] -> LM t w (SearchState term) [STerm term])
+      ( ( \(x :: Choice (STerm _)) (y :: Choice (STerm _)) -> do
+            lr <- sequence $ mem <$> y <*> x
+            rr <- sequence $ mem <$> x <*> y
+            let res = asum (lr <|> rr)
+            pure res
         )
-          sentences
+          $ mkChoice sentences
         )
         starts
-
-    pure res
+    let res' = csimpl' res
+    if (unfoldStart < i) then pure res' else (unfoldStartGen' (i + 1) res')
 genSearch ::
-  (Rift.Term term, Rift.TermLike term, Monoid w, Rift.TermOf t ~ term, Rift.Theory t) =>
+  (Rift.TermLike term, Rift.Term term, Monoid w, Rift.Theory t, Rift.TermOf t ~ term) =>
   term ->
   LM t w (SearchState term) (Rift.LogicResult term)
 genSearch term = do
   env <- ask
   let sentences = (\(Rift.Sentence t p) -> STerm t [] $ Rift.Given p) <$> Rift.getSentences (env ^. Rift.theory)
   unfold <- asks (^. Rift.unfoldStart)
-  nsentences <- (recurseM unfold unfoldStartGen sentences)
+  nsentences <- (recurseM unfold unfoldStartGen $ mkChoice sentences)
   genSearch' term
 genSearch' ::
-  (Rift.Term term, Rift.TermLike term, Monoid w) =>
+  (Rift.TermLike term, Rift.Term term, Monoid w) =>
   term ->
   LM t w (SearchState term) (Rift.LogicResult term)
 genSearch' goal = do
@@ -95,44 +102,52 @@ genSearch' goal = do
   provens <- gets _proven
   scratches <- gets _scratch
   results' <- sequence ((mem <$> provens <*> scratches) <> (mem <$> scratches <*> provens))
-  let results = nub $ concat results'
+  let results = runChoice $ csimpl' $ asum results'
   depth .= depths + 1
-  proven .= nub (provens <> scratches)
-  scratch .= nub (results <> scratches)
-  ( if (resolved (results <> provens <> scratches) goal)
-      then do ("Solved" ?> return (Rift.Solved goal))
-      else (if depths < maxDepth then (do "Go again" ?> genSearch' goal) else "Stopped" ?> return Rift.Stopped)
-    )
+  proven .= nub (provens <|> scratches)
+  scratch .= nub (results <|> scratches)
+  isres <- (resolved (nub (results <|> provens <|> scratches)) goal)
+  res <-
+    if isres
+      then pure $ Rift.Solved goal
+      else (if depths < maxDepth then genSearch' goal else return Rift.Stopped)
+  pure res
 
 resolved ::
-  forall term.
-  (Rift.Term term, Rift.TermLike term) =>
+  (Rift.TermLike term, Rift.Term term, Monoid w) =>
   [STerm term] ->
   term ->
-  Bool
+  LM t w (SearchState term) Bool
 resolved vals goal =
-  "Called"
-    ?> cexists (Rift.unify (Rift.FTerm goal []) <$> mkChoice vals)
+  let
+    ures = Rift.unify (Rift.FTerm goal []) <$> vals
+    res = cexists <$> ures
+   in
+    pure $ or res
 
 -- | The basic mem rule
 mem ::
-  (Rift.Term term, Eq term, Ord term, Show term, Monoid w) =>
-  -- | The transform, top value $?x A B$
+  -- \| The transform, top value $?x A B$
+  (Rift.Term term, Rift.TermLike term, Monoid w) =>
   STerm term ->
   -- | The transformed, bottom value, $B$
   STerm term ->
-  LM t w (SearchState term) [STerm term]
+  LM t w (SearchState term) (Choice (STerm term))
 mem top bottom =
-  (mem' top bottom) >>= \case
-    [] -> return []
-    vals -> do
-      newvals <- concat <$> sequence ((mem <$> vals) <*> pure bottom)
-      pure $ vals <> newvals
-{-# INLINE mem #-}
+  "Mem"
+    ?> ( \case
+          Choice _ [] -> cabsurd
+          vals -> vals
+       )
+    <$> mem' top bottom
 
-mem' :: (Rift.Term term, Eq term, Ord term, Show term, Monoid w) => STerm term -> STerm term -> LM t w (SearchState term) [STerm term]
-mem' top@(STerm (Rift.Lamed var upFrom upTo) freeUp proofA) bottom@(STerm down freeDown proofB) =
-  let mr = Rift.mem' upFrom upTo (var : freeUp) down freeDown
-   in pure $ (\(Rift.FTerm t v) -> STerm t v (Rift.Mem proofA proofB)) <$> mr
-mem' _ _ = pure []
-{-# INLINE mem' #-}
+-- {-# INLINE mem #-}
+
+mem' :: (Rift.Term term, Eq term, Ord term, Show term, Monoid w) => STerm term -> STerm term -> LM t w (SearchState term) (Choice (STerm term))
+mem' top@(STerm (Rift.Lamed var upFrom upTo) freeUp proofA) bottom@(STerm down freeDown proofB) = do
+  let mr = Rift.memReduce (var : freeUp) upFrom upTo (down, freeDown)
+  let res = (\(Rift.FTerm t v) -> STerm t v (Rift.Mem proofA proofB)) <$> mr
+  "Not absurd" ?> (pure res)
+mem' _ _ = do pure $ "Absurd" ?> cabsurd
+
+-- {-# INLINE mem' #-}

@@ -18,6 +18,6 @@ class Theory t where
   -- | The value of the sentences
   getSentences :: t -> [Sentence (TermOf t)]
 
-instance Theory [t] where
+instance {-# OVERLAPPABLE #-} Theory [t] where
   type TermOf [t] = t
   getSentences t = uncurry Sentence <$> zip t [0 ..]

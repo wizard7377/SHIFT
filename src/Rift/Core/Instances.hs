@@ -1,12 +1,16 @@
 {-# LANGUAGE QuantifiedConstraints #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Rift.Core.Instances where
 
 import Data.List (intercalate, intersperse)
 import Data.Text qualified as T
+import Extra
 import Extra.Debug
 import Rift.Core.Base
+import Rift.Core.Interface
 import Rift.Core.Kernel
+import Rift.Core.Unify.Util
 import Rift.Core.Utility
 import System.Console.ANSI qualified as ANSI
 
@@ -28,6 +32,7 @@ instance Token a => Unify (Term' a) where
 instance {-# OVERLAPPING #-} Show TestToken where
   show (TestToken (Left t)) = T.unpack t
   show (TestToken (Right t)) = "_" ++ show t
+  show (TestLogicToken t) = "$" ++ show t
 
 showRainbow :: (Show a) => Int -> Term' a -> [Char]
 showRainbow i (Lamed v b t) = showColor' i "[" ++ showRainbow n v ++ showColor' i "] {" ++ showRainbow n b ++ " " ++ showRainbow n t ++ showColor' i "}"
@@ -47,3 +52,7 @@ instance (Show TestToken) => Show TestTerm where
   show = showRainbow 1
 
 -- showList v = (++ showListT v)
+instance UTermLike TestTerm Int where
+  uniqueCreate term tag = PrimAtom $ TestLogicToken tag
+
+type TermFull tag term = (Term term, TermLike term, FTermLike term, UTermLike term tag)

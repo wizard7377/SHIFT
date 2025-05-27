@@ -1,10 +1,13 @@
 module Rift.Core.Dev.Util where
 
 import Control.Lens ((^.), _2)
+import Data.List.Extra (splitOn)
 import Data.Text qualified as T
 import Extra
+import Extra.TestHelp (makeTestList)
 import Rift.Core.Base
 import Rift.Core.Dev.Parser
+import Rift.Core.Interface (FTerm (..))
 import Rift.Core.Ops.Mem hiding (FTerm)
 import Rift.Core.Unify
 import Rift.Core.Unify.Base
@@ -18,6 +21,10 @@ justAssume v = case v of
 
 tRead :: String -> TestTerm
 tRead input = (justAssume . readTerm) input
+tReadIO :: String -> IO TestTerm
+tReadIO input = case readTerm input of
+  Just term -> return term
+  Nothing -> error $ "Failed to read term: " ++ input
 tReadL :: String -> [TestTerm]
 tReadL input = (justAssume . readManyTerms) input
 
@@ -25,7 +32,7 @@ tReadLL input = (justAssume . readManyTerms') input
 readSys' :: FilePath -> [[TestTerm]]
 readSys' path = tReadLL $ unsafePerformIO $ readFile path
 readSys = readSys'
-genTest :: [String] -> String -> Rift.Core.Unify.FTerm TestTerm
+genTest :: [String] -> String -> FTerm TestTerm
 genTest [] str = (FTerm (tRead str) [])
 genTest (x : xs) str =
   let
@@ -36,9 +43,20 @@ genTest (x : xs) str =
 selectAt :: [[a]] -> [Int] -> [a]
 selectAt l = concatMap (l !!)
 
-unifyTest :: (Term term, Ord term, Show term) => [term] -> [term] -> term -> term -> [UnifyState term]
+unifyTest :: (Term term, Ord term, Show term) => [term] -> [term] -> term -> term -> Choice (UnifyState term)
 unifyTest binds1 binds2 term1 term2 =
   unify (FTerm term1 binds1) (FTerm term2 binds2)
+
+unifyTestS :: [String] -> [String] -> String -> String -> Choice (UnifyState TestTerm)
+unifyTestS binds1 binds2 term1 term2 = unifyTest (tRead <$> binds1) (tRead <$> binds2) (tRead term1) (tRead term2)
+
+testFTerm :: String -> FTerm TestTerm
+testFTerm str =
+  let
+    [vars, term] = splitOn "." str
+    vars' = makeTestList (tRead . T.unpack) ";" vars
+   in
+    FTerm (tRead term) vars'
 
 --  let
 --    binds = generate term1 term2

@@ -5,17 +5,25 @@ module Tests.Searching (searchTests, searchBench, paeno, fundementalT) where
 import Criterion
 import Rift
 import Sift
-import Sift.Dev.Util (benchSolve', requireSolve, requireSolve')
+import Sift.Dev.Util (benchSolve, benchSolve', requireSolve, requireSolve')
 import Test.Tasty
 import Test.Tasty.HUnit
 
-paeno = selectAt (readSys "test/Simple.tift") [0 .. 4]
+paeno :: [TestTerm]
+paeno = selectAt (readSys "test/Simple.tift") [0 .. 3]
+fundementalT :: [TestTerm]
 fundementalT = selectAt (readSys "test/Fundemental.tift") [0]
+t0 :: TestTerm
 t0 = tRead "(= 0 0)"
+t1 :: TestTerm
 t1 = tRead "(= (S 0) 1)"
+t2 :: TestTerm
 t2 = tRead "(= (S (S 0)) 2)"
+t3 :: TestTerm
 t3 = tRead "(Nat 0)"
+t4 :: TestTerm
 t4 = tRead "(Nat (S 0))"
+t5 :: TestTerm
 t5 = tRead "(Nat 1)"
 searchTests :: TestTree
 searchTests =

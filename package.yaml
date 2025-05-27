@@ -25,6 +25,7 @@ extra-source-files:
   - CHANGELOG.md
 extra-doc-files:
   - docs/*
+  - pl/*
 
 language: GHC2021
 other-extensions:
@@ -49,7 +50,7 @@ dependencies:
   - mtl
   - text
   - megaparsec
-  - lens
+  - lens > 5
   - binary
   - data-default
   - HaTeX
@@ -89,7 +90,7 @@ when:
       - -Wno-typed-holes
       - -Wdeferred-type-errors
       - -Wdeferred-out-of-scope-variables
-      - -fprof-auto
+      - -fprof-late
       - -g2
   - condition: flag(dev) && flag(release)
     ghc-options:
@@ -122,7 +123,8 @@ library:
 executables:
   SHIFT-exe:
     main: Main.hs
-    source-dirs: app
+    source-dirs:
+      - app
     ghc-options:
       - -threaded
       - -rtsopts
@@ -131,7 +133,7 @@ executables:
       - SHIFT
 
 tests:
-  SHIFT-test:
+  spec:
     main: Main.hs
     source-dirs:
       - test
@@ -143,8 +145,8 @@ tests:
       - SHIFT
 
 benchmarks:
-  SHIFT-perf:
-    main: Bench.hs
+  timer:
+    main: Main.hs
     source-dirs:
       - perf
     ghc-options:

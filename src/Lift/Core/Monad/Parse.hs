@@ -10,6 +10,7 @@ import Text.Megaparsec
 
 data LiftError
   = SymbolNotFound
+  | SymbolAlreadyExists
   deriving (Eq, Show, Ord, Generic, Data)
 type PFMT t m = ParsecT LiftError T.Text (FMT t m)
 

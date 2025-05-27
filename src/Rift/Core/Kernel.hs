@@ -5,6 +5,8 @@
 {-# LANGUAGE QuantifiedConstraints #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE TypeData #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Rift.Core.Kernel (
   Term (..),
@@ -20,6 +22,7 @@ import Data.Data
 import Data.Text (Text)
 import Extra
 import GHC.Generics
+import Control.Lens (Plated(..))
 
 type family Fundemental :: k -> Type
 data PrimTermCon term atom where
@@ -38,6 +41,8 @@ class Term term where
 
 type AnyTerm term = Term term
 
+instance {-# OVERLAPPABLE #-} (Term term) => Plated (term) where 
+  plate f (Cons a b) = Cons <$> f a <*> f b
 -- | The pattern synonym for atom
 pattern Atom :: (Term term) => AtomOf term -> term
 pattern Atom a0 <- (viewTerm -> PrimAtomCon a0)

@@ -3,12 +3,14 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE QuantifiedConstraints #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wno-duplicate-exports #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Rift.Core.Base (
   Term(..),
   AnyTerm,
-  Term',
+  Term'(..),
   TestTerm,
   TestToken (..),
   Atomic,
@@ -38,7 +40,8 @@ import Data.Kind (Constraint, Type)
 import Data.Text as T hiding (cons)
 import GHC.Generics (Generic)
 import Text.Show.Functions ()
-
+import Extra
+import Data.Type.Equality ((:~:) (..))
 data Term' atom where
   PrimLamed :: Term' atom
   PrimAtom :: atom -> Term' atom
@@ -54,7 +57,7 @@ instance (Term (Term' atom)) where
   makeTerm (PrimAtomCon a) = PrimAtom a
   makeTerm PrimLamedCon = PrimLamed
 type TermLike term = (Eq term, Ord term, Show term)
-data TestToken = TestToken (Either Text Int)
+data TestToken = TestToken (Either Text Int) | TestLogicToken Int
   deriving (Eq, Ord, Data, Generic)
 
 type TestTerm = Term' TestToken
@@ -123,7 +126,7 @@ recurseSome f v = let v' = f v in
   if v == v' then (
     case v of
       Cons a0 a1 -> Cons (recurseSome f a0) (recurseSome f a1)
-      Atom _ -> v
+      Atom _ -> v'
       BasicLamed -> BasicLamed
   )
     else v'

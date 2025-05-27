@@ -14,6 +14,10 @@ import Lift.Core.Forms.Module
 import Lift.Core.ParseEnv
 import Rift.Forms.Language
 
+{- | The central monad transformer for parsing
+ - Takes in a term arguement `t`, an inner monad `m`, and a result `a`
+ -
+-}
 newtype FMT t m a = FMT {runFMT :: ParseEnv -> LiftState t -> m (Either Error a, LiftState t, [Message])}
 
 instance (Monad m) => Functor (FMT t m) where

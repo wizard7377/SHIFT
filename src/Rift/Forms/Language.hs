@@ -9,6 +9,9 @@ data ParseEnv = ParseEnv
   { _cwd :: FilePath
   , _file :: FilePath
   }
+
+defaultParseEnv :: ParseEnv
+defaultParseEnv = ParseEnv "." "TESTING"
 class (Theory (TheoryOf tag)) => Language (tag :: k) where
   type TheoryOf tag
   parseTheory :: ParseEnv -> TheoryOf tag
