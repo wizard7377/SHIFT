@@ -41,7 +41,8 @@ class Term term where
 
 type AnyTerm term = Term term
 
-instance {-# OVERLAPPABLE #-} (Term term) => Plated (term) where 
+-- |Simply a case where we rewrite over `Cons`
+instance (Term term) => Plated term where 
   plate f (Cons a b) = Cons <$> f a <*> f b
 -- | The pattern synonym for atom
 pattern Atom :: (Term term) => AtomOf term -> term

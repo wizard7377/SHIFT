@@ -53,3 +53,8 @@ split :: a -> (a, a)
 split a = (a, a)
 combine :: (a -> b -> c) -> (a, b) -> c
 combine f (a, b) = f a b
+
+onlyChange :: (Eq a) => (a -> a) -> (a -> Maybe a)
+onlyChange f x =
+  let x' = f x
+   in if x' == x then Nothing else Just x'

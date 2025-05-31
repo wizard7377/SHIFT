@@ -141,6 +141,9 @@ tests:
       - -threaded
       - -rtsopts
       - -with-rtsopts=-N
+      - -O0
+    cpp-options:
+      - -DnoColor
     dependencies:
       - SHIFT
 

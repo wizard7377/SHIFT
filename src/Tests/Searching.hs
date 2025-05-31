@@ -1,6 +1,6 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 
-module Tests.Searching (searchTests, searchBench, paeno, fundementalT) where
+module Tests.Searching (searchTests, searchBench, paeno, fundementalT, reallySimple) where
 
 import Criterion
 import Rift
@@ -11,6 +11,7 @@ import Test.Tasty.HUnit
 
 paeno :: [TestTerm]
 paeno = selectAt (readSys "test/Simple.tift") [0 .. 3]
+reallySimple = selectAt (readSys "test/Simple2.tift") [0]
 fundementalT :: [TestTerm]
 fundementalT = selectAt (readSys "test/Fundemental.tift") [0]
 t0 :: TestTerm

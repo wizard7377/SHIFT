@@ -21,6 +21,7 @@ import Control.Monad.Trans
 import Data.Foldable (Foldable (..))
 import Data.Functor.Identity (Identity (..))
 import Data.List (singleton)
+import Data.List.Extra (nubBy)
 import Data.Maybe (catMaybes, isJust, mapMaybe)
 import Extra.Basics
 import Extra.List
@@ -40,14 +41,12 @@ instance Functor Choice where
 instance Applicative Choice where
   pure x = Choice [x]
   (Choice fs) <*> (Choice xs) = Choice $ [f x | f <- fs, x <- xs]
+
+{-# INLINE bindChoice #-}
+bindChoice :: Choice a -> (a -> Choice b) -> Choice b
+bindChoice (Choice xs) f = Choice $ concatMap (runChoice . f) xs
 instance Monad Choice where
-  (Choice xs) >>= f =
-    Choice $
-      concatMap
-        ( \x -> case f x of
-            Choice ys -> ys
-        )
-        xs
+  (>>=) = bindChoice
 
 instance (Semigroup a) => Semigroup (Choice a) where
   (Choice xs) <> (Choice ys) = Choice $ (<>) <$> xs <*> ys
@@ -66,6 +65,8 @@ instance MonadPlus Choice where
 instance Foldable Choice where
   foldr f z (Choice xs) = foldr f z xs
 
+traverseChoice :: (Applicative f) => (a -> f b) -> Choice a -> f (Choice b)
+traverseChoice f (Choice xs) = Choice <$> traverse f xs
 instance Traversable Choice where
   traverse f (Choice xs) = Choice <$> traverse f xs
 
@@ -79,3 +80,11 @@ cabsurd = Choice []
 
 cexists :: Choice a -> Bool
 cexists (Choice xs) = not $ null xs
+csimpl :: (a -> a -> Bool) -> Choice a -> Choice a
+csimpl f (Choice xs) = Choice $ nubBy f xs
+csimpl' :: (Eq a) => Choice a -> Choice a
+csimpl' = csimpl (==)
+csubset :: (a -> b -> Bool) -> Choice a -> Choice b -> Bool
+csubset f (Choice xs) (Choice ys) = all (\x -> any (f x) ys) xs
+csubset' :: (Eq a) => Choice a -> Choice a -> Bool
+csubset' = csubset (==)

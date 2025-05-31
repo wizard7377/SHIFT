@@ -11,7 +11,7 @@ import Control.Monad
 import Control.Monad.State
 import Control.Monad.Writer
 import Data.List
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes, fromMaybe)
 import Extra
 import Rift.Core.Base
 import Prelude hiding ((.))
@@ -26,6 +26,7 @@ makePrisms ''TermState
 data UnifyState term = UnifyState
   { _upState :: [TermState term]
   , _downState :: [TermState term]
+  , _renames :: HMap term
   }
   deriving (Ord, Data, Typeable, Generic)
 
@@ -39,30 +40,36 @@ replaceDown old new state =
   let
     r0 = state & upState . each . _Bound . _2 %~ (change old new)
     r1 = r0 & downState . each . _Free %~ (change old new)
-    r2 = r0 & downState . each . _Bound . _2 %~ (change old new)
+    r2 = r1 & downState . each . _Bound . _2 %~ (change old new)
+    r3 = r2 & renames %~ (<> (toMapImage $ pure $ Image old new))
    in
-    r2
+    r3
 mapUp :: (TermLike term) => UnifyState term -> term -> term
-mapUp = mapUp' []
-mapUp' :: (TermLike term) => [Either term term] -> UnifyState term -> term -> term
+mapUp state x = fromMaybe x (mapUp' [] state x)
+mapUp' :: (TermLike term) => [Either term term] -> UnifyState term -> term -> Maybe term
 mapUp' used state x =
-  if (Left x `elem` used)
-    then x
-    else case getAt (state ^. upState) x of
-      Just (Free y) -> y
-      Just (Bound _ y) -> mapDown' (Left x : used) state y
-      Nothing -> x
+  ("Used" <?> used) `seq`
+    ("State" <?> state) `seq`
+      ("x" <?> x) `seq`
+        "Result"
+          <?> if (Left x `elem` used)
+            then Nothing
+            else case getAt (state ^. upState) x of
+              Just (Free y) -> Just y
+              Just (Bound _ y) -> mapDown' (Left x : used) state y
+              _ -> Just x
 
 mapDown :: (TermLike term) => UnifyState term -> term -> term
-mapDown = mapDown' []
-mapDown' :: (TermLike term) => [Either term term] -> UnifyState term -> term -> term
+mapDown state x = fromMaybe x (mapDown' [] state x)
+mapDown' :: (TermLike term) => [Either term term] -> UnifyState term -> term -> Maybe term
 mapDown' used state y =
   if (Right y `elem` used)
-    then y
-    else case getAt (state ^. downState) y of
-      Just (Free x) -> x
-      Just (Bound x _) -> mapUp' (Right y : used) state x
-      Nothing -> y
+    then Nothing
+    else case (mlookup (state ^. renames) y, getAt (state ^. downState) y) of
+      (Just z, _) -> mapDown' (Right y : used) state z
+      (_, Just (Free x)) -> Just x
+      (_, Just (Bound x _)) -> mapUp' (Right y : used) state x
+      (_, Nothing) -> Just y
 isFree :: (Eq term) => term -> [TermState term] -> Bool
 isFree _ [] = False
 isFree x (Free y : xs) =
@@ -112,10 +119,13 @@ setAtB z w (Bound x y : xs) =
     else Bound x y : setAt z w xs
 
 instance (Eq term) => Semigroup (UnifyState term) where
-  UnifyState a c <> UnifyState d f =
-    UnifyState (a <> d) (c <> f)
+  UnifyState a c e <> UnifyState d f h =
+    UnifyState (a <> d) (c <> f) (e <> h)
 instance (Eq term) => Monoid (UnifyState term) where
-  mempty = UnifyState [] []
+  mempty = UnifyState [] [] (toMap [])
 
 type UnifyState' t = Choice (UnifyState t)
 type Unification t = (TermLike t) => (Term t) => t -> t -> UnifyState t -> UnifyState' t
+getBound :: [TermState t] -> [t]
+getBound l = catMaybes $ map (\case Bound x _ -> Just x; _ -> Nothing) l
+getFree l = catMaybes $ map (\case Free x -> Just x; _ -> Nothing) l

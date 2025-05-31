@@ -8,10 +8,15 @@
 -}
 module Rift.Core.Unify.Conclude where
 
+import Control.Lens qualified as Lens
+import Data.Maybe (isJust, isNothing)
 import Extra
-import Rift.Core.Generate (Generator)
+import Rift.Core.Base (TermLike)
+import Rift.Core.Generate (Generator, generateTerm)
 import Rift.Core.Instances (TermFull)
-import Rift.Core.Unify.Base
+import Rift.Core.Interface (UTermLike (..))
+import Rift.Core.Unify.Base hiding (Free)
+import Rift.Core.Unify.Base qualified as Unify
 
 data Concluding term
   = Binding term term
@@ -19,10 +24,37 @@ data Concluding term
   deriving (Eq, Show, Ord, Data, Typeable, Generic)
 
 type Conclusions term = [Concluding term]
+data Renaming term = Renaming term term
+toConcluding :: TermState term -> Concluding term
+toConcluding (Unify.Free free) = (Free free)
+toConcluding (Unify.Bound bound free) = (Binding bound free)
+iscyclic :: (TermLike term) => UnifyState term -> [term] -> Bool
+-- TODO
+iscyclic state terms = any (isNothing) $ (mapUp' [] state) <$> terms
+upNormal :: (TermLike term) => UnifyState term -> Choice (UnifyState term)
+upNormal state =
+  let
+    state1 = state & upState . each . _Bound %~ (\(x, y) -> (x, mapDown state y))
+   in
+    pure state1
 
-conclude :: (TermFull tag term, Generator tag gen) => gen -> Choice (UnifyState term) -> ChoiceAccum gen (Conclusions term)
-conclude = _
+downResolve :: (UTermLike term gen, TermLike term) => gen -> UnifyState term -> (UnifyState term)
+downResolve gen state =
+  let
+    frees = getFree (state ^. downState)
+    frees' = (\x -> (x, uniqueCreate x gen)) <$> frees
+    state1 = foldr (\free state -> (uncurry replaceDown) free state) state frees'
+   in
+    -- TODO
+    (state1)
+conclude :: (TermFull tag term) => tag -> Choice (UnifyState term) -> Choice (UnifyState term)
+conclude gen state = conclude' gen <| state
 
-conclude' :: (TermFull tag term, Generator tag gen) => gen -> (UnifyState term) -> ChoiceAccum gen (Conclusions term)
-conclude' gen = do
-  _
+conclude' :: (TermFull tag term) => tag -> (UnifyState term) -> Choice (UnifyState term)
+conclude' gen state =
+  if iscyclic state (getBound (state ^. upState))
+    then cabsurd
+    else do
+      let (state1) = downResolve gen state
+      state2 <- upNormal state1
+      pure (state2)

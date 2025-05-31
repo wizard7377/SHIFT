@@ -66,6 +66,7 @@ library
       Extra.Monad
       Extra.Ops
       Extra.TestHelp
+      Extra.TestHelp.MakeTest
       Extra.Todo
       Extra.Tree
       Extra.Tuple
@@ -119,8 +120,6 @@ library
       Rift.Core.Unify.Conclude
       Rift.Core.Unify.Infer
       Rift.Core.Unify.Util
-      Rift.Core.UnifyNew.Base
-      Rift.Core.UnifyNew.Unify
       Rift.Core.Utility
       Rift.Forms
       Rift.Forms.Language
@@ -275,7 +274,8 @@ test-suite spec
       ConstraintKinds
       MonoLocalBinds
       Arrows
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -O0
+  cpp-options: -DnoColor
   build-depends:
       HUnit
     , HaTeX

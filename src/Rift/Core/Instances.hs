@@ -1,8 +1,11 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE QuantifiedConstraints #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Rift.Core.Instances where
 
+import Control.Lens (lens)
 import Data.List (intercalate, intersperse)
 import Data.Text qualified as T
 import Extra
@@ -35,10 +38,13 @@ instance {-# OVERLAPPING #-} Show TestToken where
   show (TestLogicToken t) = "$" ++ show t
 
 showRainbow :: (Show a) => Int -> Term' a -> [Char]
+showRainbow i (PrimTag t tag) = showColor' i (showRainbow n t ++ "@" ++ show tag)
+ where
+  n = i + 1
 showRainbow i (Lamed v b t) = showColor' i "[" ++ showRainbow n v ++ showColor' i "] {" ++ showRainbow n b ++ " " ++ showRainbow n t ++ showColor' i "}"
  where
   n = i + 1
-showRainbow i x@(Cons a0 a1) = showColor' i "(" ++ intercalate (showColor' i " ") (showRainbow n <$> parseCons x) ++ showColor' i ")"
+showRainbow i x@(Cons a0 a1) = showColor' i "(" ++ intercalate (showColor' i " ") (showRainbow n <$> parseCons a0) ++ " . " ++ (showRainbow n a1) ++ showColor' i ")"
  where
   n = i + 1
 showRainbow i (Atom atom) = resetCode ++ show atom
@@ -49,10 +55,39 @@ showListT :: (Show a) => [Term' a] -> String
 showListT v = if null v then "{}" else "\n[\n\t" ++ intercalate "\n\t" (showRainbow 1 <$> v) ++ "\n]"
 
 instance (Show TestToken) => Show TestTerm where
-  show = showRainbow 1
+  show t = showRainbow 1 t
 
 -- showList v = (++ showListT v)
 instance UTermLike TestTerm Int where
-  uniqueCreate term tag = PrimAtom $ TestLogicToken tag
+  uniqueCreate term tag = PrimTag term tag
+
+freesIn :: Lens' TestTerm [TestTerm]
+freesIn =
+  lens
+    ( \case
+        (PrimFree _ v) -> v
+        _ -> []
+    )
+    ( \term v ->
+        case term of
+          (PrimFree t _) -> PrimFree t v
+          _ -> PrimFree term v
+    )
+termIn :: Lens' TestTerm TestTerm
+termIn =
+  lens
+    ( \case
+        (PrimFree t v) -> t
+        t -> t
+    )
+    ( \term term' ->
+        case term of
+          (PrimFree t v) -> PrimFree term' v
+          _ -> term'
+    )
+instance FTermLike TestTerm where
+  type Inner TestTerm = TestTerm
+  fterm = termIn
+  ffrees = freesIn
 
 type TermFull tag term = (Term term, TermLike term, FTermLike term, UTermLike term tag)

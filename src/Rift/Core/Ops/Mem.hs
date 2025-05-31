@@ -17,18 +17,19 @@ import Rift.Core.Interface qualified as Rift
 import Rift.Core.Kernel qualified as Rift
 import Rift.Core.Unify qualified as Rift
 import Rift.Core.Unify.Base qualified as Rift
+import Rift.Core.Unify.Conclude (conclude)
 
 toFTerm :: (a, [a]) -> FTerm a
 toFTerm (t, fs) = FTerm t fs
 fromFTerm :: FTerm a -> (a, [a])
 fromFTerm (Rift.FTerm t fs) = (t, fs)
 {-# SCC mem #-}
-mem :: (Rift.Term term, Eq term, Ord term, Show term) => FTerm term -> FTerm term -> Choice (FTerm term)
-mem top@(Rift.FTerm (Rift.Lamed var upFrom upTo) freeUp) bottom@(Rift.FTerm down freeDown) = mem' upFrom upTo (var : freeUp) down freeDown
+mem :: (Rift.Term term, Eq term, Ord term, Show term, Rift.FTermLike term, Rift.UTermLike term gen) => gen -> FTerm term -> FTerm term -> Choice (FTerm term)
+mem gen top@(Rift.FTerm (Rift.Lamed var upFrom upTo) freeUp) bottom@(Rift.FTerm down freeDown) = mem' gen upFrom upTo (var : freeUp) down freeDown
 {-# DEPRECATED mem, mem' "Use memReduce instead" #-}
 {-# SCC mem' #-}
-mem' :: (Rift.Term term, Rift.TermLike term) => term -> term -> [term] -> term -> [term] -> Choice (FTerm term)
-mem' upFrom upTo freeUp down freeDown = memReduce freeUp upFrom upTo (FTerm down freeDown)
+mem' :: (Rift.Term term, Rift.TermLike term, Rift.FTermLike term, Rift.UTermLike term gen) => gen -> term -> term -> [term] -> term -> [term] -> Choice (FTerm term)
+mem' gen upFrom upTo freeUp down freeDown = memReduce gen freeUp upFrom upTo (FTerm down freeDown)
 
 {-# SCC memReduce #-}
 {-# INLINE memReduce #-}
@@ -39,7 +40,9 @@ mem' upFrom upTo freeUp down freeDown = memReduce freeUp upFrom upTo (FTerm down
  - ם reduction, then
 -}
 memReduce ::
-  (Rift.Term term, Rift.TermLike term, Rift.FTermLike arg, Rift.Inner arg ~ term) =>
+  forall term arg gen.
+  (Rift.Term term, Rift.TermLike term, Rift.FTermLike arg, Rift.Inner arg ~ term, Rift.FTermLike term, Rift.UTermLike term gen) =>
+  gen ->
   -- | The list of variables in the ל term
   [term] ->
   -- | The input of the ל template
@@ -50,17 +53,19 @@ memReduce ::
   arg ->
   -- | The list of all possible reductions
   Choice (FTerm term)
-memReduce freeUp upFrom upTo down =
+memReduce gen freeUp upFrom upTo down =
   let
     ur = "Ur" <?> Rift.unify (upFrom, freeUp) down
+    ur' = "Ur'" <?> conclude gen ur
     res =
-      ( \ures ->
+      ( \(ures) ->
           let
             mapping = Rift.mapUp ures
-            newvars = Rift.getFree (ures ^. Rift.upState)
+            mappingB = Rift.mapDown ures
+            newvars = Rift.getFree (ures ^. Rift.upState) <> (Rift.getFree (ures ^. Rift.downState))
            in
-            FTerm (Rift.recurseSome mapping upTo) newvars
+            FTerm (Rift.recurseManyA (mapping) mappingB upTo) newvars
       )
-        <$> ur
+        <$> ur'
    in
     res

@@ -9,9 +9,9 @@ import Extra
 import Rift.Forms.Theory (Sentence, Theory (..))
 
 defaultDepth :: Int
-defaultDepth = 3
+defaultDepth = 2
 defaultUnfold :: Int
-defaultUnfold = 12
+defaultUnfold = 4
 
 {- | The type of the logic env
  Note that it is parameterized over the type of the _theory_, not the type of the terms or sentences

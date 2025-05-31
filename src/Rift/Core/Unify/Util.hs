@@ -23,8 +23,4 @@ unify ::
   t0 ->
   t1 ->
   Choice (UnifyState i)
-unify t0 t1 = unifyInfer (t0 ^. fterm) (t1 ^. fterm) (UnifyState (Free <$> (t0 ^. ffrees)) (Free <$> (t1 ^. ffrees)))
-
-getBound :: [TermState t] -> [t]
-getBound l = catMaybes $ map (\case Bound x _ -> Just x; _ -> Nothing) l
-getFree l = catMaybes $ map (\case Free x -> Just x; _ -> Nothing) l
+unify t0 t1 = unifyInfer (t0 ^. fterm) (t1 ^. fterm) (UnifyState (Free <$> (t0 ^. ffrees)) (Free <$> (t1 ^. ffrees)) (toMap []))

@@ -29,6 +29,8 @@ module Rift.Core.Base (
   manyLamed,
   TermLike,
   recurseSome,
+  recurseManyA,
+  recurseManyB,
   poccurs,
   {-# WARNING "Don't use kernel forms, abstract instead" #-} module Rift.Core.Kernel
 ) where
@@ -42,10 +44,13 @@ import GHC.Generics (Generic)
 import Text.Show.Functions ()
 import Extra
 import Data.Type.Equality ((:~:) (..))
+import qualified Control.Lens as Lens
 data Term' atom where
   PrimLamed :: Term' atom
   PrimAtom :: atom -> Term' atom
   PrimCons :: Term' atom -> Term' atom -> Term' atom
+  PrimTag :: Term' atom -> Int -> Term' atom
+  PrimFree :: Term' atom -> [Term' atom] -> Term' atom
   deriving (Eq, Ord)
 
 instance (Term (Term' atom)) where
@@ -53,6 +58,8 @@ instance (Term (Term' atom)) where
   viewTerm (PrimCons t0 t1) = PrimConsCon t0 t1
   viewTerm (PrimAtom a) = PrimAtomCon a
   viewTerm PrimLamed = PrimLamedCon
+  viewTerm (PrimTag t i) = viewTerm t
+  viewTerm (PrimFree t v) = viewTerm t
   makeTerm (PrimConsCon t0 t1) = PrimCons t0 t1
   makeTerm (PrimAtomCon a) = PrimAtom a
   makeTerm PrimLamedCon = PrimLamed
@@ -124,13 +131,29 @@ listToTerm (x : xs) = Cons x <$> listToTerm xs
 recurseSome :: (Eq term, Term term) => (term -> term) -> term -> term
 recurseSome f v = let v' = f v in
   if v == v' then (
-    case v of
+    case v' of
       Cons a0 a1 -> Cons (recurseSome f a0) (recurseSome f a1)
       Atom _ -> v'
       BasicLamed -> BasicLamed
   )
     else v'
-
+-- |For some mapping, recursivly apply it, and only stop if we reach the bottom or the mapping changes the value
+recurseManyA :: (Eq term, Term term) => (term -> term) -> (term -> term) -> term -> term
+recurseManyB :: (Eq term, Term term) => (term -> term) -> (term -> term) -> term -> term
+recurseManyA f g v = let v' = f v in
+  if v == v' then (
+    case v' of
+      Cons a0 a1 -> Cons (recurseManyA f g a0) (recurseManyA f g a1)
+      _ -> v'
+  )
+    else recurseManyB f g v'
+recurseManyB f g v = let v' = g v in
+  if v == v' then (
+    case v' of
+      Cons a0 a1 -> Cons (recurseManyB f g a0) (recurseManyB f g a1)
+      _ -> v'
+  )
+    else recurseManyA f g v'
 -- |Check if a given term occurs within another term
 poccurs :: (Eq term, Term term) => 
   -- |The larger term
