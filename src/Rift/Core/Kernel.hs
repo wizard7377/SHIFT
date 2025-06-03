@@ -3,64 +3,77 @@
 {-# LANGUAGE ImpredicativeTypes #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE QuantifiedConstraints #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE TypeData #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_GHC -Wno-duplicate-exports #-}
 
 module Rift.Core.Kernel (
-  Term (..),
+  KTerm,
+  {-# WARNING "This should only be used in the implementation" #-}
+  PrimKaf(..),
+  {-# WARNING "This should only be used in the implementation" #-}
+  KTerm(..),
   pattern Atom,
   pattern Cons,
   pattern BasicLamed,
-  {-# WARNING "Should not be used outside of implementations" #-}
-  PrimTermCon (..),
+  pattern Kaf,
   AnyTerm,
 ) where
 
+import Control.Lens (Plated (..), Prism', preview, review, traversal, (^?))
+import Control.Lens.Extras (is)
 import Data.Data
 import Data.Text (Text)
 import Extra
 import GHC.Generics
-import Control.Lens (Plated(..))
 
 type family Fundemental :: k -> Type
-data PrimTermCon term atom where
-  PrimLamedCon :: PrimTermCon term atom
-  PrimAtomCon :: atom -> PrimTermCon term atom
-  PrimConsCon :: term -> term -> PrimTermCon term atom
-  deriving (Eq, Ord)
 
-{-| The basic class of terms 
+data PrimKaf term = PrimKafCon term term
+
+{- | The basic class of terms
  - Fundementally, each term is something that has a way to plate to and from a nullary ל constructor, a unary ת constructor, and binary כ constructor
- - -}
-class Term term where
-  type AtomOf term :: Type
-  viewTerm :: term -> PrimTermCon term (AtomOf term)
-  makeTerm :: PrimTermCon term (AtomOf term) -> term
+ -
+-}
+class KTerm term where
+  pKaf :: Prism' term (PrimKaf term)
+  isLamed :: term -> Bool
+  mkLamed :: term
 
-type AnyTerm term = Term term
+type AnyTerm term = KTerm term
 
--- |Simply a case where we rewrite over `Cons`
-instance (Term term) => Plated term where 
-  plate f (Cons a b) = Cons <$> f a <*> f b
+-- | Simply a case where we rewrite over `Cons`
+instance (KTerm term) => Plated term where
+  plate f x =
+    case x ^? pKaf of
+      Just (PrimKafCon a b) -> review pKaf <$> (PrimKafCon <$> f a <*> f b)
+      Nothing -> pure x
+
 -- | The pattern synonym for atom
-pattern Atom :: (Term term) => AtomOf term -> term
-pattern Atom a0 <- (viewTerm -> PrimAtomCon a0)
-  where
-    Atom a0 = makeTerm (PrimAtomCon a0)
+pattern Atom' :: (KTerm term) => term
+pattern Atom' <- (is pKaf -> False)
+
+pattern Atom :: (KTerm term) => term -> term
+pattern Atom atom <- atom@Atom'
 
 -- | The pattern sysnonym for cons
-pattern Cons :: (Term term) => term -> term -> term
-pattern Cons t0 t1 <- (viewTerm -> PrimConsCon t0 t1)
-  where
-    Cons a0 a1 = makeTerm (PrimConsCon a0 a1)
--- | The pattern synoynm for lamed
-pattern BasicLamed :: (Term term) => term
-pattern BasicLamed <- (viewTerm -> PrimLamedCon)
-  where
-    BasicLamed = makeTerm PrimLamedCon
+{-# DEPRECATED Cons "Use Kaf instead" #-}
+pattern Cons :: (KTerm term) => term -> term -> term
+pattern Cons t0 t1 = Kaf t0 t1
 
-{-# INLINE Cons #-} 
-{-# INLINE BasicLamed #-} 
-{-# INLINE Atom #-} 
+pattern Kaf :: (KTerm term) => term -> term -> term
+pattern Kaf t0 t1 <- (preview pKaf -> Just (PrimKafCon t0 t1))
+  where
+    Kaf t0 t1 = review pKaf (PrimKafCon t0 t1)
+
+-- | The pattern synoynm for lamed
+pattern BasicLamed :: (KTerm term) => term
+pattern BasicLamed <- (isLamed -> True)
+  where
+    BasicLamed = mkLamed
+
+{-# INLINE Cons #-}
+{-# INLINE BasicLamed #-}
+{-# INLINE Atom #-}

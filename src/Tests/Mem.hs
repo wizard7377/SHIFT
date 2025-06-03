@@ -46,13 +46,13 @@ makeMemMsg vUp tUpFrom tUpTo vDown tDown tr =
     show $ show $ "Couldn't solve for" ++ show tr' ++ " from מ: ∀" ++ show vUp' ++ " . " ++ show tUpFrom' ++ " |- " ++ show tUpTo' ++ " of : ∀ " ++ show vDown' ++ " . " ++ show tDown' ++ " "
 makeTermList :: String -> [Rift.TestTerm]
 makeTermList = makeTestList (Rift.tRead . T.unpack) ";"
-makeFTermTest :: String -> String -> Rift.FTerm Rift.TestTerm
+makeFTermTest :: String -> String -> Rift.FTerm' Rift.TestTerm
 makeFTermTest t s =
   let
     t' = Rift.tRead t
     s' = makeTermList s
    in
-    Rift.FTerm t' s'
+    Rift.FTerm' t' s'
 
 makeMemTest ::
   -- | VUP
@@ -65,7 +65,7 @@ makeMemTest ::
   String ->
   -- | TDOWN
   String ->
-  Choice (Rift.FTerm Rift.TestTerm)
+  Choice (Rift.FTerm' Rift.TestTerm)
 makeMemTest vUp tUpFrom tUpTo vDown tDown =
   let
     vUp' = makeTermList vUp
@@ -102,7 +102,7 @@ memTest :: [String] -> String -> String -> [String] -> String -> [([String], Str
 memTest vUp tUpFrom tUpTo vDown tDown hypos =
   let
     res = Rift.mem' (Rift.tRead tUpFrom) (Rift.tRead tUpTo) (Rift.tRead <$> vUp) (Rift.tRead tDown) (Rift.tRead <$> vDown)
-    hypos' = (\(x, y) -> (Rift.FTerm (Rift.tRead y)) (Rift.tRead <$> x)) <$> hypos
+    hypos' = (\(x, y) -> (Rift.FTerm' (Rift.tRead y)) (Rift.tRead <$> x)) <$> hypos
    in
     res @?= (mkChoice hypos')
 -}

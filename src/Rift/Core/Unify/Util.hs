@@ -9,15 +9,15 @@ module Rift.Core.Unify.Util where
 import Data.Maybe (catMaybes)
 import Extra
 import Rift.Core.Base
-import Rift.Core.Interface (FTermLike (..))
+import Rift.Core.Interface (FTerm (..))
 import Rift.Core.Unify.Base
 import Rift.Core.Unify.Infer
 
 unify ::
   forall t0.
-  (TermLike (Inner t0), FTermLike t0, Term (Inner t0)) =>
+  (TermLike (Inner t0), FTerm t0, KTerm (Inner t0)) =>
   forall t1.
-  (TermLike (Inner t1), FTermLike t1, Term (Inner t1)) =>
+  (TermLike (Inner t1), FTerm t1, KTerm (Inner t1)) =>
   forall i.
   (i ~ (Inner t0), i ~ (Inner t1)) =>
   t0 ->

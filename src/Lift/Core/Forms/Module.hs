@@ -9,8 +9,7 @@ import Control.Lens.Lens (IndexedLens')
 import Data.Data
 import Data.Map qualified as Map
 import Extra
-import Lift.Core.Forms.Axiom
-import Lift.Core.Forms.Proof
+import Lift.Core.Forms.Statement
 import Lift.Core.Source.Core
 import Lift.Core.Symbol.SymbolTable
 import Lift.Core.Symbol.Types
@@ -18,8 +17,8 @@ import Lift.Core.Symbol.Types
 data Module t = Module
   { _moduleName :: ModuleName
   , _moduleSource :: SourceRange
-  , _statements :: Map.Map SymbolName (Statement t)
-  , _proofs :: Map.Map SymbolName (Proof t)
+  , _definitions :: Map.Map Symbol (DefinitionType, t)
+  , _assertion :: [Proof t]
   , _symboltable :: SymbolTable
   , _queries :: Todo
   }

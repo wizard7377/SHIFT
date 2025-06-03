@@ -9,6 +9,7 @@ module Extra.Lens (
   (.=),
   (&),
   (<&>),
+  (^?),
   Lens.each,
   Lens._1,
   Lens._2,
@@ -17,8 +18,13 @@ module Extra.Lens (
   Lens.makeLenses,
   Lens.makePrisms,
   Lens.Prism,
+  Lens.Prism',
   Lens.Traversal,
+  Lens.Traversal',
   Lens.Plated,
+  Lens.traversal,
+  Lens.preview,
+  Lens.review,
 ) where
 
 import Control.Lens qualified as Lens

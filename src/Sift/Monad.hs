@@ -45,10 +45,10 @@ newtype LMT (t :: Type) (w :: Type) (s :: Type) (m :: Type -> Type) (a :: Type) 
   -- ^ The functional internals
   }
 
-class (Monad m, Monad (LMT t w s m), Monoid w, Semigroup w, Functor m, Applicative m, Rift.Term term, Rift.TermLike term, Monoid w, Rift.TermOf t ~ term, Rift.Theory t) => FormsLMT t w s m term
+class (Monad m, Monad (LMT t w s m), Monoid w, Semigroup w, Functor m, Applicative m, Rift.KTerm term, Rift.TermLike term, Monoid w, Rift.TermOf t ~ term, Rift.Theory t) => FormsLMT t w s m term
 class (FormsLMT t w s Identity term) => FormsLM t w s term
 
-instance (Monad m, Monad (LMT t w s m), Monoid w, Semigroup w, Functor m, Applicative m, Rift.Term term, Rift.TermLike term, Monoid w, Rift.TermOf t ~ term, Rift.Theory t) => FormsLMT t w s m term
+instance (Monad m, Monad (LMT t w s m), Monoid w, Semigroup w, Functor m, Applicative m, Rift.KTerm term, Rift.TermLike term, Monoid w, Rift.TermOf t ~ term, Rift.Theory t) => FormsLMT t w s m term
 bindLMT :: (Monad m, Semigroup w) => LMT r w s m a -> (a -> LMT r w s m b) -> LMT r w s m b
 bindLMT comp f = LMT $ \env s -> do
   (res, s', w) <- runLMT comp env s

@@ -23,7 +23,7 @@ data STerm term = STerm
   }
   deriving (Generic, Data)
 
-instance (Rift.Term term) => Rift.FTermLike (STerm term) where
+instance (Rift.KTerm term) => Rift.FTerm (STerm term) where
   type Inner (STerm term) = term
   fterm = lens _term (\(STerm t fs i) t' -> STerm t' fs i)
   ffrees = lens _frees (\(STerm t fs i) fs' -> STerm t fs' i)
@@ -43,7 +43,7 @@ addFrees (STerm t fs i) new = STerm t (fs <> new) i
 replaceTerm :: STerm term -> term -> STerm term
 replaceTerm (STerm _ fs i) new = STerm new fs i
 
-reduceTerm :: (Eq term, Rift.Term term) => STerm term -> STerm term
+reduceTerm :: (Eq term, Rift.KTerm term) => STerm term -> STerm term
 reduceTerm (STerm t fs i) =
   let
     vs = filter (Rift.poccurs t) fs
@@ -76,9 +76,9 @@ proven :: Lens' (SearchState term) [STerm term]
 proven = lens _scratch (\s d -> s{_proven = d})
 vars :: Lens' (SearchState term) Int
 vars = lens _vars (\s d -> s{_vars = d})
-fterm :: Lens' (STerm term) (Rift.FTerm term)
-fterm = lens (\(STerm t v i) -> (Rift.FTerm t v)) (\(STerm t v i) (Rift.FTerm t' v') -> (STerm t' v' i))
-showState :: (Rift.Term term, Rift.TermLike term) => SearchState term -> String
+fterm :: Lens' (STerm term) (Rift.FTerm' term)
+fterm = lens (\(STerm t v i) -> (Rift.FTerm' t v)) (\(STerm t v i) (Rift.FTerm' t' v') -> (STerm t' v' i))
+showState :: (Rift.KTerm term, Rift.TermLike term) => SearchState term -> String
 showState state =
   let
     header = "Depth is: " ++ show (state ^. depth)
@@ -86,7 +86,7 @@ showState state =
     scratchv = "\n\nScratch\n\n" ++ intercalate "\n" (show <$> (state ^. scratch))
    in
     header ++ provenv ++ scratchv ++ "\n"
-instance (Rift.Term term, Rift.TermLike term) => Show (SearchState term) where
+instance (Rift.KTerm term, Rift.TermLike term) => Show (SearchState term) where
   show = showState
 instance forall term. EnterState (SearchState term) where
   type TermOf (SearchState term) = term

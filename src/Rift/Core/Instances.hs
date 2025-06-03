@@ -37,28 +37,28 @@ instance {-# OVERLAPPING #-} Show TestToken where
   show (TestToken (Right t)) = "_" ++ show t
   show (TestLogicToken t) = "$" ++ show t
 
-showRainbow :: (Show a) => Int -> Term' a -> [Char]
+showRainbow :: (Show a, Show (Term' a)) => Int -> Term' a -> [Char]
 showRainbow i (PrimTag t tag) = showColor' i (showRainbow n t ++ "@" ++ show tag)
  where
   n = i + 1
 showRainbow i (Lamed v b t) = showColor' i "[" ++ showRainbow n v ++ showColor' i "] {" ++ showRainbow n b ++ " " ++ showRainbow n t ++ showColor' i "}"
  where
   n = i + 1
-showRainbow i x@(Cons a0 a1) = showColor' i "(" ++ intercalate (showColor' i " ") (showRainbow n <$> parseCons a0) ++ " . " ++ (showRainbow n a1) ++ showColor' i ")"
+showRainbow i x@(Kaf a0 a1) = showColor' i "(" ++ intercalate (showColor' i " ") (showRainbow n <$> parseCons a0) ++ " . " ++ (showRainbow n a1) ++ showColor' i ")"
  where
   n = i + 1
 showRainbow i (Atom atom) = resetCode ++ show atom
  where
   n = i + 1
 showRainbow i BasicLamed = resetCode ++ "ל"
-showListT :: (Show a) => [Term' a] -> String
+showListT :: (Show a, Show (Term' a)) => [Term' a] -> String
 showListT v = if null v then "{}" else "\n[\n\t" ++ intercalate "\n\t" (showRainbow 1 <$> v) ++ "\n]"
 
 instance (Show TestToken) => Show TestTerm where
   show t = showRainbow 1 t
 
 -- showList v = (++ showListT v)
-instance UTermLike TestTerm Int where
+instance UTerm Idx TestTerm where
   uniqueCreate term tag = PrimTag term tag
 
 freesIn :: Lens' TestTerm [TestTerm]
@@ -85,9 +85,9 @@ termIn =
           (PrimFree t v) -> PrimFree term' v
           _ -> term'
     )
-instance FTermLike TestTerm where
+instance FTerm TestTerm where
   type Inner TestTerm = TestTerm
   fterm = termIn
   ffrees = freesIn
 
-type TermFull tag term = (Term term, TermLike term, FTermLike term, UTermLike term tag)
+type TermFull tag term = (KTerm term, TermLike term, FTerm term, UTerm tag term)

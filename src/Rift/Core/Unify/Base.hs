@@ -125,7 +125,7 @@ instance (Eq term) => Monoid (UnifyState term) where
   mempty = UnifyState [] [] (toMap [])
 
 type UnifyState' t = Choice (UnifyState t)
-type Unification t = (TermLike t) => (Term t) => t -> t -> UnifyState t -> UnifyState' t
+type Unification t = (TermLike t) => (KTerm t) => t -> t -> UnifyState t -> UnifyState' t
 getBound :: [TermState t] -> [t]
 getBound l = catMaybes $ map (\case Bound x _ -> Just x; _ -> Nothing) l
 getFree l = catMaybes $ map (\case Free x -> Just x; _ -> Nothing) l

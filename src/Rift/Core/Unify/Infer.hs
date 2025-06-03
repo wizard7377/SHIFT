@@ -19,7 +19,7 @@ allSplit [] = []
 allSplit xs = [(take i xs, x, drop (i + 1) xs) | (i, x) <- zip [0 ..] xs]
 
 -- | The central unifier
-unifyInfer :: (TermLike t, Term t) => Unification t
+unifyInfer :: (TermLike t, KTerm t) => Unification t
 unifyInfer t0 t1 state =
   "Result" <?> do
     -- Rewrite the top and bottom

@@ -80,10 +80,10 @@ library
       Lift.Core.Dev
       Lift.Core.Dev.Parse
       Lift.Core.Forms
-      Lift.Core.Forms.Axiom
       Lift.Core.Forms.Message
       Lift.Core.Forms.Module
       Lift.Core.Forms.Proof
+      Lift.Core.Forms.Statement
       Lift.Core.Monad
       Lift.Core.Monad.Monad
       Lift.Core.Monad.Parse

@@ -14,7 +14,7 @@ import Extra
 import Rift.Core.Base (TermLike)
 import Rift.Core.Generate (Generator, generateTerm)
 import Rift.Core.Instances (TermFull)
-import Rift.Core.Interface (UTermLike (..))
+import Rift.Core.Interface (UTerm (..))
 import Rift.Core.Unify.Base hiding (Free)
 import Rift.Core.Unify.Base qualified as Unify
 
@@ -38,7 +38,7 @@ upNormal state =
    in
     pure state1
 
-downResolve :: (UTermLike term gen, TermLike term) => gen -> UnifyState term -> (UnifyState term)
+downResolve :: (UTerm gen term, TermLike term) => gen -> UnifyState term -> (UnifyState term)
 downResolve gen state =
   let
     frees = getFree (state ^. downState)

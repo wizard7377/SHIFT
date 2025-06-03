@@ -59,9 +59,9 @@ import Sift.Solver.Types
 {-# SCC genSearch' #-}
 {-# SCC mem #-}
 {-# SCC mem' #-}
-unfoldStartGen :: forall t w term. (Rift.Term term, Rift.TermLike term, Monoid w, Rift.TermOf t ~ term, Rift.Theory t, Rift.FTermLike term, Rift.UTermLike term Int) => Choice (STerm term) -> LM t w (SearchState term) (Choice (STerm term))
+unfoldStartGen :: forall t w term. (Rift.KTerm term, Rift.TermLike term, Monoid w, Rift.TermOf t ~ term, Rift.Theory t, Rift.FTerm term, Rift.UTerm Idx term) => Choice (STerm term) -> LM t w (SearchState term) (Choice (STerm term))
 unfoldStartGen = unfoldStartGen' 0
-unfoldStartGen' :: forall t w term. (Rift.Term term, Rift.TermLike term, Monoid w, Rift.TermOf t ~ term, Rift.Theory t, Rift.FTermLike term, Rift.UTermLike term Int) => Int -> Choice (STerm term) -> LM t w (SearchState term) (Choice (STerm term))
+unfoldStartGen' :: forall t w term. (Rift.KTerm term, Rift.TermLike term, Monoid w, Rift.TermOf t ~ term, Rift.Theory t, Rift.FTerm term, Rift.UTerm Idx term) => Int -> Choice (STerm term) -> LM t w (SearchState term) (Choice (STerm term))
 unfoldStartGen' i starts =
   do
     env <- ask
@@ -81,7 +81,7 @@ unfoldStartGen' i starts =
     let res' = csimpl' res
     if (unfoldStart < i) then pure res' else (unfoldStartGen' (i + 1) res')
 genSearch ::
-  (Rift.TermLike term, Rift.Term term, Monoid w, Rift.Theory t, Rift.TermOf t ~ term, Rift.UTermLike term Int, Rift.FTermLike term) =>
+  (Rift.TermLike term, Rift.KTerm term, Monoid w, Rift.Theory t, Rift.TermOf t ~ term, Rift.UTerm Idx term, Rift.FTerm term) =>
   term ->
   LM t w (SearchState term) (Rift.LogicResult term)
 genSearch term = do
@@ -91,7 +91,7 @@ genSearch term = do
   nsentences <- (recurseM unfold unfoldStartGen $ mkChoice sentences)
   genSearch' term
 genSearch' ::
-  (Rift.TermLike term, Rift.Term term, Monoid w, Rift.UTermLike term Int, Rift.FTermLike term) =>
+  (Rift.TermLike term, Rift.KTerm term, Monoid w, Rift.UTerm Idx term, Rift.FTerm term) =>
   term ->
   LM t w (SearchState term) (Rift.LogicResult term)
 genSearch' goal = do
@@ -114,13 +114,13 @@ genSearch' goal = do
   pure res
 
 resolved ::
-  (Rift.TermLike term, Rift.Term term, Monoid w) =>
+  (Rift.TermLike term, Rift.KTerm term, Monoid w) =>
   [STerm term] ->
   term ->
   LM t w (SearchState term) Bool
 resolved vals goal =
   let
-    ures = Rift.unify (Rift.FTerm goal []) <$> vals
+    ures = Rift.unify (Rift.FTerm' goal []) <$> vals
     res = cexists <$> ures
    in
     pure $ or res
@@ -128,7 +128,7 @@ resolved vals goal =
 -- | The basic mem rule
 mem ::
   -- \| The transform, top value $?x A B$
-  (Rift.Term term, Rift.TermLike term, Monoid w, Rift.FTermLike term, Rift.UTermLike term Int) =>
+  (Rift.KTerm term, Rift.TermLike term, Monoid w, Rift.FTerm term, Rift.UTerm Idx term) =>
   STerm term ->
   -- | The transformed, bottom value, $B$
   STerm term ->
@@ -143,11 +143,11 @@ mem top bottom =
 
 -- {-# INLINE mem #-}
 
-mem' :: (Rift.Term term, Eq term, Ord term, Show term, Monoid w, Rift.FTermLike term, Rift.UTermLike term Int) => STerm term -> STerm term -> LM t w (SearchState term) (Choice (STerm term))
+mem' :: (Rift.KTerm term, Eq term, Ord term, Show term, Monoid w, Rift.FTerm term, Rift.UTerm Idx term) => STerm term -> STerm term -> LM t w (SearchState term) (Choice (STerm term))
 mem' top@(STerm (Rift.Lamed var upFrom upTo) freeUp proofA) bottom@(STerm down freeDown proofB) = do
   state <- get
   let mr = Rift.memReduce (state ^. depth) (var : freeUp) upFrom upTo (down, freeDown)
-  let res = (\(Rift.FTerm t v) -> STerm t v (Rift.Mem proofA proofB)) <$> mr
+  let res = (\(Rift.FTerm' t v) -> STerm t v (Rift.Mem proofA proofB)) <$> mr
   "Not absurd" ?> (pure res)
 mem' _ _ = do pure $ "Absurd" ?> cabsurd
 

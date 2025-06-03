@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE QuantifiedConstraints #-}
 
@@ -21,97 +22,92 @@ import Rift.Core.Instances ()
 -- import Rift.Core.Dev.Lexer qualified as L
 
 import Control.Monad.Trans (MonadTrans (..))
-import Text.Megaparsec
+import Data.List.Extra
+import Extra
 import Text.Megaparsec (MonadParsec (notFollowedBy, try), ParsecT, anySingle, choice, many, noneOf, oneOf, parseTest, single, some)
+import Text.Megaparsec hiding (EndOfInput, State)
 import Text.Megaparsec.Char
 import Text.Megaparsec.Char.Lexer qualified as L
 import Text.Megaparsec.Debug
+import Prelude hiding (lex)
 
 data LexToken
-  = LBrace
-  | RBrace
-  | LBracket
-  | RBracket
-  | LAngle
-  | RAngle
-  | LParen
+  = LParen
   | RParen
-  | TokenLamed
-  | TokenCons
-  | TokenSep
-  | TokenWild
-  | TokenValue String
-  deriving (Show, Eq, Ord)
-type Parser r = ParsecT Void T.Text (Control.Monad.State.State Int) r
+  | LamedTok
+  | WildTok
+  | SymbolTok T.Text
+  deriving (Eq, Show, Ord, Data, Typeable, Generic)
 
-sc :: Parser ()
-sc =
-  L.space
-    space1
-    (L.skipLineComment $ T.pack "//")
-    (L.skipBlockCommentNested (T.pack "/*") (T.pack "*/"))
-symbol s = L.symbol sc $ T.pack s
-lexeme = L.lexeme sc
-parseCons :: Parser TestTerm
-parseLamed :: Parser TestTerm
-parseToken :: Parser TestTerm
--- parseParenList :: Parser TestTerm
-pterm :: Parser TestTerm
-parseCons = label "List" $ do
-  symbol "("
-  t0 <- pterm
-  t1 <- someTill pterm (symbol ")")
-  return $ foldr1 Cons (t0 : t1)
+lex :: T.Text -> [LexToken]
+lex input =
+  ( \(x :: T.Text) -> case x of
+      "?" -> LamedTok
+      "_" -> WildTok
+      "(" -> LParen
+      ")" -> RParen
+      _ -> SymbolTok x
+  )
+    <$> lw
+ where
+  lw = T.words input
 
-lamed' :: (AnyTerm term) => term -> (term, term) -> term
-lamed' base (v, t) = Lamed v t base
-parseLamed = label "Lamed" $ do
-  symbol "["
-  vars <- many pterm
-  symbol "]"
-  symbol "{"
-  ts <- count (length vars) pterm
-  t0 <- pterm
-  symbol "}"
-  let combo = zip vars ts
-  return $ foldr (flip lamed') t0 combo
+getUpTo :: (Eq a) => a -> a -> Int -> [a] -> Maybe ([a], [a])
+getUpTo open close depth (x : xs) =
+  if x == open
+    then case getUpTo open close (depth + 1) xs of
+      Just (ys, zs) -> Just (x : ys, zs)
+      Nothing -> Nothing
+    else
+      if x == close
+        then
+          if depth <= 1
+            then Just ([], xs)
+            else case getUpTo open close (depth - 1) xs of
+              Just (ys, zs) -> Just (x : ys, zs)
+              Nothing -> Nothing
+        else case getUpTo open close depth xs of
+          Just (ys, zs) -> Just (x : ys, zs)
+          Nothing -> Nothing
 
-parseToken = label "Token" $ do
-  tok <- lexeme $ some (noneOf "(){}[]; ")
-  case tok of
-    "_" -> do
-      (i :: Int) <- get
-      let v = Atom (TestToken $ Right i)
-      put (i + 1)
-      return v
-    str -> return $ Atom (TestToken $ Left $ T.pack str)
+data NoParse
+  = ParseError
+  | EndOfInput
+  deriving (Show, Eq)
+makeWild :: State Int TestTerm
+makeWild = do
+  n <- get
+  put (n + 1)
+  pure $ PrimAtom (TestToken (Right n))
 
-psys' :: Parser [TestTerm]
-psys' = label "System" $ do
-  optional sc
-  endBy1 pterm $ symbol ";"
+appendTerm :: (Either NoParse TestTerm) -> Either NoParse TestTerm -> Either NoParse TestTerm
+appendTerm (Left ParseError) _ = Left ParseError
+appendTerm (Left EndOfInput) b = b
+appendTerm (Right a) (Left ParseError) = Left ParseError
+appendTerm (Right a) (Left EndOfInput) = Right a
+appendTerm (Right a) (Right b) = Right (Kaf a b)
+parseTerm' :: [LexToken] -> State Int (Either NoParse TestTerm)
+parseTerm' tokens = case tokens of
+  (LParen : rest) -> case getUpTo LParen RParen 1 rest of
+    Just (inner, rest') -> do
+      term <- parseTerm' inner
+      restTerms <- parseTerm' rest'
+      pure $ appendTerm term restTerms
+    Nothing -> pure $ Left ParseError
+  WildTok : rest -> do
+    term <- makeWild
+    rests <- (parseTerm' rest)
+    pure $ appendTerm (Right term) rests
+  SymbolTok sym : rest -> do
+    let term = PrimAtom (TestToken (Left sym))
+    rests <- parseTerm' rest
+    pure $ appendTerm (Right term) rests
+  RParen : _ -> pure $ Left ParseError
+  [] -> pure $ Left EndOfInput
 
-psys = do
-  psys'
-pterm = label "Term'" $ choice [try parseLamed, try parseCons, parseToken]
-
-pfile :: Parser [[TestTerm]]
-pfile = label "File" $ do
-  res <- (endBy1 psys' $ symbol ";;;")
-  try eof
-  return res
-parseOf :: Parser r -> T.Text -> Maybe r
-parseOf parser input = case evalState (runParserT parser "TEST" input) 0 of
-  Left e -> trace (errorBundlePretty e) Nothing
-  Right res -> Just res
-
--- | Note that lists are `()`, rules `{}`, and lameds `<>[]`
-readTerm :: String -> Maybe TestTerm
-readTerm = parseOf pterm . T.pack
-
-readTerm' = parseOf (pterm <* eof) . T.pack
-readManyTerms = parseOf psys . T.pack
-readManyTerms' = parseOf pfile . T.pack
-
-parseTestOne = readTerm'
-parseTestMany = readManyTerms'
+parseTerm :: String -> Maybe TestTerm
+parseTerm input =
+  case evalState (parseTerm' (lex (T.pack input))) 0 of
+    Left ParseError -> Nothing
+    Left EndOfInput -> Nothing
+    Right term -> Just term

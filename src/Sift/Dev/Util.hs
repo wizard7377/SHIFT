@@ -16,7 +16,7 @@ import Data.Text qualified as T
 import Extra.Error (Error (..))
 import GHC.Exts (Any)
 import Rift (Atomic, LogicEnv, LogicResult (..), Sentence (..), Term', TermOf, TestTerm, TestToken, Theory, defaultEnv, getSentences, theory)
-import Rift.Core.Base (Term, TermLike)
+import Rift.Core.Base (KTerm, TermLike)
 import Rift.Core.Dev (tRead)
 import Rift.Core.Dev.Forms
 import Sift.Monad (EnterState (..), FormsLMT, LMT, applyEnv, mkLMT, runLMT, runLMT')

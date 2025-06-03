@@ -1,6 +1,6 @@
 module Rift.Core.Generate where
 
-import Rift.Core.Interface (UTermLike (..))
+import Rift.Core.Interface (UTerm (..))
 
 newtype AGenerator gen = Generator gen
 class Generator gen val where
@@ -9,7 +9,7 @@ class Generator gen val where
 instance (Num a) => Generator (AGenerator a) a where
   generate (Generator gen) = (gen, Generator $ gen + 1)
 
-generateTerm :: (Generator gen tag) => (UTermLike term tag) => gen -> term -> (term, gen)
+generateTerm :: (Generator gen tag) => (UTerm tag term) => gen -> term -> (term, gen)
 generateTerm gen term =
   let (tag, newGen) = generate gen
    in (uniqueCreate term tag, newGen)

@@ -6,22 +6,22 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wno-duplicate-exports #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Rift.Core.Base (
-  Term(..),
+  KTerm(..),
   AnyTerm,
   Term'(..),
   TestTerm,
   TestToken (..),
   Atomic,
-  lamed,
   cons,
   --drule,
   pattern Cons3,
   pattern Lamed,
   pattern Atom,
   --pattern Rule,
-  pattern Cons,
+  pattern Kaf,
   termToList,
   listToTerm,
   mkCons,
@@ -53,16 +53,16 @@ data Term' atom where
   PrimFree :: Term' atom -> [Term' atom] -> Term' atom
   deriving (Eq, Ord)
 
-instance (Term (Term' atom)) where
-  type AtomOf (Term' atom) = atom
-  viewTerm (PrimCons t0 t1) = PrimConsCon t0 t1
-  viewTerm (PrimAtom a) = PrimAtomCon a
-  viewTerm PrimLamed = PrimLamedCon
-  viewTerm (PrimTag t i) = viewTerm t
-  viewTerm (PrimFree t v) = viewTerm t
-  makeTerm (PrimConsCon t0 t1) = PrimCons t0 t1
-  makeTerm (PrimAtomCon a) = PrimAtom a
-  makeTerm PrimLamedCon = PrimLamed
+instance (KTerm (Term' atom)) where
+  isLamed PrimLamed = True
+  isLamed _ = False
+  mkLamed = PrimLamed
+  pKaf = Lens.prism' 
+    (\(PrimKafCon a b) -> PrimCons a b)
+    (\case
+      PrimCons a b -> Just (PrimKafCon a b)
+      _ -> Nothing)
+
 type TermLike term = (Eq term, Ord term, Show term)
 data TestToken = TestToken (Either Text Int) | TestLogicToken Int
   deriving (Eq, Ord, Data, Generic)
@@ -74,23 +74,21 @@ All of these are fairly standard and should be implemented for most types anyway
 -}
 type Atomic a = (Eq a, Ord a, Show a)
 -- |The functional version of `PrimAtom`, equavilent to `Atom`
-atom :: Term term => (AtomOf term) -> term
-atom = Atom
 
 {-# DEPRECATED #-}
 mkCons3 :: AnyTerm term => term->term->term-> term
-mkCons3 f a0 a1 = Cons f (Cons a0 a1)
+mkCons3 f a0 a1 = Kaf f (Kaf a0 a1)
 
 {-# DEPRECATED #-}
 mkCons :: AnyTerm term => term->term-> term
-mkCons = Cons
--- |The functional version of `Cons`, equaivelent to `Cons`
+mkCons = Kaf
+-- |The functional version of `Kaf`, equaivelent to `Kaf`
 cons :: AnyTerm term => term->term-> term
-cons = Cons
+cons = Kaf
 
 -- |The functional version of `PrimLamed`, equaivelent to `Lamed`
 lamed ::
-  Term term =>
+  KTerm term =>
   -- |The variable
   term ->
   -- |The consequent
@@ -99,69 +97,69 @@ lamed ::
   term ->
   -- |The result
   term
-lamed frees a0 a1 = Cons BasicLamed (Cons frees (Cons a0 a1))
+lamed frees a0 a1 = Kaf BasicLamed (Kaf frees (Kaf a0 a1))
 
 -- FOR TESTS ONLY, THIS IS A PARTIAL FUNCTION
-manyLamed :: Term term => [term] -> term -> term -> term
+manyLamed :: KTerm term => [term] -> term -> term -> term
 manyLamed [t] a0 a1 = Lamed t a0 a1
 manyLamed (t : ts) a0 a1 = Lamed t (manyLamed ts a0 a1) a1
 --drule = mkCons' ARule
 
 
-pattern Cons3 :: Term term => term -> term -> term -> term
-pattern Cons3 f a0 a1 <- Cons f (Cons a0 a1)
+pattern Cons3 :: KTerm term => term -> term -> term -> term
+pattern Cons3 f a0 a1 <- Kaf f (Kaf a0 a1)
   where
-    Cons3 f a0 a1 = Cons f (Cons a0 a1)
+    Cons3 f a0 a1 = Kaf f (Kaf a0 a1)
 
-pattern Lamed :: Term term => term -> term -> term -> term
-pattern Lamed v a b <- Cons BasicLamed (Cons v (Cons a b))
+pattern Lamed :: KTerm term => term -> term -> term -> term
+pattern Lamed v a b <- Kaf BasicLamed (Kaf v (Kaf a b))
   where
-    Lamed v a b = Cons BasicLamed (Cons v (Cons a b))
+    Lamed v a b = Kaf BasicLamed (Kaf v (Kaf a b))
 {-# INLINE Lamed #-}
-termToList :: Term term => term -> [term]
-termToList (Cons a0 a1) = (:) a0 $ termToList a1
+termToList :: KTerm term => term -> [term]
+termToList (Kaf a0 a1) = (:) a0 $ termToList a1
 termToList _ = []
 
 listToTerm :: AnyTerm term => [term] -> Maybe (term)
 listToTerm [] = Nothing
 listToTerm [x] = Just x
-listToTerm (x : xs) = Cons x <$> listToTerm xs
+listToTerm (x : xs) = Kaf x <$> listToTerm xs
 
 -- |For some mapping, recursivly apply it, and only stop if we reach the bottom or the mapping changes the value
-recurseSome :: (Eq term, Term term) => (term -> term) -> term -> term
+recurseSome :: (Eq term, KTerm term) => (term -> term) -> term -> term
 recurseSome f v = let v' = f v in
   if v == v' then (
     case v' of
-      Cons a0 a1 -> Cons (recurseSome f a0) (recurseSome f a1)
+      Kaf a0 a1 -> Kaf (recurseSome f a0) (recurseSome f a1)
       Atom _ -> v'
       BasicLamed -> BasicLamed
   )
     else v'
 -- |For some mapping, recursivly apply it, and only stop if we reach the bottom or the mapping changes the value
-recurseManyA :: (Eq term, Term term) => (term -> term) -> (term -> term) -> term -> term
-recurseManyB :: (Eq term, Term term) => (term -> term) -> (term -> term) -> term -> term
+recurseManyA :: (Eq term, KTerm term) => (term -> term) -> (term -> term) -> term -> term
+recurseManyB :: (Eq term, KTerm term) => (term -> term) -> (term -> term) -> term -> term
 recurseManyA f g v = let v' = f v in
   if v == v' then (
     case v' of
-      Cons a0 a1 -> Cons (recurseManyA f g a0) (recurseManyA f g a1)
+      Kaf a0 a1 -> Kaf (recurseManyA f g a0) (recurseManyA f g a1)
       _ -> v'
   )
     else recurseManyB f g v'
 recurseManyB f g v = let v' = g v in
   if v == v' then (
     case v' of
-      Cons a0 a1 -> Cons (recurseManyB f g a0) (recurseManyB f g a1)
+      Kaf a0 a1 -> Kaf (recurseManyB f g a0) (recurseManyB f g a1)
       _ -> v'
   )
     else recurseManyA f g v'
 -- |Check if a given term occurs within another term
-poccurs :: (Eq term, Term term) => 
+poccurs :: (Eq term, KTerm term) => 
   -- |The larger term
   term -> 
   -- |The smaller term
   term -> Bool 
 poccurs term value = 
   (value == term) || (case term of
-    Cons a0 a1 -> (poccurs term a0) || (poccurs term a1)
+    Kaf a0 a1 -> (poccurs term a0) || (poccurs term a1)
     Atom _ -> False
     BasicLamed -> False)

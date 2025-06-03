@@ -11,3 +11,5 @@ flip t b a = t a b
 
 class (Data a) => Functional a b c | a b -> c where
   fapply :: a -> b -> c
+
+type Idx = Int
