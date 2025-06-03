@@ -6,7 +6,7 @@
  - Shift all variables up, make all bindings simple
  -
 -}
-module Rift.Core.Unify.Conclude where
+module Sift.Core.Unify.Conclude where
 
 import Control.Lens qualified as Lens
 import Data.Maybe (isJust, isNothing)
@@ -15,8 +15,8 @@ import Rift.Core.Base (TermLike)
 import Rift.Core.Generate (Generator, generateTerm)
 import Rift.Core.Instances (TermFull)
 import Rift.Core.Interface (UTerm (..))
-import Rift.Core.Unify.Base hiding (Free)
-import Rift.Core.Unify.Base qualified as Unify
+import Sift.Core.Unify.Base hiding (Free)
+import Sift.Core.Unify.Base qualified as Unify
 
 data Concluding term
   = Binding term term

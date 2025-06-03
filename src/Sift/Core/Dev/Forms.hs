@@ -1,4 +1,4 @@
-module Rift.Core.Dev.Forms where
+module Sift.Core.Dev.Forms where
 
 import Rift.Core.Base
 import Rift.Core.Instances

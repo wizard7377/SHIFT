@@ -3,7 +3,7 @@
 {-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE QuantifiedConstraints #-}
 
-module Rift.Core.Dev.Parser where
+module Sift.Core.Dev.Parser where
 
 import Control.Monad (void)
 import Control.Monad.State (MonadState (..), State, evalState)

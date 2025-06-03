@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Rift.Core.Unify.Base where
+module Sift.Core.Unify.Base where
 
 import Control.Applicative
 import Control.Category (Category (..))

@@ -4,14 +4,14 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Rift.Core.Unify.Util where
+module Sift.Core.Unify.Util where
 
 import Data.Maybe (catMaybes)
 import Extra
 import Rift.Core.Base
 import Rift.Core.Interface (FTerm (..))
-import Rift.Core.Unify.Base
-import Rift.Core.Unify.Infer
+import Sift.Core.Unify.Base
+import Sift.Core.Unify.Infer
 
 unify ::
   forall t0.

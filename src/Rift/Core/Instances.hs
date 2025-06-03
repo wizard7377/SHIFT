@@ -13,7 +13,6 @@ import Extra.Debug
 import Rift.Core.Base
 import Rift.Core.Interface
 import Rift.Core.Kernel
-import Rift.Core.Unify.Util
 import Rift.Core.Utility
 import System.Console.ANSI qualified as ANSI
 

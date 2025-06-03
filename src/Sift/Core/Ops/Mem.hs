@@ -1,4 +1,4 @@
-module Rift.Core.Ops.Mem (
+module Sift.Core.Mem (
     {-# DEPRECATED "Use memReduce instead" #-}
   mem,
     {-# DEPRECATED "Use memReduce instead" #-}
@@ -10,14 +10,14 @@ import Control.Lens (makeClassy)
 import Control.Lens.Lens
 import Data.List ((\\))
 import Extra
+import Rift.Core qualified as Rift
 import Rift.Core.Base
 import Rift.Core.Base qualified as Rift
 import Rift.Core.Interface (FTerm' (..))
 import Rift.Core.Interface qualified as Rift
 import Rift.Core.Kernel qualified as Rift
-import Rift.Core.Unify qualified as Rift
-import Rift.Core.Unify.Base qualified as Rift
-import Rift.Core.Unify.Conclude (conclude)
+import Sift.Core.Unify.Base qualified as Rift
+import Sift.Core.Unify.Conclude (conclude)
 
 toFTerm :: (a, [a]) -> FTerm' a
 toFTerm (t, fs) = FTerm' t fs

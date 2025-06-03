@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Rift.Core.Unify.Infer where
+module Sift.Core.Unify.Infer where
 
 import Control.Applicative
 import Control.Lens (Each (..))
@@ -12,7 +12,7 @@ import Data.Function ((&))
 import Data.Functor (($>), (<&>))
 import Extra
 import Rift.Core.Base
-import Rift.Core.Unify.Base
+import Sift.Core.Unify.Base
 
 allSplit :: [a] -> [([a], a, [a])]
 allSplit [] = []

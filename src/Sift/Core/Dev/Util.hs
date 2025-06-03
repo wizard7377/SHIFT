@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Rift.Core.Dev.Util where
+module Sift.Core.Dev.Util where
 
 import Control.Lens ((^.), _2)
 import Control.Monad.State
@@ -9,11 +9,9 @@ import Data.Text qualified as T
 import Extra
 import Extra.TestHelp (makeTestList)
 import Rift.Core.Base
-import Rift.Core.Dev.Parser
 import Rift.Core.Interface (FTerm' (..))
-import Rift.Core.Ops.Mem hiding (FTerm')
-import Rift.Core.Unify
-import Rift.Core.Unify.Base
+import Sift.Core.Dev.Parser
+import Sift.Core.Ops.Mem hiding (FTerm')
 import System.IO.Unsafe (unsafePerformIO)
 import Text.Megaparsec (MonadParsec (..), parseMaybe, parseTest, runParserT)
 import Text.Megaparsec.Error (errorBundlePretty)

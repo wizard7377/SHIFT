@@ -17,8 +17,8 @@ import Extra.Error (Error (..))
 import GHC.Exts (Any)
 import Rift (Atomic, LogicEnv, LogicResult (..), Sentence (..), Term', TermOf, TestTerm, TestToken, Theory, defaultEnv, getSentences, theory)
 import Rift.Core.Base (KTerm, TermLike)
-import Rift.Core.Dev (tRead)
-import Rift.Core.Dev.Forms
+import Rift.Forms
+import Sift.Core (tRead)
 import Sift.Monad (EnterState (..), FormsLMT, LMT, applyEnv, mkLMT, runLMT, runLMT')
 import Sift.Solver (SearchState (..), genSearch)
 import Test.HUnit qualified as T

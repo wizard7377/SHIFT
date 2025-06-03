@@ -76,50 +76,13 @@ library
       Hift.Opts.Forms
       Hift.Opts.Types
       Hift.Query
-      Lift.Core
-      Lift.Core.Dev
-      Lift.Core.Dev.Parse
-      Lift.Core.Forms
-      Lift.Core.Forms.Message
-      Lift.Core.Forms.Module
-      Lift.Core.Forms.Proof
-      Lift.Core.Forms.Statement
-      Lift.Core.Monad
-      Lift.Core.Monad.Monad
-      Lift.Core.Monad.Parse
-      Lift.Core.Monad.Symbol
-      Lift.Core.ParseEnv
-      Lift.Core.Source
-      Lift.Core.Source.Core
-      Lift.Core.Symbol
-      Lift.Core.Symbol.SymbolTable
-      Lift.Core.Symbol.Types
-      Lift.Core.Symbol.Typeset
-      Lift.Dift
-      Lift.Mift
-      Lift.Mift.Common
-      Lift.Mift.Lexer
-      Lift.Mift.Parser
-      Lift.Mift.Types
-      Lift.Pift
+      Lift.Lift
       Rift.Core
       Rift.Core.Base
-      Rift.Core.Dev
-      Rift.Core.Dev.Forms
-      Rift.Core.Dev.Paeno
-      Rift.Core.Dev.Parser
-      Rift.Core.Dev.Util
       Rift.Core.Generate
       Rift.Core.Instances
       Rift.Core.Interface
       Rift.Core.Kernel
-      Rift.Core.Ops
-      Rift.Core.Ops.Mem
-      Rift.Core.Unify
-      Rift.Core.Unify.Base
-      Rift.Core.Unify.Conclude
-      Rift.Core.Unify.Infer
-      Rift.Core.Unify.Util
       Rift.Core.Utility
       Rift.Forms
       Rift.Forms.Language
@@ -131,6 +94,19 @@ library
       Rift.Forms.Search
       Rift.Forms.Theory
       Sift.Base
+      Sift.Core
+      Sift.Core.Dev
+      Sift.Core.Dev.Forms
+      Sift.Core.Dev.Paeno
+      Sift.Core.Dev.Parser
+      Sift.Core.Dev.Util
+      Sift.Core.Ops
+      Sift.Core.Ops.Mem
+      Sift.Core.Unify
+      Sift.Core.Unify.Base
+      Sift.Core.Unify.Conclude
+      Sift.Core.Unify.Infer
+      Sift.Core.Unify.Util
       Sift.Dev
       Sift.Dev.Util
       Sift.Monad
