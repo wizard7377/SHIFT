@@ -43,10 +43,10 @@ showRainbow i (PrimTag t tag) = showColor' i (showRainbow n t ++ "@" ++ show tag
 showRainbow i (Lamed v b t) = showColor' i "[" ++ showRainbow n v ++ showColor' i "] {" ++ showRainbow n b ++ " " ++ showRainbow n t ++ showColor' i "}"
  where
   n = i + 1
-showRainbow i x@(Kaf a0 a1) = showColor' i "(" ++ intercalate (showColor' i " ") (showRainbow n <$> parseCons a0) ++ " . " ++ (showRainbow n a1) ++ showColor' i ")"
+showRainbow i (Kaf a0 a1) = showColor' i "(" ++ intercalate (showColor' i " ") (showRainbow n <$> parseCons a0) ++ " . " ++ (showRainbow n a1) ++ showColor' i ")"
  where
   n = i + 1
-showRainbow i (Atom atom) = resetCode ++ show atom
+showRainbow i (PrimAtom atom) = resetCode ++ show atom
  where
   n = i + 1
 showRainbow i BasicLamed = resetCode ++ "ל"

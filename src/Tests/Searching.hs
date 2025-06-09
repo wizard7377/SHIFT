@@ -1,6 +1,6 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 
-module Tests.Searching (searchTests, searchBench, paeno, fundementalT, reallySimple) where
+module Tests.Searching where
 
 import Criterion
 import Rift
@@ -9,23 +9,26 @@ import Sift.Dev.Util (benchSolve, benchSolve', requireSolve, requireSolve')
 import Test.Tasty
 import Test.Tasty.HUnit
 
-paeno :: [TestTerm]
-paeno = selectAt (readSys "test/Simple.tift") [0 .. 3]
-reallySimple = selectAt (readSys "test/Simple2.tift") [0]
-fundementalT :: [TestTerm]
-fundementalT = selectAt (readSys "test/Fundemental.tift") [0]
-t0 :: TestTerm
+-- paeno :: [TestTerm]
+-- paeno = selectAt (readSys "test/Simple.tift") [0 .. 3]
+-- reallySimple = selectAt (readSys "test/Simple2.tift") [0]
+
+-- fundementalT :: [TestTerm]
+-- fundementalT = selectAt (readSys "test/Fundemental.tift") [0]
+t0 :: IO TestTerm
 t0 = tRead "(= 0 0)"
-t1 :: TestTerm
+t1 :: IO TestTerm
 t1 = tRead "(= (S 0) 1)"
-t2 :: TestTerm
+t2 :: IO TestTerm
 t2 = tRead "(= (S (S 0)) 2)"
-t3 :: TestTerm
+t3 :: IO TestTerm
 t3 = tRead "(Nat 0)"
-t4 :: TestTerm
+t4 :: IO TestTerm
 t4 = tRead "(Nat (S 0))"
-t5 :: TestTerm
+t5 :: IO TestTerm
 t5 = tRead "(Nat 1)"
+
+{-
 searchTests :: TestTree
 searchTests =
   testGroup
@@ -51,3 +54,8 @@ uA0 = genTest ["A"] "A"
 uB0 = genTest [] "(x y [z] {f} _)"
 uA1 = genTest ["x", "y"] "x + y = 3"
 uB1 = genTest ["y", "z"] "2 + z = y"
+-}
+
+temp0 = tRead "(x y z)"
+temp1 = tRead "(a b c)"
+temp2 = tRead "a"

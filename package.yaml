@@ -68,6 +68,7 @@ dependencies:
   - tasty-hunit
   - deepseq
   - optparse-applicative
+  - fgl
 
 when:
   - condition: flag(sanity) && (!flag(dev))

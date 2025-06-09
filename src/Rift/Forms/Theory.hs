@@ -1,8 +1,10 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module Rift.Forms.Theory where
 
 import Data.Data
+import Extra
 import GHC.Generics
 import Rift.Core qualified as Rift
 
@@ -21,3 +23,20 @@ class Theory t where
 instance {-# OVERLAPPABLE #-} Theory [t] where
   type TermOf [t] = t
   getSentences t = uncurry Sentence <$> zip t [0 ..]
+
+data ConvertRules
+  = PrimitiveEqual
+  | WeakAlphaLamed
+  | WeakAlphaDalet
+  | AlphaConvert
+  | BetaConvert
+  deriving (Show, Eq, Ord, Enum, Bounded, Data, Typeable, Generic)
+
+data Assertion t = Assertion
+  { _assertGeneral :: t
+  , _assertSpecific :: t
+  , _assertionRules :: [ConvertRules]
+  }
+  deriving (Show, Eq, Ord, Data, Typeable, Generic)
+
+makeLenses ''Assertion

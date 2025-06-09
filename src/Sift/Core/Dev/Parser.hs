@@ -6,7 +6,7 @@
 module Sift.Core.Dev.Parser where
 
 import Control.Monad (void)
-import Control.Monad.State (MonadState (..), State, evalState)
+import Control.Monad.State (MonadState (..), State, StateT (runStateT), evalState, runState)
 import Data.Foldable (Foldable (..))
 import Data.Functor (($>))
 import Data.Functor.Identity
@@ -23,91 +23,58 @@ import Rift.Core.Instances ()
 
 import Control.Monad.Trans (MonadTrans (..))
 import Data.List.Extra
+import Data.Text qualified as T
+import Data.Void (Void)
 import Extra
-import Text.Megaparsec (MonadParsec (notFollowedBy, try), ParsecT, anySingle, choice, many, noneOf, oneOf, parseTest, single, some)
+import Rift qualified
+import Text.Megaparsec (MonadParsec (notFollowedBy, try), Parsec, ParsecT, anySingle, choice, eof, many, noneOf, oneOf, parseTest, single, some, try, (<|>))
 import Text.Megaparsec hiding (EndOfInput, State)
 import Text.Megaparsec.Char
+import Text.Megaparsec.Char qualified as C
 import Text.Megaparsec.Char.Lexer qualified as L
 import Text.Megaparsec.Debug
 import Prelude hiding (lex)
 
-data LexToken
-  = LParen
-  | RParen
-  | LamedTok
-  | WildTok
-  | SymbolTok T.Text
-  deriving (Eq, Show, Ord, Data, Typeable, Generic)
+type Parser = ParsecT Void T.Text (State Int)
+sc :: Parser ()
+sc = L.space C.space1 (L.skipLineComment "--") (L.skipBlockComment "{-" "-}")
+symbol :: T.Text -> Parser T.Text
+symbol = L.symbol sc
+lexeme :: Parser a -> Parser a
+lexeme = L.lexeme sc
 
-lex :: T.Text -> [LexToken]
-lex input =
-  ( \(x :: T.Text) -> case x of
-      "?" -> LamedTok
-      "_" -> WildTok
-      "(" -> LParen
-      ")" -> RParen
-      _ -> SymbolTok x
-  )
-    <$> lw
- where
-  lw = T.words input
+atomicP :: Parser (Rift.TestTerm)
+atomicP = lexeme $ do
+  tok <- some (noneOf (" \n\t()[]{}?" :: String))
+  pure $ Rift.PrimAtom $ TestToken $ Left $ T.pack tok
 
-getUpTo :: (Eq a) => a -> a -> Int -> [a] -> Maybe ([a], [a])
-getUpTo open close depth (x : xs) =
-  if x == open
-    then case getUpTo open close (depth + 1) xs of
-      Just (ys, zs) -> Just (x : ys, zs)
-      Nothing -> Nothing
-    else
-      if x == close
-        then
-          if depth <= 1
-            then Just ([], xs)
-            else case getUpTo open close (depth - 1) xs of
-              Just (ys, zs) -> Just (x : ys, zs)
-              Nothing -> Nothing
-        else case getUpTo open close depth xs of
-          Just (ys, zs) -> Just (x : ys, zs)
-          Nothing -> Nothing
+lamedP :: Parser (Rift.TestTerm)
+lamedP = try (symbol "?") $> Rift.PrimLamed
 
-data NoParse
-  = ParseError
-  | EndOfInput
-  deriving (Show, Eq)
-makeWild :: State Int TestTerm
-makeWild = do
+wildP :: Parser (Rift.TestTerm)
+wildP = do
+  try $ symbol "_"
   n <- get
   put (n + 1)
-  pure $ PrimAtom (TestToken (Right n))
+  pure $ Rift.PrimAtom $ TestToken $ Right n
 
-appendTerm :: (Either NoParse TestTerm) -> Either NoParse TestTerm -> Either NoParse TestTerm
-appendTerm (Left ParseError) _ = Left ParseError
-appendTerm (Left EndOfInput) b = b
-appendTerm (Right a) (Left ParseError) = Left ParseError
-appendTerm (Right a) (Left EndOfInput) = Right a
-appendTerm (Right a) (Right b) = Right (Kaf a b)
-parseTerm' :: [LexToken] -> State Int (Either NoParse TestTerm)
-parseTerm' tokens = case tokens of
-  (LParen : rest) -> case getUpTo LParen RParen 1 rest of
-    Just (inner, rest') -> do
-      term <- parseTerm' inner
-      restTerms <- parseTerm' rest'
-      pure $ appendTerm term restTerms
-    Nothing -> pure $ Left ParseError
-  WildTok : rest -> do
-    term <- makeWild
-    rests <- (parseTerm' rest)
-    pure $ appendTerm (Right term) rests
-  SymbolTok sym : rest -> do
-    let term = PrimAtom (TestToken (Left sym))
-    rests <- parseTerm' rest
-    pure $ appendTerm (Right term) rests
-  RParen : _ -> pure $ Left ParseError
-  [] -> pure $ Left EndOfInput
+kafP :: Parser (Rift.TestTerm)
+kafP =
+  do
+    _ <- symbol "("
+    firstOf <- termP
+    restOf <- many termP
+    symbol ")"
+    pure $
+      foldr1
+        (\acc x -> Rift.PrimCons acc x)
+        (firstOf : restOf)
+termP :: Parser (Rift.TestTerm)
+termP = choice [kafP, lamedP, wildP, atomicP]
 
-parseTerm :: String -> Maybe TestTerm
-parseTerm input =
-  case evalState (parseTerm' (lex (T.pack input))) 0 of
-    Left ParseError -> Nothing
-    Left EndOfInput -> Nothing
-    Right term -> Just term
+parseTerm :: T.Text -> IO (Rift.TestTerm)
+parseTerm input = do
+  let (result, _) = runState (runParserT (termP <* eof) "" input) 0
+  case result of
+    Left err -> error $ "Parse error: " ++ errorBundlePretty err
+    Right term -> pure term

@@ -77,7 +77,8 @@ mkChoice = Choice
 
 cabsurd :: Choice a
 cabsurd = Choice []
-
+ctrivial :: (Monoid a) => Choice a
+ctrivial = Choice [mempty]
 cexists :: Choice a -> Bool
 cexists (Choice xs) = not $ null xs
 csimpl :: (a -> a -> Bool) -> Choice a -> Choice a
@@ -88,3 +89,9 @@ csubset :: (a -> b -> Bool) -> Choice a -> Choice b -> Bool
 csubset f (Choice xs) (Choice ys) = all (\x -> any (f x) ys) xs
 csubset' :: (Eq a) => Choice a -> Choice a -> Bool
 csubset' = csubset (==)
+
+cfilter :: (a -> Bool) -> Choice a -> Choice a
+cfilter p (Choice xs) = Choice $ filter p xs
+onlyJust :: Choice (Maybe a) -> Choice a
+onlyJust (Choice xs) =
+  Choice $ mapMaybe id xs

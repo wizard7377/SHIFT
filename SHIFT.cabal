@@ -55,14 +55,20 @@ library
       Extra.Basics
       Extra.Boolean
       Extra.Choice
+      Extra.ChoiceNew
       Extra.ChoiceOld
       Extra.Debug
       Extra.Decide
       Extra.Error
       Extra.Exports
+      Extra.Ghci
+      Extra.Graphic
       Extra.Lens
       Extra.List
       Extra.Map
+      Extra.Map.Lens
+      Extra.Map.Other
+      Extra.Map.Types
       Extra.Monad
       Extra.Ops
       Extra.TestHelp
@@ -76,7 +82,16 @@ library
       Hift.Opts.Forms
       Hift.Opts.Types
       Hift.Query
+      Lift.Common.Module
+      Lift.Common.Names
+      Lift.Common.Parsing
+      Lift.Common.Tokens
       Lift.Lift
+      Lift.Mift
+      Lift.Mift.Base
+      Lift.Mift.Expr
+      Lift.Mift.Parse.Lexer
+      Lift.Mift.Parse.Parser
       Rift.Core
       Rift.Core.Base
       Rift.Core.Generate
@@ -101,11 +116,10 @@ library
       Sift.Core.Dev.Parser
       Sift.Core.Dev.Util
       Sift.Core.Ops
-      Sift.Core.Ops.Mem
       Sift.Core.Unify
+      Sift.Core.Unify.Algorithm
       Sift.Core.Unify.Base
-      Sift.Core.Unify.Conclude
-      Sift.Core.Unify.Infer
+      Sift.Core.Unify.Prep
       Sift.Core.Unify.Util
       Sift.Dev
       Sift.Dev.Util
@@ -149,6 +163,7 @@ library
     , data-default
     , deepseq
     , extra
+    , fgl
     , lens >5
     , megaparsec
     , monad-loops
@@ -207,6 +222,7 @@ executable SHIFT-exe
     , data-default
     , deepseq
     , extra
+    , fgl
     , lens >5
     , megaparsec
     , monad-loops
@@ -268,6 +284,7 @@ test-suite spec
     , data-default
     , deepseq
     , extra
+    , fgl
     , lens >5
     , megaparsec
     , monad-loops
@@ -327,6 +344,7 @@ benchmark timer
     , data-default
     , deepseq
     , extra
+    , fgl
     , lens >5
     , megaparsec
     , monad-loops

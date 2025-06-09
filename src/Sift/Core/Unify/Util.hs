@@ -1,26 +1,16 @@
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE MonoLocalBinds #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeFamilies #-}
-
 module Sift.Core.Unify.Util where
 
-import Data.Maybe (catMaybes)
+import Data.Graph.Inductive (Graph, isSimple, mkNode)
 import Extra
-import Rift.Core.Base
-import Rift.Core.Interface (FTerm (..))
-import Sift.Core.Unify.Base
-import Sift.Core.Unify.Infer
+import Extra.Graphic
 
-unify ::
-  forall t0.
-  (TermLike (Inner t0), FTerm t0, KTerm (Inner t0)) =>
-  forall t1.
-  (TermLike (Inner t1), FTerm t1, KTerm (Inner t1)) =>
-  forall i.
-  (i ~ (Inner t0), i ~ (Inner t1)) =>
-  t0 ->
-  t1 ->
-  Choice (UnifyState i)
-unify t0 t1 = unifyInfer (t0 ^. fterm) (t1 ^. fterm) (UnifyState (Free <$> (t0 ^. ffrees)) (Free <$> (t1 ^. ffrees)) (toMap []))
+freePower :: (Eq term) => [term] -> term -> Int
+freePower free t = length $ filter (== t) free
+boundRoot :: (Eq term, Graph gr, Ord term) => Graphic gr term b -> term -> Int
+boundRoot graphic t =
+  let
+    ends = graphic ^. nodes . mAt t
+   in
+    length ends
+nonCyclic :: (Graph gr) => Choice (gr a b) -> Choice (gr a b)
+nonCyclic = cfilter isSimple
