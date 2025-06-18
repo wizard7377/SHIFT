@@ -20,8 +20,15 @@ extra-source-files:
     CHANGELOG.md
 extra-doc-files:
     docs/MetaLamed.md
-    pl/Reference.pl
+    pl/abstract.pl
+    pl/Abstract.pl~
+    pl/abstract.pl~
+    pl/macros.pl~
+    pl/main.pl
+    pl/main.pl~
     pl/Reference.pl~
+    pl/solver.pl
+    pl/solver.pl~
 
 source-repository head
   type: git
@@ -66,11 +73,13 @@ library
       Extra.Lens
       Extra.List
       Extra.Map
+      Extra.Map.Direct
       Extra.Map.Lens
       Extra.Map.Other
       Extra.Map.Types
       Extra.Monad
       Extra.Ops
+      Extra.Parsers
       Extra.TestHelp
       Extra.TestHelp.MakeTest
       Extra.Todo
@@ -82,16 +91,20 @@ library
       Hift.Opts.Forms
       Hift.Opts.Types
       Hift.Query
+      Lift.Common
       Lift.Common.Module
       Lift.Common.Names
       Lift.Common.Parsing
       Lift.Common.Tokens
+      Lift.Dev
+      Lift.Dev.TestParse
       Lift.Lift
       Lift.Mift
       Lift.Mift.Base
       Lift.Mift.Expr
       Lift.Mift.Parse.Lexer
       Lift.Mift.Parse.Parser
+      Lift.Mift.Parse.State
       Rift.Core
       Rift.Core.Base
       Rift.Core.Generate
@@ -117,10 +130,6 @@ library
       Sift.Core.Dev.Util
       Sift.Core.Ops
       Sift.Core.Unify
-      Sift.Core.Unify.Algorithm
-      Sift.Core.Unify.Base
-      Sift.Core.Unify.Prep
-      Sift.Core.Unify.Util
       Sift.Dev
       Sift.Dev.Util
       Sift.Monad

@@ -100,9 +100,9 @@ lamed ::
 lamed frees a0 a1 = Kaf BasicLamed (Kaf frees (Kaf a0 a1))
 
 -- FOR TESTS ONLY, THIS IS A PARTIAL FUNCTION
-manyLamed :: KTerm term => [term] -> term -> term -> term
-manyLamed [t] a0 a1 = Lamed t a0 a1
-manyLamed (t : ts) a0 a1 = Lamed t (manyLamed ts a0 a1) a1
+manyLamed :: KTerm term => [term] -> term -> term -> term -> term
+manyLamed [t] a0 a1 a2 = Lamed t a0 a1 a2
+manyLamed (t : ts) a0 a1 a2 = Lamed t (manyLamed ts a0 a1 a2) a1 a2
 --drule = mkCons' ARule
 
 
@@ -111,10 +111,10 @@ pattern Cons3 f a0 a1 <- Kaf f (Kaf a0 a1)
   where
     Cons3 f a0 a1 = Kaf f (Kaf a0 a1)
 
-pattern Lamed :: KTerm term => term -> term -> term -> term
-pattern Lamed v a b <- Kaf BasicLamed (Kaf v (Kaf a b))
+pattern Lamed :: KTerm term => term -> term -> term -> term -> term
+pattern Lamed v a b f <- Kaf BasicLamed (Kaf v (Kaf a (Kaf b f)))
   where
-    Lamed v a b = Kaf BasicLamed (Kaf v (Kaf a b))
+    Lamed v a b f = Kaf BasicLamed (Kaf v (Kaf a (Kaf b f)))
 {-# INLINE Lamed #-}
 termToList :: KTerm term => term -> [term]
 termToList (Kaf a0 a1) = (:) a0 $ termToList a1

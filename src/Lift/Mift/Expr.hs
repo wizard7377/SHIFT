@@ -11,7 +11,10 @@ data MiftExpr
   | -- | An expression with
     MiftRepr T.Text MiftExpr
   | MiftLamed
-  | MiftAtom Name
+  | -- | An unexpanded atom
+    MiftAtom Name
   | MiftList [MiftExpr]
   | MiftCons MiftExpr MiftExpr
+  | -- | Those with `${` `$}`
+    MiftTuple [MiftExpr]
   | MiftApply MiftExpr MiftExpr

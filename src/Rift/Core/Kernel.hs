@@ -16,6 +16,7 @@ module Rift.Core.Kernel (
   {-# WARNING "This should only be used in the implementation" #-}
   KTerm(..),
   pattern Atom,
+  pattern Atom',
   pattern Cons,
   pattern BasicLamed,
   pattern Kaf,
@@ -77,3 +78,4 @@ pattern BasicLamed <- (isLamed -> True)
 {-# INLINE Cons #-}
 {-# INLINE BasicLamed #-}
 {-# INLINE Atom #-}
+{-# COMPLETE BasicLamed, Atom', Kaf #-}

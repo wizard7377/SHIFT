@@ -40,7 +40,7 @@ showRainbow :: (Show a, Show (Term' a)) => Int -> Term' a -> [Char]
 showRainbow i (PrimTag t tag) = showColor' i (showRainbow n t ++ "@" ++ show tag)
  where
   n = i + 1
-showRainbow i (Lamed v b t) = showColor' i "[" ++ showRainbow n v ++ showColor' i "] {" ++ showRainbow n b ++ " " ++ showRainbow n t ++ showColor' i "}"
+showRainbow i (Lamed v b t f) = showColor' i "[" ++ showRainbow n v ++ showColor' i "] {" ++ showRainbow n b ++ " -> " ++ showRainbow n t ++ " ? " ++ showRainbow n f ++ showColor' i "}"
  where
   n = i + 1
 showRainbow i (Kaf a0 a1) = showColor' i "(" ++ intercalate (showColor' i " ") (showRainbow n <$> parseCons a0) ++ " . " ++ (showRainbow n a1) ++ showColor' i ")"
@@ -87,6 +87,7 @@ termIn =
 instance FTerm TestTerm where
   type Inner TestTerm = TestTerm
   fterm = termIn
-  ffrees = freesIn
+  frees = freesIn
+  groundTerm = id
 
 type TermFull tag term = (KTerm term, TermLike term, FTerm term, UTerm tag term)

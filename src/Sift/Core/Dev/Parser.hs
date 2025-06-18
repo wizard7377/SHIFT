@@ -45,7 +45,7 @@ lexeme = L.lexeme sc
 
 atomicP :: Parser (Rift.TestTerm)
 atomicP = lexeme $ do
-  tok <- some (noneOf (" \n\t()[]{}?" :: String))
+  tok <- some (noneOf (" \n\t()[]{}<>@?" :: String))
   pure $ Rift.PrimAtom $ TestToken $ Left $ T.pack tok
 
 lamedP :: Parser (Rift.TestTerm)
@@ -69,8 +69,17 @@ kafP =
       foldr1
         (\acc x -> Rift.PrimCons acc x)
         (firstOf : restOf)
+
+freeP :: Parser (Rift.TestTerm)
+freeP = do
+  _ <- symbol "@"
+  _ <- symbol "<"
+  frees <- some termP
+  _ <- symbol ">"
+  term <- termP
+  pure $ PrimFree term frees
 termP :: Parser (Rift.TestTerm)
-termP = choice [kafP, lamedP, wildP, atomicP]
+termP = choice [freeP, kafP, lamedP, wildP, atomicP]
 
 parseTerm :: T.Text -> IO (Rift.TestTerm)
 parseTerm input = do

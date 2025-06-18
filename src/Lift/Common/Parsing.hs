@@ -22,7 +22,7 @@ type AnyParse a = forall e m. (Ord e, Monad m) => P.ParsecT e T.Text m a
 
 data Lexical a = Lexical FPos a
 
-lexInfo :: AnyParse a -> AnyParse (Lexical a)
+lexInfo :: (Ord e, Monad m) => P.ParsecT e T.Text m a -> P.ParsecT e T.Text m (Lexical a)
 lexInfo p = do
   start <- P.getSourcePos
   res <- p

@@ -1,2 +1,2 @@
-$create ${ A B C x y z $} $;
-$create ${ => * Λ $} $;
+
+$define $( x y z $)

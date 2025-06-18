@@ -95,3 +95,7 @@ cfilter p (Choice xs) = Choice $ filter p xs
 onlyJust :: Choice (Maybe a) -> Choice a
 onlyJust (Choice xs) =
   Choice $ mapMaybe id xs
+
+fromFoldable :: (Foldable f) => f a -> Choice a
+fromFoldable xs =
+  Choice $ toList xs

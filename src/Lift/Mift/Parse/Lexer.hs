@@ -9,6 +9,7 @@ import Data.Functor (($>))
 import Data.Text qualified as T
 import Lift.Common.Parsing (ParseMT)
 import Text.Megaparsec qualified as P
+import Text.Megaparsec qualified as T
 import Text.Megaparsec.Char qualified as L hiding (space)
 import Text.Megaparsec.Char.Lexer qualified as L
 
@@ -19,7 +20,7 @@ lexeme :: (Ord e0, Monad m0) => P.ParsecT e0 T.Text m0 a0 -> P.ParsecT e0 T.Text
 lexeme = L.lexeme sc
 symbol :: (Ord e0, Monad m0) => T.Text -> (P.ParsecT e0 T.Text m0 T.Text)
 symbol = L.symbol sc
-keyword :: (Ord e0, Monad m0) => T.Text -> P.ParsecT e0 T.Text m0 T.Text
-keyword s = symbol ("$" <> s)
+keyword :: (Ord e0, Monad m0) => T.Text -> P.ParsecT e0 T.Text m0 ()
+keyword s = T.try $ symbol ("$" <> s) $> ()
 glyph :: (Ord e, Monad m) => P.ParsecT e T.Text m T.Text
 glyph = T.pack <$> many (P.notFollowedBy sc *> P.anySingleBut '$')

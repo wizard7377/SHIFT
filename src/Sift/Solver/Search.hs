@@ -144,9 +144,9 @@ mem top bottom =
 -- {-# INLINE mem #-}
 
 mem' :: (Rift.KTerm term, Eq term, Ord term, Show term, Monoid w, Rift.FTerm term, Rift.UTerm Idx term) => STerm term -> STerm term -> LM t w (SearchState term) (Choice (STerm term))
-mem' top@(STerm (Rift.Lamed var upFrom upTo) freeUp proofA) bottom@(STerm down freeDown proofB) = do
+mem' top@(STerm (Rift.Lamed var upFrom upTo failure) freeUp proofA) bottom@(STerm down freeDown proofB) = do
   state <- get
-  let mr = Rift.memReduce (state ^. depth) (var : freeUp) upFrom upTo (down, freeDown)
+  let mr = _ -- Rift.memReduce (state ^. depth) (var : freeUp) upFrom upTo (down, freeDown)
   let res = (\(Rift.FTerm' t v) -> STerm t v (Rift.Mem proofA proofB)) <$> mr
   "Not absurd" ?> (pure res)
 mem' _ _ = do pure $ "Absurd" ?> cabsurd
