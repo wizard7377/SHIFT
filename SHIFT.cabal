@@ -62,6 +62,11 @@ library
       Extra.Basics
       Extra.Boolean
       Extra.Choice
+      Extra.Choice.Core
+      Extra.Choice.Exports
+      Extra.Choice.Instances
+      Extra.Choice.Interface
+      Extra.Choice.Types
       Extra.ChoiceNew
       Extra.ChoiceOld
       Extra.Debug
@@ -129,6 +134,7 @@ library
       Sift.Core.Dev.Parser
       Sift.Core.Dev.Util
       Sift.Core.Ops
+      Sift.Core.Ops.Mem
       Sift.Core.Unify
       Sift.Dev
       Sift.Dev.Util
