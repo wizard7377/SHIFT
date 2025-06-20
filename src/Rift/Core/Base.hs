@@ -51,6 +51,7 @@ data Term' atom where
   PrimCons :: Term' atom -> Term' atom -> Term' atom
   PrimTag :: Term' atom -> Int -> Term' atom
   PrimFree :: Term' atom -> [Term' atom] -> Term' atom
+  PrimError :: Term' atom
   deriving (Eq, Ord)
 
 instance (KTerm (Term' atom)) where

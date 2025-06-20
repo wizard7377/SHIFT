@@ -1,7 +1,7 @@
 {-# LANGUAGE GHC2021 #-}
 {-# LANGUAGE DefaultSignatures #-}
 
-module Extra.Map.Direct (Direction (..), Directional (..), DirectMap (..), ltmap, rtmap, lmaprec, rmaprec, normalMap, (->>), (<<-)) where
+module Extra.Map.Direct (Direction (..), Directional (..), DirectMap (..), ltmap, rtmap, lmaprec, rmaprec, normalMap, (->>), (<<-), (<->)) where
 
 import Control.Lens qualified as Lens
 import Control.Lens.Operators ((%~), (^.), (^?))
@@ -16,7 +16,12 @@ data Direction
   = LeftToRight
   | RightToLeft
   | Bidirectional
-  deriving (Eq, Ord, Show, Data, Typeable, Generic, Enum)
+  deriving (Eq, Ord, Data, Typeable, Generic, Enum)
+
+instance Show Direction where
+  show LeftToRight = ">>"
+  show RightToLeft = "<<"
+  show Bidirectional = "<>"
 
 -- | Typeclass for types that have a 'Direction'.
 class Directional t where
@@ -117,7 +122,5 @@ normalMap' m (TImage t k v) = case t ^. direction of
 (<<-) :: a -> b -> TImage Direction a b
 (<<-) = TImage RightToLeft
 
-instance {-# OVERLAPPING #-} (Show a, Show b) => Show (TImage Direction a b) where
-  show (TImage LeftToRight x y) = show x ++ " >>->> " ++ show y
-  show (TImage RightToLeft x y) = show x ++ " <<-<< " ++ show y
-  show (TImage Bidirectional x y) = show x ++ " <<->> " ++ show y
+(<->) :: a -> b -> TImage Direction a b
+(<->) = TImage Bidirectional

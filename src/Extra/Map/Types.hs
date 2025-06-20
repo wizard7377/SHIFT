@@ -48,18 +48,6 @@ type Map = TMap ()
 -- | A mapping from @a@ to itself.
 type HMap a = Map a a
 
-instance {-# OVERLAPS #-} (Show a, Show b) => Show (Image a b) where
-  show (TImage t x y) = show t ++ " : " ++ show x ++ " |-> " ++ show y
-
-instance {-# OVERLAPS #-} (Show a, Show b) => Show (Map a b) where
-  show (TMap xs) = "{" ++ intercalate ", " (map show xs) ++ "}"
-
-instance {-# OVERLAPPABLE #-} (Show t, Show a, Show b) => Show (TImage t a b) where
-  show (TImage t x y) = show x ++ " |-[" ++ show t ++ "]-> " ++ show y
-
-instance (Show a, Show b, Show t) => Show (TMap t a b) where
-  show (TMap xs) = "{" ++ intercalate ", " (map show xs) ++ "}"
-
 instance Functor (TImage t a) where
   fmap f (TImage t a b) = TImage t a (f b)
 
@@ -107,3 +95,14 @@ instance HasMapValue (TMap t a b) where
 
 instance HasMapTag (TMap t a b) where
   type MapTag (TMap t a b) = t
+instance {-# OVERLAPS #-} (Show a, Show b) => Show (Image a b) where
+  show (TImage t x y) = show t ++ " : " ++ show x ++ " |-> " ++ show y
+
+instance {-# OVERLAPS #-} (Show a, Show b) => Show (Map a b) where
+  show (TMap xs) = "{" ++ intercalate ", " (map show xs) ++ "}"
+
+instance {-# OVERLAPPABLE #-} (Show t, Show a, Show b) => Show (TImage t a b) where
+  show (TImage t x y) = show x ++ " =" ++ show t ++ "= " ++ show y
+
+instance (Show a, Show b, Show t) => Show (TMap t a b) where
+  show (TMap xs) = "{" ++ intercalate ", " (map show xs) ++ "}"

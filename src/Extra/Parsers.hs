@@ -6,25 +6,26 @@ module Extra.Parsers where
 import Control.Comonad
 import Control.Exception
 import Control.Monad.IO.Class
+import Control.Monad.State qualified as M
 import Data.Functor.Identity (Identity)
 import Data.Kind (Type)
 import Data.String (IsString (..))
+import Data.Text qualified as T
 import Data.Void (Void)
 import Text.Megaparsec
 
 -- | Something that can be parsed
-class (IsString (InputOf a), Monad (MonadOf a)) => Parsable (a :: Type) where
-  type InputOf (a :: Type) :: Type
-  type InputOf a = String
-  type MonadOf (a :: Type) :: Type -> Type
+class Parsable (a :: Type) where
+  type MonadOf a :: Type -> Type
   type MonadOf a = Identity
-  type ErrorOf (a :: Type) :: Type
-  type ErrorOf a = Void
-  pread :: ParsecT (ErrorOf a) (InputOf a) (MonadOf a) a
+  pread :: ParsecT Void T.Text (MonadOf a) a
 
-preadWithIO :: (Exception (ErrorOf a), Comonad (MonadOf a), Parsable a, IsString (InputOf a), Stream (InputOf a), ShowErrorComponent (ErrorOf a), VisualStream (InputOf a), TraversableStream (InputOf a)) => String -> IO a
+instance Comonad (M.State Int) where
+  extract s = M.evalState s 0
+  duplicate = pure
+preadWithIO :: (MonadOf a ~ w, Monad w, Comonad w, MonadIO m, Parsable a) => String -> m a
 preadWithIO input = do
-  let result = extract $ runParserT pread (fromString "") (fromString "")
+  let result = extract $ runParserT pread (fromString "") (T.pack input)
   case result of
     Left err -> throw (userError $ errorBundlePretty err)
     Right val -> return val

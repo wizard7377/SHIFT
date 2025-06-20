@@ -6,6 +6,7 @@
 module Rift.Core.Instances where
 
 import Control.Lens (lens)
+import Control.Lens qualified as Lens
 import Data.List (intercalate, intersperse)
 import Data.Text qualified as T
 import Extra
@@ -50,6 +51,9 @@ showRainbow i (PrimAtom atom) = resetCode ++ show atom
  where
   n = i + 1
 showRainbow i BasicLamed = resetCode ++ "ל"
+showRainbow i (PrimFree t v) = showColor' i "<" ++ intercalate (showColor' i ", ") (showRainbow n <$> v) ++ showColor' i ">" ++ " " ++ showRainbow n t
+ where
+  n = i + 1
 showListT :: (Show a, Show (Term' a)) => [Term' a] -> String
 showListT v = if null v then "{}" else "\n[\n\t" ++ intercalate "\n\t" (showRainbow 1 <$> v) ++ "\n]"
 
@@ -60,7 +64,7 @@ instance (Show TestToken) => Show TestTerm where
 instance UTerm Idx TestTerm where
   uniqueCreate term tag = PrimTag term tag
 
-freesIn :: Lens' TestTerm [TestTerm]
+freesIn :: Lens' (Term' atom) [(Term' atom)]
 freesIn =
   lens
     ( \case
@@ -72,7 +76,7 @@ freesIn =
           (PrimFree t _) -> PrimFree t v
           _ -> PrimFree term v
     )
-termIn :: Lens' TestTerm TestTerm
+termIn :: Lens' (Term' atom) (Term' atom)
 termIn =
   lens
     ( \case
@@ -84,10 +88,14 @@ termIn =
           (PrimFree t v) -> PrimFree term' v
           _ -> term'
     )
-instance FTerm TestTerm where
-  type Inner TestTerm = TestTerm
+instance FTerm (Term' atom) where
+  type Inner (Term' atom) = (Term' atom)
   fterm = termIn
   frees = freesIn
   groundTerm = id
 
+instance ETerm (Term' atom) where
+  eterm = PrimError
 type TermFull tag term = (KTerm term, TermLike term, FTerm term, UTerm tag term)
+instance (Eq atom) => RTerm (Term' atom) where
+  replaceTerm x y = Lens.transform (change x y)

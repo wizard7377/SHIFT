@@ -1,5 +1,7 @@
-module Tests (module Tests.Searching, module Tests.Mem) where
+module Tests (module Tests.Searching, module Tests.Unify) where
 
-import Tests.Mem
+-- import Tests.Mem
+
 import Tests.Searching
+import Tests.Unify
 

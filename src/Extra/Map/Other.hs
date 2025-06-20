@@ -4,6 +4,7 @@ import Control.Category qualified as Category
 import Control.Lens qualified as Lens
 import Data.Bifunctor (Bifunctor (..))
 import Data.Data (Data)
+import Data.List (intersect, permutations)
 import Data.Maybe (fromJust, fromMaybe)
 import Data.Typeable
 import Extra.Lens
@@ -170,3 +171,6 @@ flipmapV_ m0 m1 m2 x =
       Just y -> flipmapK m0 m1 m2 y
       Nothing -> x
   )
+
+equivalent :: (Eq a, Eq b, Eq t) => TMap t a b -> TMap t a b -> Bool
+equivalent (TMap xs) (TMap ys) = not $ null $ intersect (permutations xs) (permutations ys)

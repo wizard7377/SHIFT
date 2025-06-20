@@ -1,8 +1,11 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE QuantifiedConstraints #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Rift.Core.Interface where
 
@@ -37,6 +40,40 @@ instance FTerm (t, [t]) where
   fterm = _1
   frees = _2
   groundTerm t = (t, [])
+
+class ETerm term where
+  eterm :: term
+
+-- | Inner, var
+addFree :: (FTerm term, KTerm (Inner term)) => term -> Inner term -> term
+addFree t inner =
+  let
+    frees' = t ^. frees
+   in
+    t & frees .~ (inner : frees')
+
+-- | Inner, var
+addFrees :: (FTerm term, KTerm (Inner term)) => term -> [Inner term] -> term
+addFrees t inner =
+  let
+    frees' = t ^. frees
+   in
+    t & frees .~ (inner <> frees')
+
+freeTerm :: (FTerm term, KTerm (Inner term)) => term -> ([Inner term], Inner term)
+freeTerm t =
+  (t ^. frees, t ^. fterm)
+
+boundTerm :: forall term. (FTerm term, KTerm (Inner term)) => [Inner term] -> Inner term -> term
+boundTerm free inner =
+  let
+    (t :: term) = groundTerm inner
+   in
+    t & frees .~ free
+pattern FreeTerm :: (FTerm term, KTerm (Inner term)) => [Inner term] -> Inner term -> term
+pattern FreeTerm frees inner <- (freeTerm -> (frees, inner))
+  where
+    FreeTerm frees inner = boundTerm frees inner
 data FTerm' t = FTerm'
   { _ftterm :: t
   , _ftfrees :: [t]
@@ -64,11 +101,24 @@ simplifyF t =
    in
     t & ffrees .~ frees1
 
-type FullTermLike tag term =
+class
   ( KTerm term
   , FTerm term
   , UTerm tag term
+  , Inner term ~ term
   -- , RTerm term
-  )
+  ) =>
+  FullTermLike tag term
+instance
+  ( KTerm term
+  , FTerm term
+  , UTerm tag term
+  , Inner term ~ term
+  -- , RTerm term
+  ) =>
+  FullTermLike tag term
 
-type Term term = FullTermLike Idx term
+class (FullTermLike Idx term) => Term term
+instance (FullTermLike Idx term) => Term term
+termEq :: (Term term) => term :~: (Inner term)
+termEq = Refl

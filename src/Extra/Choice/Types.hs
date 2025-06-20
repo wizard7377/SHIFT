@@ -1,5 +1,6 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE QuantifiedConstraints #-}
@@ -27,21 +28,28 @@ import Data.List (singleton)
 import Data.List.Extra (nubBy)
 import Data.Maybe
 import Data.Maybe (catMaybes, isJust, mapMaybe)
-import Extra ((<&>))
 import Extra.Basics
 import Extra.List
 import Extra.Ops
 
 -- The monadic list type
-data MStep m a = MNil | MCons a (MList m a)
-type MList m a = m (MStep m a)
+data StepT m a = MNil | MCons a (ListT m a)
+type ListT m a = m (StepT m a)
+type Yield m a = m (Maybe (a, m a))
 
 -- This can be directly used as a monad transformer
-newtype ChoiceT m a = ChoiceT {_runChoiceT :: MList m a}
-type Choice = ChoiceT Identity
+newtype ChoiceT m a = ChoiceT {_runChoiceT :: ListT m a}
+type Choice = ChoiceT Data.Functor.Identity.Identity
 
-class MonadChoice (m :: Type -> Type) (a :: Type) where
-  csplit :: (Foldable f) => m (f a) -> m a
+{- | The class of Monads that are non-deterministic
+Features two types, a given "viewed" type and a given "choice" type
+Note that this is not one-to-one, one can view one choice as many things, and one view can see many choices
+-}
+class (Monad m) => MonadChoice (m :: Type -> Type) where
+  cset :: Yield m a -> m a
+  cget :: m a -> Yield m a
+
+-- csplit :: (Foldable f) => m (f a) -> m a
 
 cguard :: (Alternative m) => Bool -> m ()
 cguard True = pure ()

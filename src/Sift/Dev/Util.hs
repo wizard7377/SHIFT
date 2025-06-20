@@ -20,7 +20,7 @@ import Rift.Core.Base (KTerm, TermLike)
 import Rift.Forms
 import Sift.Core (tRead)
 import Sift.Monad (EnterState (..), FormsLMT, LMT, applyEnv, mkLMT, runLMT, runLMT')
-import Sift.Solver (SearchState (..), genSearch)
+import Sift.Solver (SearchState (..))
 import Test.HUnit qualified as T
 import Test.HUnit.Lang (HUnitFailure (HUnitFailure))
 

@@ -6,6 +6,7 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE StarIsType #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ViewPatterns #-}
 
 -- {-# LANGUAGE UndecidableInstances #-}
 
@@ -27,59 +28,89 @@ import Data.List (singleton)
 import Data.List.Extra (nubBy)
 import Data.Maybe
 import Data.Maybe (catMaybes, isJust, mapMaybe)
-import Extra ((<&>))
 import Extra.Basics
 import Extra.Choice.Types
 import Extra.List
 import Extra.Ops
 
--- Implemenation of join
+-- | Monadic join for 'ChoiceT'. Flattens a 'ChoiceT' of 'ChoiceT's into a single 'ChoiceT'.
 joinListT :: (Functor m, Monad m) => ChoiceT m (ChoiceT m a) -> ChoiceT m a
 joinListT (ChoiceT xss) = ChoiceT . joinMList $ fmap (fmap _runChoiceT) xss
 
-joinMList :: (Functor m, Monad m) => MList m (MList m a) -> MList m a
+-- | Monadic join for 'ListT'. Flattens a 'ListT' of 'ListT's into a single 'ListT'.
+joinMList :: (Functor m, Monad m) => ListT m (ListT m a) -> ListT m a
 joinMList = (=<<) joinMList'
 
-joinMList' :: (Functor m, Monad m) => MStep m (MList m a) -> MList m a
+-- | Helper for 'joinMList'. Processes a single step of a 'ListT' of 'ListT's.
+joinMList' :: (Functor m, Monad m) => StepT m (ListT m a) -> ListT m a
 joinMList' MNil = return MNil
 joinMList' (MCons x xs) = x `mAppend` joinMList xs
 
-mAppend :: (Functor m, Monad m) => MList m a -> MList m a -> MList m a
+-- | Monadic append for 'ListT'. Concatenates two 'ListT' computations.
+mAppend :: (Functor m, Monad m) => ListT m a -> ListT m a -> ListT m a
 mAppend xs ys = (`mAppend'` ys) =<< xs
 
-mAppend' :: (Functor m, Monad m) => MStep m a -> MList m a -> MList m a
+-- | Helper for 'mAppend'. Appends a single step to a 'ListT'.
+mAppend' :: (Functor m, Monad m) => StepT m a -> ListT m a -> ListT m a
 mAppend' MNil ys = ys
 mAppend' (MCons x xs) ys = return $ MCons x (mAppend xs ys)
 
--- A "lazy" run function, which only calculates the first solution.
+-- | Runs a 'ListT' computation and collects the results in a list.
+execListT :: (Monad m) => ListT m a -> m [a]
+execListT m = do
+  xs <- m
+  case xs of
+    MNil -> return []
+    MCons x xs' -> (x :) <$> execListT (xs')
+
+-- | Lazily runs a 'ChoiceT' computation, returning the first solution and the remaining computation, if any.
 runListT' :: (Functor m) => ChoiceT m a -> m (Maybe (a, ChoiceT m a))
 runListT' (ChoiceT m) = fmap g m
  where
   g MNil = Nothing
   g (MCons x xs) = Just (x, ChoiceT xs)
 
--- In ChoiceT from Control.Monad this one is the data constructor ChoiceT, so sadly, this code can't be a drop-in replacement.
+-- | Lifts a list into the 'ChoiceT' monad transformer.
 liftList :: (Monad m) => [a] -> ChoiceT m a
 liftList [] = ChoiceT $ return MNil
 liftList (x : xs) = ChoiceT . return $ MCons x (_runChoiceT $ liftList xs)
 
-instance (Functor m) => Functor (MStep m) where
+-- | Converts a foldable structure to a 'ListT'.
+fromListList :: (Monad m, Foldable f) => f a -> ListT m a
+fromListList (toList -> []) = return MNil
+fromListList (toList -> (x : xs)) = return $ MCons x (fromListList xs)
+
+-- | Converts a foldable structure to a 'ChoiceT'.
+fromList :: (Monad m, Foldable f) => f a -> ChoiceT m a
+fromList xs = ChoiceT $ fromListList xs
+
+-- | Converts a 'ChoiceT' computation to a list in the base monad.
+ctoList :: (Monad m) => ChoiceT m a -> m [a]
+ctoList (ChoiceT m) = do
+  xs <- m
+  case xs of
+    MNil -> return []
+    MCons x xs' -> (x :) <$> ctoList (ChoiceT xs')
+
+instance (Functor m) => Functor (StepT m) where
   fmap _ MNil = MNil
   fmap f (MCons x xs) = MCons (f x) (fmap (fmap f) xs)
 
-bindStep :: (Monad m) => MStep m (a -> b) -> MStep m a -> MStep m b
+-- | Applicative-style bind for 'MStep'.
+bindStep :: (Monad m) => StepT m (a -> b) -> StepT m a -> StepT m b
 bindStep (MCons f fs) (MCons x xs) = MCons (f x) $ do
-  (fs' :: MStep m (a -> b)) <- fs
-  (xs' :: MStep m (a)) <- xs
+  (fs' :: StepT m (a -> b)) <- fs
+  (xs' :: StepT m (a)) <- xs
   let r1 = f <$> xs'
   let r2 = fs' <*> pure x
   let r3 = fs' <*> xs'
   let rt = mAppend' r1 $ mAppend' r2 $ pure r3
   rt
 {-# INLINE bindStep #-}
-instance (Monad m) => Applicative (MStep m) where
+
+instance (Monad m) => Applicative (StepT m) where
   pure x = MCons x (pure MNil)
-  (<*>) :: forall a b. MStep m (a -> b) -> MStep m a -> MStep m b
+  (<*>) :: forall a b. StepT m (a -> b) -> StepT m a -> StepT m b
   MNil <*> _ = MNil
   _ <*> MNil = MNil
   x <*> y = bindStep x y

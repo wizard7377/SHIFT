@@ -66,8 +66,8 @@ library
       Extra.Choice.Exports
       Extra.Choice.Instances
       Extra.Choice.Interface
+      Extra.Choice.Pretty
       Extra.Choice.Types
-      Extra.ChoiceNew
       Extra.ChoiceOld
       Extra.Debug
       Extra.Decide
@@ -142,7 +142,6 @@ library
       Sift.Solver
       Sift.Solver.Search
       Sift.Solver.Types
-      Tests.Mem
       Tests.Searching
       Tests.Unify
       Paths_SHIFT

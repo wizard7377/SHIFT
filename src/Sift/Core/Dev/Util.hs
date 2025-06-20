@@ -45,7 +45,5 @@ instance Read (TestTerm) where
   readsPrec _ str = (,) <$> (maybeToList $ eitherToMaybe $ unsafePerformIO $ (try :: IO TestTerm -> IO (Either SomeException TestTerm)) $ tRead str) <*> pure ""
 
 instance Parsable TestTerm where
-  type InputOf TestTerm = T.Text
-  type ErrorOf TestTerm = Void
-  type MonadOf TestTerm = (State Int)
+  type MonadOf TestTerm = State Int
   pread = (termP <* T.eof)
