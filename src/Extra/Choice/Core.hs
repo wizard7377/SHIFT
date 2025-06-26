@@ -1,3 +1,4 @@
+{-# LANGUAGE GHC2021 #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -5,11 +6,18 @@
 {-# LANGUAGE QuantifiedConstraints #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE StarIsType #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_HADDOCK show-extensions, prune #-}
 
 -- {-# LANGUAGE UndecidableInstances #-}
 
+{- |
+Module      : Extra.Choice.Core
+License     : BSD-2-Clause
+Maintainer  : Asher Frost
+-}
 module Extra.Choice.Core where
 
 import Control.Applicative
@@ -49,6 +57,9 @@ joinMList' (MCons x xs) = x `mAppend` joinMList xs
 -- | Monadic append for 'ListT'. Concatenates two 'ListT' computations.
 mAppend :: (Functor m, Monad m) => ListT m a -> ListT m a -> ListT m a
 mAppend xs ys = (`mAppend'` ys) =<< xs
+
+mAppendListT :: (Functor m, Monad m) => ListT m a -> ListT m a -> ListT m a
+mAppendListT = mAppend
 
 -- | Helper for 'mAppend'. Appends a single step to a 'ListT'.
 mAppend' :: (Functor m, Monad m) => StepT m a -> ListT m a -> ListT m a

@@ -1,8 +1,22 @@
-module Sift (module Sift.Core, module Sift.Base, module Sift.Monad, module Sift.Solver) where
+{-# LANGUAGE GHC2021 #-}
+-- \|
+-- Module      : Sift
+-- Description : Solver for Intutioninistic Flat Theorems
+-- License     : BSD-2-Clause
+-- Maintainer  : Asher Frost
+--
+-- The primary computational part of the SHIFT ecosystem
+{-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_HADDOCK show-extensions, prune #-}
 
--- \^Solver for Flat Intuitionistic Types
+module Sift (
+  module Sift.Core,
+  module Sift.Base,
+  module Sift.Ops,
+  module Sift.Search,
+) where
 
 import Sift.Base
 import Sift.Core
-import Sift.Monad hiding (_depth)
-import Sift.Solver hiding (_depth, _sentences)
+import Sift.Ops
+import Sift.Search

@@ -1,9 +1,17 @@
+{-# LANGUAGE GHC2021 #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE QuantifiedConstraints #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_HADDOCK show-extensions, prune #-}
 
-module Sift.Core.Dev.Parser where
+{- |
+Module      : Sift.Core.Dev.Parser
+License     : BSD-2-Clause
+Maintainer  : Asher Frost
+-}
+module Sift.Core.Dev.Parser (Parser, sc, symbol, lexeme, termP, parseTerm) where
 
 import Control.Monad (void)
 import Control.Monad.State (MonadState (..), State, StateT (runStateT), evalState, runState)
@@ -45,7 +53,7 @@ lexeme = L.lexeme sc
 
 atomicP :: Parser (Rift.TestTerm)
 atomicP = lexeme $ do
-  tok <- some (noneOf (" \n\t()[]{}<>?" :: String))
+  tok <- some (noneOf (" \n\t()[]{}?" :: String))
   pure $ Rift.PrimAtom $ TestToken $ Left $ T.pack tok
 
 lamedP :: Parser (Rift.TestTerm)
@@ -72,11 +80,18 @@ kafP =
 
 freeP :: Parser (Rift.TestTerm)
 freeP = do
-  _ <- symbol "<"
+  _ <- symbol "["
   frees <- some termP
-  _ <- symbol ">"
+  _ <- symbol "]"
   term <- termP
   pure $ PrimFree term frees
+
+repP = do
+  _ <- symbol "{"
+  termFrom <- termP
+  termTo <- termP
+  _ <- symbol "}"
+  pure $ PrimRep termFrom termTo
 termP :: Parser (Rift.TestTerm)
 termP = choice [freeP, kafP, lamedP, wildP, atomicP]
 

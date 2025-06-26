@@ -33,9 +33,14 @@ import Extra.List
 import Extra.Ops
 
 -- The monadic list type
-data StepT m a = MNil | MCons a (ListT m a)
+data StepT m a where
+  MNil :: StepT m a
+  MCons :: a -> (ListT m a) -> StepT m a
 type ListT m a = m (StepT m a)
 type Yield m a = m (Maybe (a, m a))
+
+yield :: (Monad m) => a -> m a -> Yield m a
+yield a next = pure (Just (a, next))
 
 -- This can be directly used as a monad transformer
 newtype ChoiceT m a = ChoiceT {_runChoiceT :: ListT m a}
@@ -46,11 +51,11 @@ Features two types, a given "viewed" type and a given "choice" type
 Note that this is not one-to-one, one can view one choice as many things, and one view can see many choices
 -}
 class (Monad m) => MonadChoice (m :: Type -> Type) where
-  cset :: Yield m a -> m a
-  cget :: m a -> Yield m a
+  cset :: m (Maybe (a, m a)) -> m a
+  cget :: m a -> m (Maybe (a, m a))
 
--- csplit :: (Foldable f) => m (f a) -> m a
+newtype ChoiceATT (arr :: k0 -> Type -> Type) (m :: Type -> Type) (a :: k0) (b :: Type) = ChoiceATT
+  {_runChoiceATT :: arr a (ChoiceT m b)}
 
-cguard :: (Alternative m) => Bool -> m ()
-cguard True = pure ()
-cguard False = empty
+type ChoiceAT = ChoiceATT (->)
+type CBool m = ChoiceT m ()

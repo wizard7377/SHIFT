@@ -1,3 +1,4 @@
+{-# LANGUAGE GHC2021 #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -5,11 +6,18 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_HADDOCK show-extensions, prune #-}
 
-module Sift.Core.Dev.Util where
+{- |
+Module      : Sift.Core.Dev.Util
+License     : BSD-2-Clause
+Maintainer  : Asher Frost
+-}
+module Sift.Core.Dev.Util (justAssume, tRead, tRead') where
 
 import Control.Lens ((^.), _2)
 import Control.Monad.State

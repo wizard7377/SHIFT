@@ -1,3 +1,12 @@
+{-# LANGUAGE GHC2021 #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_HADDOCK show-extensions, prune #-}
+
+{- |
+Module      : Rift.Forms.Proof
+License     : BSD-2-Clause
+Maintainer  : Asher Frost
+-}
 module Rift.Forms.Proof where
 
 import Control.Applicative (Alternative (..))

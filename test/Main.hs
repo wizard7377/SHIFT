@@ -4,4 +4,4 @@ import Test.Tasty (defaultMain, testGroup)
 import Tests
 
 main :: IO ()
-main = defaultMain $ testGroup "SHIFT tests" [unifyTests]
+main = defaultMain $ testGroup "SHIFT tests" [unifyTests, memTests]

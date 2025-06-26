@@ -15,6 +15,9 @@ module Extra.Map.Lens (
   seeImgMap,
   seeTupImg,
   seeTupMap,
+  toMapImage1,
+  unTagImage,
+  unTagMap,
 ) where
 
 import Control.Lens (Lens', lens)
@@ -142,3 +145,10 @@ fromTMap (TMap xs) = (\(TImage t a b) -> (t, a, b)) <$> xs
 -- | Convert a list of tuples to a 'TMap'.
 toTMap :: [(t, a, b)] -> TMap t a b
 toTMap xs = TMap (uncurry3 TImage <$> xs)
+
+unTagImage :: TImage t a b -> Image a b
+unTagImage (TImage _ a b) = TImage () a b
+unTagMap :: TMap t a b -> Map a b
+unTagMap (TMap xs) = TMap (unTagImage <$> xs)
+toMapImage1 :: TImage t a b -> TMap t a b
+toMapImage1 (TImage t a b) = TMap [TImage t a b]

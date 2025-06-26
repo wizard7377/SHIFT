@@ -6,7 +6,7 @@
  - The unification module
  -
 -}
-module Sift.Core.Unify where
+module Sift.Core.Unify (unify, prep, unify', UnifyState (..), unifyGraph, freeLeft, freeRight, freeBoth) where
 
 import Control.Applicative (Alternative (..))
 import Control.Lens (re)

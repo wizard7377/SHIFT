@@ -2,8 +2,9 @@
 {-# LANGUAGE QuantifiedConstraints #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE ViewPatterns #-}
 
-module Rift.Core.Instances where
+module Rift.Core.Instances (showRainbow) where
 
 import Control.Lens (lens)
 import Control.Lens qualified as Lens
@@ -12,6 +13,7 @@ import Data.Text qualified as T
 import Extra
 import Extra.Debug
 import Rift.Core.Base
+import Rift.Core.Classes
 import Rift.Core.Interface
 import Rift.Core.Kernel
 import Rift.Core.Utility
@@ -41,9 +43,6 @@ showRainbow :: (Show a, Show (Term' a)) => Int -> Term' a -> [Char]
 showRainbow i (PrimTag t tag) = showColor' i (showRainbow n t ++ "@" ++ show tag)
  where
   n = i + 1
-showRainbow i (Lamed v b t f) = showColor' i "[" ++ showRainbow n v ++ showColor' i "] {" ++ showRainbow n b ++ " -> " ++ showRainbow n t ++ " ? " ++ showRainbow n f ++ showColor' i "}"
- where
-  n = i + 1
 showRainbow i (Kaf a0 a1) = showColor' i "(" ++ intercalate (showColor' i " ") (showRainbow n <$> parseCons a0) ++ " . " ++ (showRainbow n a1) ++ showColor' i ")"
  where
   n = i + 1
@@ -51,7 +50,10 @@ showRainbow i (PrimAtom atom) = resetCode ++ show atom
  where
   n = i + 1
 showRainbow i BasicLamed = resetCode ++ "ל"
-showRainbow i (PrimFree t v) = showColor' i "<" ++ intercalate (showColor' i ", ") (showRainbow n <$> v) ++ showColor' i ">" ++ " " ++ showRainbow n t
+showRainbow i (PrimRep from to within) = showColor' i "{" ++ (showRainbow n from) ++ " := " ++ (showRainbow n to) ++ showColor' i "}" ++ " " ++ showRainbow n within
+ where
+  n = i + 1
+showRainbow i (PrimFree t v) = showColor' i "[" ++ intercalate (showColor' i ", ") (showRainbow n <$> v) ++ showColor' i "]" ++ " " ++ showRainbow n t
  where
   n = i + 1
 showListT :: (Show a, Show (Term' a)) => [Term' a] -> String
@@ -72,9 +74,10 @@ freesIn =
         _ -> []
     )
     ( \term v ->
-        case term of
-          (PrimFree t _) -> PrimFree t v
-          _ -> PrimFree term v
+        case (v, term) of
+          ([], (PrimFree t _)) -> t
+          (_, (PrimFree t _)) -> PrimFree t v
+          (_, _) -> PrimFree term v
     )
 termIn :: Lens' (Term' atom) (Term' atom)
 termIn =
@@ -85,11 +88,29 @@ termIn =
     )
     ( \term term' ->
         case term of
+          (PrimFree t []) -> term'
           (PrimFree t v) -> PrimFree term' v
           _ -> term'
     )
+
+simplify :: Term' atom -> Term' atom
+simplify t = case t of
+  PrimFree t' [] -> simplify t'
+  PrimFree (PrimFree t' v0) v1 -> PrimFree (simplify t') (v0 <> v1)
+  _ -> t
 instance FTerm (Term' atom) where
   type Inner (Term' atom) = (Term' atom)
+
+  {-
+  pDalet =
+    Lens.prism'
+      (\(PrimDaletCon t v) -> addFree v t)
+      ( \case
+          PrimFree t (v0 : []) -> Just (PrimDaletCon v0 t)
+          PrimFree t (v0 : vs) -> Just (PrimDaletCon v0 (PrimFree t vs))
+          _ -> Nothing
+      )
+  -}
   fterm = termIn
   frees = freesIn
   groundTerm = id
@@ -98,4 +119,11 @@ instance ETerm (Term' atom) where
   eterm = PrimError
 type TermFull tag term = (KTerm term, TermLike term, FTerm term, UTerm tag term)
 instance (Eq atom) => RTerm (Term' atom) where
-  replaceTerm x y = Lens.transform (change x y)
+  pAyin =
+    Lens.prism'
+      (\(PrimAyinCon from to within) -> PrimRep from to within)
+      ( \case
+          (simplify -> PrimRep from to within) -> Just (PrimAyinCon from to within)
+          _ -> Nothing
+      )
+  replaceTerm x y = (PrimRep x y)

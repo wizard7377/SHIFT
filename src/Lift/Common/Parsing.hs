@@ -21,7 +21,7 @@ type ParseMT (e :: Type) (t :: Type) (m :: Type -> Type) = P.ParsecT e T.Text (M
 type AnyParse a = forall e m. (Ord e, Monad m) => P.ParsecT e T.Text m a
 
 data Lexical a = Lexical FPos a
-
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
 lexInfo :: (Ord e, Monad m) => P.ParsecT e T.Text m a -> P.ParsecT e T.Text m (Lexical a)
 lexInfo p = do
   start <- P.getSourcePos

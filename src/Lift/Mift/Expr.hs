@@ -1,6 +1,7 @@
 module Lift.Mift.Expr where
 
 import Data.Text qualified as T
+import Extra
 import Lift.Common.Names
 import Lift.Common.Parsing
 
@@ -18,3 +19,4 @@ data MiftExpr
   | -- | Those with `${` `$}`
     MiftTuple [MiftExpr]
   | MiftApply MiftExpr MiftExpr
+  deriving (Eq, Ord, Data, Typeable, Generic, Show)

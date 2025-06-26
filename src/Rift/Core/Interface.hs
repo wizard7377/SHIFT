@@ -1,3 +1,4 @@
+{-# LANGUAGE GHC2021 #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE PatternSynonyms #-}
@@ -6,35 +7,20 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_HADDOCK show-extensions, prune #-}
 
-module Rift.Core.Interface where
+{- |
+Module      : Rift.Core.Interface
+License     : BSD-2-Clause
+Maintainer  : Asher Frost
+-}
+module Rift.Core.Interface (ETerm (..), addFree, addFrees, freeTerm, boundTerm, pattern FreeTerm, simplifyF, FullTermLike (..), Term (..), FTerm' (..)) where
 
 import Data.Type.Equality ((:~:) (..))
 import Extra
 import Rift.Core.Base (KTerm, TestTerm, poccurs)
+import Rift.Core.Classes
 
--- | The class of all terms that have a list of variables within them
-class FTerm m where
-  -- | The type of the term contained within
-  type Inner m :: Type
-
-  -- | The inner term
-  fterm :: (KTerm (Inner m)) => Lens' m (Inner m)
-
-  -- | The variables
-  frees :: (KTerm (Inner m)) => Lens' m [(Inner m)]
-
-  ffrees :: (KTerm (Inner m)) => Lens' m [Inner m]
-  ffrees = frees
-  groundTerm :: Inner m -> m
-  {-# MINIMAL fterm, frees, groundTerm #-}
-
-{-# DEPRECATED ffrees "Use frees instead" #-}
-class UTerm tag term | term -> tag where
-  uniqueCreate :: term -> tag -> term
-
-class RTerm term where
-  replaceTerm :: term -> term -> (term -> term)
 instance FTerm (t, [t]) where
   type Inner (t, [t]) = t
   fterm = _1
@@ -106,6 +92,7 @@ class
   , FTerm term
   , UTerm tag term
   , Inner term ~ term
+  , Plated term
   -- , RTerm term
   ) =>
   FullTermLike tag term
@@ -114,6 +101,7 @@ instance
   , FTerm term
   , UTerm tag term
   , Inner term ~ term
+  , Plated term
   -- , RTerm term
   ) =>
   FullTermLike tag term

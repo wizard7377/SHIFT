@@ -99,10 +99,10 @@ instance {-# OVERLAPS #-} (Show a, Show b) => Show (Image a b) where
   show (TImage t x y) = show t ++ " : " ++ show x ++ " |-> " ++ show y
 
 instance {-# OVERLAPS #-} (Show a, Show b) => Show (Map a b) where
-  show (TMap xs) = "{" ++ intercalate ", " (map show xs) ++ "}"
+  show (TMap xs) = "{\n\t" ++ intercalate ",\n\t " (map show xs) ++ "\n}"
 
 instance {-# OVERLAPPABLE #-} (Show t, Show a, Show b) => Show (TImage t a b) where
   show (TImage t x y) = show x ++ " =" ++ show t ++ "= " ++ show y
 
 instance (Show a, Show b, Show t) => Show (TMap t a b) where
-  show (TMap xs) = "{" ++ intercalate ", " (map show xs) ++ "}"
+  show (TMap xs) = "{\n\t" ++ intercalate ",\n\t " (map show xs) ++ "\n}"

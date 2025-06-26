@@ -1,3 +1,11 @@
+{-# OPTIONS_HADDOCK show-extensions, prune #-}
+{-# LANGUAGE GHC2021, TemplateHaskell #-}
+{-|
+Module      : Rift.Core.Base
+License     : BSD-2-Clause
+Maintainer  : Asher Frost
+-}
+
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE PatternSynonyms #-}
@@ -7,6 +15,7 @@
 {-# OPTIONS_GHC -Wno-duplicate-exports #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE DeriveAnyClass #-}
 
 module Rift.Core.Base (
   KTerm(..),
@@ -45,15 +54,35 @@ import Text.Show.Functions ()
 import Extra
 import Data.Type.Equality ((:~:) (..))
 import qualified Control.Lens as Lens
+-- |The type of terms used for testing `Sift`
 data Term' atom where
+  -- |ל
   PrimLamed :: Term' atom
+  -- |ט
   PrimAtom :: atom -> Term' atom
+  -- |כ
   PrimCons :: Term' atom -> Term' atom -> Term' atom
   PrimTag :: Term' atom -> Int -> Term' atom
+  -- |ד
   PrimFree :: Term' atom -> [Term' atom] -> Term' atom
+  -- |`λfrom . λto . λterm . (term[from := to])`
+  PrimRep :: Term' atom -> Term' atom -> Term' atom -> Term' atom
   PrimError :: Term' atom
-  deriving (Eq, Ord)
+  deriving (Data,Typeable,Generic)
 
+deriving instance Data atom => Plated (Term' atom)
+instance (Eq atom, Plated (Term' atom)) => Eq (Term' atom) where
+  PrimLamed == PrimLamed = True
+  PrimAtom a == PrimAtom b = a == b
+  PrimCons a0 a1 == PrimCons b0 b1 = (a0 == b0) && (a1 == b1)
+  PrimTag a n == PrimTag b m = (a == b) && (n == m)
+  PrimFree a vs == PrimFree b ws = (a == b) && (vs == ws)
+  PrimRep a0 a1 a2 == PrimRep b0 b1 b2 =
+    (a0 == b0) && (a1 == b1) && (a2 == b2)
+  --PrimRep a0 a1 a2 == t = if (occurs a0 a1) then False else ((Lens.transform (change a0 a1) a2) == t)
+  --t == PrimRep a0 a1 a2 = if (occurs a0 a1) then False else (t == Lens.transform (change a0 a1) a2)
+  PrimError == PrimError = True
+  _ == _ = False
 instance (KTerm (Term' atom)) where
   isLamed PrimLamed = True
   isLamed _ = False
@@ -66,7 +95,7 @@ instance (KTerm (Term' atom)) where
 
 type TermLike term = (Eq term, Ord term, Show term)
 data TestToken = TestToken (Either Text Int) | TestLogicToken Int
-  deriving (Eq, Ord, Data, Generic)
+  deriving (Eq, Ord, Data, Generic, Typeable)
 
 type TestTerm = Term' TestToken
 {- | The attomic class constraint
@@ -164,3 +193,5 @@ poccurs term value =
     Kaf a0 a1 -> (poccurs term a0) || (poccurs term a1)
     Atom _ -> False
     BasicLamed -> False)
+
+

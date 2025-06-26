@@ -1,7 +1,14 @@
-module Tests (module Tests.Searching, module Tests.Unify) where
+{-# LANGUAGE GHC2021 #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_HADDOCK show-extensions, prune #-}
 
--- import Tests.Mem
+-- \|
+-- Module      : Tests
+-- License     : BSD-2-Clause
+-- Maintainer  : Asher Frost
 
-import Tests.Searching
+module Tests (module Tests.Unify, module Tests.Mem) where
+
+import Tests.Mem
+
 import Tests.Unify
-
