@@ -1,42 +1,65 @@
+{-# LANGUAGE GHC2021 #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE QuantifiedConstraints #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_HADDOCK show-extensions, prune #-}
 
-module Rift.Core.Interface where
+{- |
+Module      : Rift.Core.Interface
+License     : BSD-2-Clause
+Maintainer  : Asher Frost
+-}
+module Rift.Core.Interface (ETerm (..), addFree, addFrees, freeTerm, boundTerm, pattern FreeTerm, simplifyF, FullTermLike (..), Term (..), FTerm' (..)) where
 
 import Data.Type.Equality ((:~:) (..))
 import Extra
 import Rift.Core.Base (KTerm, TestTerm, poccurs)
+import Rift.Core.Classes
 
--- | The class of all terms that have a list of variables within them
-class FTerm m where
-  -- | The type of the term contained within
-  type Inner m :: Type
-
-  -- | The inner term
-  fterm :: (KTerm (Inner m)) => Lens' m (Inner m)
-
-  -- | The variables
-  frees :: (KTerm (Inner m)) => Lens' m [(Inner m)]
-
-  ffrees :: (KTerm (Inner m)) => Lens' m [Inner m]
-  ffrees = frees
-  groundTerm :: Inner m -> m
-  {-# MINIMAL fterm, frees, groundTerm #-}
-
-{-# DEPRECATED ffrees "Use frees instead" #-}
-class UTerm tag term | term -> tag where
-  uniqueCreate :: term -> tag -> term
-
-class RTerm term where
-  replaceTerm :: term -> term -> (term -> term)
 instance FTerm (t, [t]) where
   type Inner (t, [t]) = t
   fterm = _1
   frees = _2
   groundTerm t = (t, [])
+
+class ETerm term where
+  eterm :: term
+
+-- | Inner, var
+addFree :: (FTerm term, KTerm (Inner term)) => term -> Inner term -> term
+addFree t inner =
+  let
+    frees' = t ^. frees
+   in
+    t & frees .~ (inner : frees')
+
+-- | Inner, var
+addFrees :: (FTerm term, KTerm (Inner term)) => term -> [Inner term] -> term
+addFrees t inner =
+  let
+    frees' = t ^. frees
+   in
+    t & frees .~ (inner <> frees')
+
+freeTerm :: (FTerm term, KTerm (Inner term)) => term -> ([Inner term], Inner term)
+freeTerm t =
+  (t ^. frees, t ^. fterm)
+
+boundTerm :: forall term. (FTerm term, KTerm (Inner term)) => [Inner term] -> Inner term -> term
+boundTerm free inner =
+  let
+    (t :: term) = groundTerm inner
+   in
+    t & frees .~ free
+pattern FreeTerm :: (FTerm term, KTerm (Inner term)) => [Inner term] -> Inner term -> term
+pattern FreeTerm frees inner <- (freeTerm -> (frees, inner))
+  where
+    FreeTerm frees inner = boundTerm frees inner
 data FTerm' t = FTerm'
   { _ftterm :: t
   , _ftfrees :: [t]
@@ -64,11 +87,26 @@ simplifyF t =
    in
     t & ffrees .~ frees1
 
-type FullTermLike tag term =
+class
   ( KTerm term
   , FTerm term
   , UTerm tag term
+  , Inner term ~ term
+  , Plated term
   -- , RTerm term
-  )
+  ) =>
+  FullTermLike tag term
+instance
+  ( KTerm term
+  , FTerm term
+  , UTerm tag term
+  , Inner term ~ term
+  , Plated term
+  -- , RTerm term
+  ) =>
+  FullTermLike tag term
 
-type Term term = FullTermLike Idx term
+class (FullTermLike Idx term) => Term term
+instance (FullTermLike Idx term) => Term term
+termEq :: (Term term) => term :~: (Inner term)
+termEq = Refl

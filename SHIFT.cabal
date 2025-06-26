@@ -20,8 +20,17 @@ extra-source-files:
     CHANGELOG.md
 extra-doc-files:
     docs/MetaLamed.md
-    pl/Reference.pl
+    docs/Rules.pro
+    docs/Theory.md
+    pl/abstract.pl
+    pl/Abstract.pl~
+    pl/abstract.pl~
+    pl/macros.pl~
+    pl/main.pl
+    pl/main.pl~
     pl/Reference.pl~
+    pl/solver.pl
+    pl/solver.pl~
 
 source-repository head
   type: git
@@ -55,16 +64,30 @@ library
       Extra.Basics
       Extra.Boolean
       Extra.Choice
+      Extra.Choice.Combinators
+      Extra.Choice.Core
+      Extra.Choice.Exports
+      Extra.Choice.Instances
+      Extra.Choice.Interface
+      Extra.Choice.Pretty
+      Extra.Choice.Types
       Extra.ChoiceOld
       Extra.Debug
       Extra.Decide
       Extra.Error
       Extra.Exports
+      Extra.Ghci
+      Extra.Graphic
       Extra.Lens
       Extra.List
       Extra.Map
+      Extra.Map.Direct
+      Extra.Map.Lens
+      Extra.Map.Other
+      Extra.Map.Types
       Extra.Monad
       Extra.Ops
+      Extra.Parsers
       Extra.TestHelp
       Extra.TestHelp.MakeTest
       Extra.Todo
@@ -76,9 +99,25 @@ library
       Hift.Opts.Forms
       Hift.Opts.Types
       Hift.Query
+      Hift.Toplevel
+      Lift.Common
+      Lift.Common.Module
+      Lift.Common.Names
+      Lift.Common.Parsing
+      Lift.Common.Tokens
+      Lift.Dev
+      Lift.Dev.TestParse
       Lift.Lift
+      Lift.Mift
+      Lift.Mift.Base
+      Lift.Mift.Expr
+      Lift.Mift.Parse.Instances
+      Lift.Mift.Parse.Lexer
+      Lift.Mift.Parse.Parser
+      Lift.Mift.Parse.State
       Rift.Core
       Rift.Core.Base
+      Rift.Core.Classes
       Rift.Core.Generate
       Rift.Core.Instances
       Rift.Core.Interface
@@ -86,8 +125,7 @@ library
       Rift.Core.Utility
       Rift.Forms
       Rift.Forms.Language
-      Rift.Forms.LogicEnv
-      Rift.Forms.LogicRes
+      Rift.Forms.Parse
       Rift.Forms.Proof
       Rift.Forms.Proof.Abstract
       Rift.Forms.Proof.Types
@@ -100,21 +138,21 @@ library
       Sift.Core.Dev.Paeno
       Sift.Core.Dev.Parser
       Sift.Core.Dev.Util
-      Sift.Core.Ops
-      Sift.Core.Ops.Mem
+      Sift.Core.Monad
+      Sift.Core.Types
       Sift.Core.Unify
-      Sift.Core.Unify.Base
-      Sift.Core.Unify.Conclude
-      Sift.Core.Unify.Infer
-      Sift.Core.Unify.Util
       Sift.Dev
-      Sift.Dev.Util
-      Sift.Monad
-      Sift.Solver
-      Sift.Solver.Search
-      Sift.Solver.Types
+      Sift.Ops
+      Sift.Ops.Common
+      Sift.Ops.Mem
+      Sift.Ops.Nun
+      Sift.Ops.Simple
+      Sift.Ops.Zeta
+      Sift.Search
+      Sift.Search.Convert
+      Sift.Search.Reduce
+      Tests.Common
       Tests.Mem
-      Tests.Searching
       Tests.Unify
       Paths_SHIFT
   autogen-modules:
@@ -149,17 +187,26 @@ library
     , data-default
     , deepseq
     , extra
+    , fgl
+    , free
     , lens >5
     , megaparsec
+    , mmorph
     , monad-loops
     , mtl
     , optparse-applicative
     , prettyprinter
+    , profunctors
+    , quickcheck-instances
     , tasty
     , tasty-hunit
+    , tasty-quickcheck
     , template-haskell
     , text
+    , witch
   default-language: GHC2021
+  if flag(check)
+    ghc-options: -O0 -fdefer-typed-holes -fdefer-type-errors -w -Wdefault
   if flag(sanity) && (!flag(dev))
     ghc-options: -O0 -fdefer-typed-holes -Wtyped-holes -W -Wno-duplicate-exports -Wno-unused-imports -Wno-unused-local-binds -Wno-unused-matches -Wno-dodgy-imports -Wno-dodgy-exports
   if flag(dev) && (!flag(release))
@@ -207,17 +254,26 @@ executable SHIFT-exe
     , data-default
     , deepseq
     , extra
+    , fgl
+    , free
     , lens >5
     , megaparsec
+    , mmorph
     , monad-loops
     , mtl
     , optparse-applicative
     , prettyprinter
+    , profunctors
+    , quickcheck-instances
     , tasty
     , tasty-hunit
+    , tasty-quickcheck
     , template-haskell
     , text
+    , witch
   default-language: GHC2021
+  if flag(check)
+    ghc-options: -O0 -fdefer-typed-holes -fdefer-type-errors -w -Wdefault
   if flag(sanity) && (!flag(dev))
     ghc-options: -O0 -fdefer-typed-holes -Wtyped-holes -W -Wno-duplicate-exports -Wno-unused-imports -Wno-unused-local-binds -Wno-unused-matches -Wno-dodgy-imports -Wno-dodgy-exports
   if flag(dev) && (!flag(release))
@@ -268,17 +324,26 @@ test-suite spec
     , data-default
     , deepseq
     , extra
+    , fgl
+    , free
     , lens >5
     , megaparsec
+    , mmorph
     , monad-loops
     , mtl
     , optparse-applicative
     , prettyprinter
+    , profunctors
+    , quickcheck-instances
     , tasty
     , tasty-hunit
+    , tasty-quickcheck
     , template-haskell
     , text
+    , witch
   default-language: GHC2021
+  if flag(check)
+    ghc-options: -O0 -fdefer-typed-holes -fdefer-type-errors -w -Wdefault
   if flag(sanity) && (!flag(dev))
     ghc-options: -O0 -fdefer-typed-holes -Wtyped-holes -W -Wno-duplicate-exports -Wno-unused-imports -Wno-unused-local-binds -Wno-unused-matches -Wno-dodgy-imports -Wno-dodgy-exports
   if flag(dev) && (!flag(release))
@@ -327,17 +392,26 @@ benchmark timer
     , data-default
     , deepseq
     , extra
+    , fgl
+    , free
     , lens >5
     , megaparsec
+    , mmorph
     , monad-loops
     , mtl
     , optparse-applicative
     , prettyprinter
+    , profunctors
+    , quickcheck-instances
     , tasty
     , tasty-hunit
+    , tasty-quickcheck
     , template-haskell
     , text
+    , witch
   default-language: GHC2021
+  if flag(check)
+    ghc-options: -O0 -fdefer-typed-holes -fdefer-type-errors -w -Wdefault
   if flag(sanity) && (!flag(dev))
     ghc-options: -O0 -fdefer-typed-holes -Wtyped-holes -W -Wno-duplicate-exports -Wno-unused-imports -Wno-unused-local-binds -Wno-unused-matches -Wno-dodgy-imports -Wno-dodgy-exports
   if flag(dev) && (!flag(release))

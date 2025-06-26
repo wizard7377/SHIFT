@@ -7,11 +7,14 @@ module Rift.Core (
   module Instances,
   -- module Parser,
   module Interface,
+  module Classes,
 ) where
 
 import Rift.Core.Base as Base
 
 -- import Rift.Core.Dev as Dev hiding (FTerm')
 -- import Rift.Core.Dev.Parser as Parser
+
+import Rift.Core.Classes as Classes
 import Rift.Core.Instances as Instances
 import Rift.Core.Interface as Interface

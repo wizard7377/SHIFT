@@ -68,8 +68,21 @@ dependencies:
   - tasty-hunit
   - deepseq
   - optparse-applicative
-
+  - fgl
+  - quickcheck-instances
+  - tasty-quickcheck
+  - profunctors
+  - free
+  - mmorph
+  - witch
 when:
+  - condition: flag(check)
+    ghc-options:
+      - -O0
+      - -fdefer-typed-holes
+      - -fdefer-type-errors
+      - -w
+      - -Wdefault
   - condition: flag(sanity) && (!flag(dev))
     ghc-options:
       - -O0

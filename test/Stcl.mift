@@ -1,2 +1,10 @@
-$create ${ A B C x y z $} $;
-$create ${ => * Λ $} $;
+$module Stlc
+$symbol x y ! *
+$: ∀ $= 
+  $( $? x ! x 
+    $( 
+      $? y ! y $( 
+        $. $( $? x ! * y $) * 
+      $) 
+    $) 
+  $)

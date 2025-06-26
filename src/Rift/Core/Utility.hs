@@ -4,7 +4,7 @@ import Rift.Core.Base
 import Rift.Core.Kernel
 
 parseLamed :: (KTerm term) => term -> (term, [(term, term)])
-parseLamed (Lamed v b t) =
+parseLamed (Lamed v b t f) =
   let
     (b', o') = parseLamed b
    in

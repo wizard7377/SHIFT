@@ -1,120 +1,89 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Tests.Mem where
 
+import Control.Lens qualified as Lens
+import Data.Foldable (Foldable (toList))
 import Data.Text qualified as T
+import Debug.Trace (traceShowId)
 import Extra
-import Extra.TestHelp (makeTestList)
+import Extra.Parsers
 import Rift qualified
-import Rift.Core.Interface (simplifyF)
-import Test.HUnit
+import Sift qualified
 import Test.Tasty (TestTree, testGroup)
-import Test.Tasty.HUnit (testCase)
+import Test.Tasty.HUnit
+import Tests.Common
 
-makeMemName ::
-  -- | VUP
-  String ->
-  -- | TUPFROM
-  String ->
-  -- | TUPTO
-  String ->
-  -- | VDown
-  String ->
-  -- | TDOWN
-  String ->
-  [(String, String)] ->
+memTestMsg ::
+  (Plated Rift.TestTerm) =>
+  [] (Rift.TestTerm) ->
+  Rift.TestTerm ->
+  Rift.TestTerm ->
   String
-makeMemName vUp tUpFrom tUpTo vDown tDown tr =
-  let
-    vUp' = makeTermList vUp
-    tUpFrom' = Rift.tRead tUpFrom
-    tUpTo' = Rift.tRead tUpTo
-    vDown' = makeTermList vDown
-    tDown' = Rift.tRead tDown
-    tr' = (uncurry makeFTermTest) <$> tr
-   in
-    show $ "mem " ++ show vUp' ++ " " ++ show tUpFrom' ++ " " ++ show tUpTo' ++ " " ++ show vDown' ++ " " ++ show tDown' ++ " " ++ show tr'
-makeMemMsg vUp tUpFrom tUpTo vDown tDown tr =
-  let
-    vUp' = makeTermList vUp
-    tUpFrom' = Rift.tRead tUpFrom
-    tUpTo' = Rift.tRead tUpTo
-    vDown' = makeTermList vDown
-    tDown' = Rift.tRead tDown
-    tr' = (uncurry makeFTermTest) <$> tr
-   in
-    show $ show $ "Couldn't solve for" ++ show tr' ++ " from מ: ∀" ++ show vUp' ++ " . " ++ show tUpFrom' ++ " |- " ++ show tUpTo' ++ " of : ∀ " ++ show vDown' ++ " . " ++ show tDown' ++ " "
-makeTermList :: String -> [Rift.TestTerm]
-makeTermList = makeTestList (Rift.tRead . T.unpack) ";"
-makeFTermTest :: String -> String -> Rift.FTerm' Rift.TestTerm
-makeFTermTest t s =
-  let
-    t' = Rift.tRead t
-    s' = makeTermList s
-   in
-    Rift.FTerm' t' s'
+memTestMsg res input expected = show input ++ " does not מ-reduce to " ++ show expected ++ " (actually מ-reduces to: " ++ show (toList res) ++ " #" ++ show (length res) ++ " )"
+memTestGen ::
+  (Plated Rift.TestTerm) =>
+  -- | Input
+  String ->
+  -- | Expected
+  String ->
+  Assertion
+memTestGen = memTestGen' (Sift.reduceRec)
 
-makeMemTest ::
-  -- | VUP
+memTestGen' :: (Rift.Inner Rift.TestTerm ~ Rift.TestTerm) => (Rift.TestTerm -> Sift.OpM Rift.TestTerm) -> String -> String -> Assertion
+memTestGen' = memTestGen'' $ \expect res -> any (\x -> not . null $ Sift.runOpMDef (Sift.convert x expect)) res
+memTestGen'' ::
+  (Plated Rift.TestTerm) =>
+  (Rift.TestTerm -> [Rift.TestTerm] -> Bool) ->
+  (Rift.TestTerm -> Sift.OpM Rift.TestTerm) ->
+  -- | Input
   String ->
-  -- | TUPFROM
+  -- | Expected
   String ->
-  -- | TUPTO
-  String ->
-  -- | VDown
-  String ->
-  -- | TDOWN
-  String ->
-  Choice (Rift.FTerm' Rift.TestTerm)
-makeMemTest vUp tUpFrom tUpTo vDown tDown =
-  let
-    vUp' = makeTermList vUp
-    tUpFrom' = Rift.tRead tUpFrom
-    tUpTo' = Rift.tRead tUpTo
-    vDown' = makeTermList vDown
-    tDown' = Rift.tRead tDown
-   in
-    simplifyF <$> Rift.memReduce 0 vUp' tUpFrom' tUpTo' (makeFTermTest tDown vDown)
-memTesting ::
-  -- | VUP
-  String ->
-  -- | TUPFROM
-  String ->
-  -- | TUPTO
-  String ->
-  -- | VDown
-  String ->
-  -- | TDOWN
-  String ->
-  [(String, String)] ->
-  -- | Name
-  String ->
-  TestTree
-memTesting vUp tUpFrom tUpTo vDown tDown tr name =
-  let
-    res = makeMemTest vUp tUpFrom tUpTo vDown tDown
-    tr' = (uncurry makeFTermTest) <$> tr
-   in
-    testCase name $ assertBool (makeMemMsg vUp tUpFrom tUpTo vDown tDown tr) (csubset' res (mkChoice tr'))
+  Assertion
+memTestGen'' valid f input' expected' = do
+  input <- termRead input'
+  expected <- termRead expected'
+  let res0 = f input
+  let res1 = simplifyTest <$> res0
+  let res2 = Sift.runOpM res1 def
+  let isGood = valid expected res2
+  assertBool (memTestMsg (res2) input expected) isGood
 
-{-
-memTest :: [String] -> String -> String -> [String] -> String -> [([String], String)] -> Assertion
-memTest vUp tUpFrom tUpTo vDown tDown hypos =
+memTestRec :: (Plated Rift.TestTerm) => String -> String -> Assertion
+memTestRec =
   let
-    res = Rift.mem' (Rift.tRead tUpFrom) (Rift.tRead tUpTo) (Rift.tRead <$> vUp) (Rift.tRead tDown) (Rift.tRead <$> vDown)
-    hypos' = (\(x, y) -> (Rift.FTerm' (Rift.tRead y)) (Rift.tRead <$> x)) <$> hypos
+    res = Sift.reduceRec
    in
-    res @?= (mkChoice hypos')
--}
-basicMem :: TestTree
-basicMem =
+    memTestGen' res
+simplifyTest :: (Plated Rift.TestTerm) => Rift.TestTerm -> Rift.TestTerm
+simplifyTest = Lens.transform (\case Rift.PrimFree t [] -> simplifyTest t; t -> t)
+memTests :: (Plated Rift.TestTerm) => TestTree
+memTests =
   testGroup
-    "Basic mem"
-    [ memTesting "" "x" "y" "" "x" [("y", "")] "M1"
-    , memTesting "x" "x" "y" "" "z" [("y", "")] "M2"
-    , memTesting "x" "x" "x" "" "z" [("z", "")] "M3"
-    , memTesting "x;y" "(= x y)" "(= y x)" "" "(= 1 (S 0))" [("(= (S 0) 1)", "")] "M4"
-    -- TODO these need better naming system
-    -- , memTesting "x;y" "(= x y)" "(= y x)" "a" "(= a 1)" [("(= 1 x)", "x")] "M5"
-    -- , memTesting "x;y" "(= x y)" "(= y x)" "a" "(= a (S b))" [("(= (S b) x)", "x;b")] "M6"
+    "Mem tests"
+    [ testCase "Simple mem reduction" $ memTestGen "((? x F x x) 1)" "1"
+    , testCase "Fail mem reduction" $ memTestGen "((? x F (x 2) x) (3 4))" "(F 3 4)"
+    , testCase "Free mem reduction" $ memTestGen "((? x F * x) *)" "[x]x"
+    , testCase "Nested mem reduction" $ memTestGen "((? x F (G x) x) (G 5))" "5"
+    , testCase "Double application" $
+        memTestRec
+          "((? x F x x) ((? y G y y) 2))"
+          "2"
+    , testCase "Multiple variables" $ memTestGen "((? x y F (x y) x) (3 4))" "(y 3 4)"
+    , -- , testCase "Empty term match" $ memTestGen "((? x F x (G x)) ())" "()"
+      testCase "Variable capture" $ memTestGen "((? x F [y](x y) x) [z](z 1))" "[z]z"
+    , -- , testCase "Complex nested patterns" $ memTestGen "((? x F (G (H x)) x) (G (H 9)))" "9"
+      testCase "Application reduction" $ memTestGen "((? f x (f x) f) (G 5))" "(x G 5)"
+    , testCase "∀ test" memTestForall
     ]
+
+{- |
+@
+ ∀ := (λ x . Λ y . x)
+ ==> (ל x ! x $ (ל y ! * x) *)
+@
+-}
+memTestForall :: Assertion
+memTestForall = memTestRec "((? x ! x ((? y ! * x)) *) (y = y))" "[y](y = y)"
