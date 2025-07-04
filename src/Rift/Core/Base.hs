@@ -68,6 +68,8 @@ data Term' atom where
   -- |`λfrom . λto . λterm . (term[from := to])`
   PrimRep :: Term' atom -> Term' atom -> Term' atom -> Term' atom
   PrimError :: Term' atom
+  PrimPe :: Term' atom -> Term' atom
+  PrimFe :: Term' atom
   deriving (Data,Typeable,Generic)
 
 deriving instance Data atom => Plated (Term' atom)
@@ -82,6 +84,10 @@ instance (Eq atom, Plated (Term' atom)) => Eq (Term' atom) where
   --PrimRep a0 a1 a2 == t = if (occurs a0 a1) then False else ((Lens.transform (change a0 a1) a2) == t)
   --t == PrimRep a0 a1 a2 = if (occurs a0 a1) then False else (t == Lens.transform (change a0 a1) a2)
   PrimError == PrimError = True
+  -- TODO:
+  PrimPe a == PrimPe b = a == b
+  -- TODO:
+  PrimFe == PrimFe = False
   _ == _ = False
 instance (KTerm (Term' atom)) where
   isLamed PrimLamed = True

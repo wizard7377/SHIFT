@@ -75,6 +75,7 @@ dependencies:
   - free
   - mmorph
   - witch
+  - haskeline
 when:
   - condition: flag(check)
     ghc-options:

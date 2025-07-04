@@ -21,16 +21,8 @@ extra-source-files:
 extra-doc-files:
     docs/MetaLamed.md
     docs/Rules.pro
+    docs/Structure.md
     docs/Theory.md
-    pl/abstract.pl
-    pl/Abstract.pl~
-    pl/abstract.pl~
-    pl/macros.pl~
-    pl/main.pl
-    pl/main.pl~
-    pl/Reference.pl~
-    pl/solver.pl
-    pl/solver.pl~
 
 source-repository head
   type: git
@@ -72,6 +64,7 @@ library
       Extra.Choice.Pretty
       Extra.Choice.Types
       Extra.ChoiceOld
+      Extra.Color
       Extra.Debug
       Extra.Decide
       Extra.Error
@@ -100,6 +93,7 @@ library
       Hift.Opts.Types
       Hift.Query
       Hift.Toplevel
+      Hift.Types
       Lift.Common
       Lift.Common.Module
       Lift.Common.Names
@@ -125,7 +119,6 @@ library
       Rift.Core.Utility
       Rift.Forms
       Rift.Forms.Language
-      Rift.Forms.Parse
       Rift.Forms.Proof
       Rift.Forms.Proof.Abstract
       Rift.Forms.Proof.Types
@@ -189,6 +182,7 @@ library
     , extra
     , fgl
     , free
+    , haskeline
     , lens >5
     , megaparsec
     , mmorph
@@ -256,6 +250,7 @@ executable SHIFT-exe
     , extra
     , fgl
     , free
+    , haskeline
     , lens >5
     , megaparsec
     , mmorph
@@ -326,6 +321,7 @@ test-suite spec
     , extra
     , fgl
     , free
+    , haskeline
     , lens >5
     , megaparsec
     , mmorph
@@ -394,6 +390,7 @@ benchmark timer
     , extra
     , fgl
     , free
+    , haskeline
     , lens >5
     , megaparsec
     , mmorph

@@ -42,6 +42,9 @@ class FTerm term where
   groundTerm :: Inner term -> term
 
 {-# DEPRECATED ffrees "Use frees instead" #-}
+class PTerm term where
+  -- | Remove one level of ף, that is, ףα ==> α[פ := ףα]
+  fixed :: term -> term
 class UTerm tag term | term -> tag where
   uniqueCreate :: term -> tag -> term
 

@@ -10,6 +10,7 @@ Maintainer  : Asher Frost
 module Sift.Core.Types where
 
 import Extra
+import Rift.Forms qualified as Rift
 
 data OpTypes
   = AlphaConvert
@@ -18,7 +19,7 @@ data OpTypes
   | ZetaRedux
   deriving (Eq, Ord, Data, Typeable, Generic, Bounded, Enum, Show)
 data OpEnv t = OpEnv
-  { _opDepth :: Int
+  { _logicEnv :: Rift.LogicEnv
   , _opGoal :: Maybe t
   }
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
@@ -45,11 +46,11 @@ instance Monoid (OpAccum t) where
 instance Default (OpAccum t) where
   def = OpAccum{_opHistory = []}
 instance Default (OpEnv t) where
-  def = OpEnv{_opDepth = 64, _opGoal = Nothing}
+  def = OpEnv{_logicEnv = def, _opGoal = Nothing}
 
 opEnvToState :: OpEnv t -> OpState t
-opEnvToState OpEnv{_opDepth, _opGoal} =
+opEnvToState OpEnv{_logicEnv, _opGoal} =
   OpState
-    { _curDepth = _opDepth
+    { _curDepth = Rift._logicEnvDepth _logicEnv
     , _curGoal = _opGoal
     }

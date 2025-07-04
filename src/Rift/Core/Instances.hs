@@ -11,6 +11,7 @@ import Control.Lens qualified as Lens
 import Data.List (intercalate, intersperse)
 import Data.Text qualified as T
 import Extra
+import Extra.Color
 import Extra.Debug
 import Rift.Core.Base
 import Rift.Core.Classes

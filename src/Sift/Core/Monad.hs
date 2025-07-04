@@ -1,9 +1,12 @@
 {-# LANGUAGE GHC2021 #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_HADDOCK show-extensions, prune #-}
 
 module Sift.Core.Monad (OpM, Redux', Redux, Convert, Convert', module Sift.Core.Types, OpM', runOpM, runOpM_, liftConvert, runOpMDef) where
 
+import Control.Monad.Identity qualified as M
 import Control.Monad.Morph
 import Control.Monad.RWS qualified as M
 import Control.Monad.Reader
@@ -48,3 +51,7 @@ testConvert f x goal =
     (result, _, _) = runOpM_ (f x goal) def
    in
     or result
+
+instance Rift.Search M.Identity (OpM t) t where
+  type ResultOfS (OpM t) = [t]
+  search s env t = return $ runOpM s (OpEnv env $ Just t)

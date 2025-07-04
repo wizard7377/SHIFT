@@ -12,6 +12,7 @@ module Lift.Mift.Parse.State where
 import Control.Lens (from, re, (%=), (<>=))
 import Control.Lens.Combinators (to)
 import Control.Lens.Operators ((^..))
+import Control.Monad qualified as M
 import Control.Monad.Except qualified as M
 import Control.Monad.Extra
 import Control.Monad.RWS qualified as M
@@ -32,24 +33,24 @@ mkWith with name value = do
       let mod1 = cmod & (with name) .~ [value]
       (programState . modules . mAt (state ^. programState . currentModule) . each . mto) .= mod1
     else
-      _
+      M.fail "" -- TODO:
 getWith :: (k -> Lens' (Module MiftExpr) [v]) -> k -> MiftM v
 getWith with name = do
   state <- M.get
   let symbol = state ^.. programState . modules . mAt (state ^. programState . currentModule) . each . mto
   case symbol ^? (each . with name) of
     Just (x : _) -> pure x
-    _ -> _
+    _ -> M.fail "" -- TODO:
 
 mkToken :: Name -> TImage () Name (TokenValue MiftExpr) -> MiftM ()
 mkToken = mkWith (\x -> tokens . mAt x)
 getToken :: Name -> MiftM (TImage () Name (TokenValue MiftExpr))
 getToken = getWith (\x -> tokens . mAt x)
-mkProof :: MiftExpr -> TImage Name MiftExpr MiftExpr -> MiftM ()
-mkProof = mkWith (\x -> proofs . mAt x)
-getProof :: MiftExpr -> MiftM (TImage Name MiftExpr MiftExpr)
-getProof = getWith (\x -> proofs . mAt x)
-mkAssert :: MiftExpr -> TImage Name MiftExpr MiftExpr -> MiftM ()
+mkProof :: Name -> TImage Name MiftExpr MiftExpr -> MiftM ()
+mkProof = mkWith (\x -> proofs . mAtT x)
+getProof :: Name -> MiftM (TImage Name MiftExpr MiftExpr)
+getProof = getWith (\x -> proofs . mAtT x)
+mkAssert :: Name -> Image Name MiftExpr -> MiftM ()
 mkAssert = mkWith (\x -> assertions . mAt x)
-getAssert :: MiftExpr -> MiftM (TImage Name MiftExpr MiftExpr)
+getAssert :: Name -> MiftM (Image Name MiftExpr)
 getAssert = getWith (\x -> assertions . mAt x)

@@ -7,10 +7,9 @@ Module      : Rift.Forms
 License     : BSD-2-Clause
 Maintainer  : Asher Frost
 -}
-module Rift.Forms (module Rift.Forms.Theory, module Rift.Forms.Proof, module Rift.Forms.Language, module Rift.Forms.Search, UserTheory (..)) where
+module Rift.Forms (module Rift.Forms.Theory, module Rift.Forms.Proof, module Rift.Forms.Language, module Rift.Forms.Search) where
 
 import Rift.Forms.Language
-import Rift.Forms.Parse
 import Rift.Forms.Proof
 import Rift.Forms.Search
 import Rift.Forms.Theory

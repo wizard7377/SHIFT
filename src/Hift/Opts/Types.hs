@@ -1,3 +1,12 @@
+{-# LANGUAGE GHC2021 #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_HADDOCK show-extensions, prune #-}
+
+{- |
+Module      : Hift.Opts.Types
+License     : BSD-2-Clause
+Maintainer  : Asher Frost
+-}
 module Hift.Opts.Types where
 
 import Extra
@@ -33,3 +42,5 @@ data Action
   | Build BuildOptions
   | Typeset TypesetOptions
   deriving (Eq, Show, Ord, Data, Typeable, Generic)
+
+makeLenses ''ProgOpts

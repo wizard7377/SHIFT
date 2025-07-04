@@ -2,7 +2,10 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# OPTIONS_HADDOCK show-extensions, prune #-}
+
+{-# HLINT ignore "Use newtype instead of data" #-}
 
 {- |
 Module      : Rift.Forms.Language
@@ -11,16 +14,25 @@ Maintainer  : Asher Frost
 -}
 module Rift.Forms.Language where
 
+import Data.Text qualified as T
 import Extra
 import Rift.Forms.Theory
 
 data ParseEnv = ParseEnv
   { _cwd :: FilePath
-  , _file :: FilePath
   }
 makeLenses ''ParseEnv
 defaultParseEnv :: ParseEnv
-defaultParseEnv = ParseEnv "." "TESTING"
-class (Theory (TheoryOf tag)) => Language (tag :: k) where
-  type TheoryOf tag
-  parseTheory :: ParseEnv -> TheoryOf tag
+defaultParseEnv = ParseEnv "."
+
+-- | The class of all languages that can be parsed
+class (Monad m) => Language m l where
+  type ResultOfL l :: Type
+
+  -- | Given a file name, parse the file and return the result in a monad
+  parseFile :: l -> ParseEnv -> T.Text -> m (ResultOfL l)
+
+  -- | Given some scratch text, parse it and return the result in the monad
+  parseText :: l -> ParseEnv -> T.Text -> m (ResultOfL l)
+
+newtype ALanguage m = ALanguage (forall l. (Language m l) => l)

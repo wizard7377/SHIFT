@@ -53,7 +53,9 @@ miftConsDot :: MiftM ()
 miftEqual :: MiftM ()
 miftSkip :: MiftM ()
 miftAssert :: MiftM ()
-miftQuery :: MiftM ()
+miftSep :: MiftM ()
+miftWild :: MiftM ()
+miftVoid :: MiftM ()
 
 -- | Create a name, assuming it is already defined
 miftAtomUse :: MiftM Name
@@ -79,12 +81,11 @@ miftFile' = do
   T.optional sc *> miftModDeclare
 miftDecl =
   T.choice
-    [ miftModDeclare
-    , miftSymDeclare
+    [ miftSymDeclare
     , miftProofDeclare
     , miftAssertDeclare
     ]
-    <* (T.optional miftSkip)
+    <* (T.many miftSkip)
 miftModDeclare = dbg "MODULE" $ do
   state <- M.get
   keyword "module"
@@ -120,13 +121,11 @@ miftSymDeclare = do
     )
   pure ()
 miftProofDeclare = do
-  miftQuery
-  name <- glyph
-  miftAssert
+  name <- T.try (miftAssert *> glyph <* miftSep)
   sideA <- miftExpr
   miftEqual
   sideB <- miftExpr
-  mkProof (toName name) (image (toName name) (Theorem sideA sideB))
+  mkProof (toName name) (TImage (toName name) sideA sideB)
 miftAssertDeclare = do
   miftAssert
   defines <- glyph
@@ -143,6 +142,8 @@ miftExpr =
     , T.label "Parenthisized expression" (T.between miftLParen miftRParen (MiftList <$> T.some miftExpr))
     , T.label "Cons expression" (miftConsDot *> (MiftCons <$> miftExpr <*> miftExpr))
     , T.label "Atomic expression" (MiftAtom <$> miftAtomUse)
+    , T.label "Wildcard expression" (miftWild $> MiftWild)
+    , T.label "Void expression" (miftVoid $> MiftVoid)
     , miftTuple
     ]
 
@@ -157,4 +158,6 @@ miftConsDot = T.label "cons dot" $ keyword "."
 miftEqual = T.label "Equals sign" $ keyword "="
 miftSkip = T.label "End of statement" $ keyword ";"
 miftAssert = T.label "Assertion" $ keyword ":"
-miftQuery = T.label "Query" $ keyword "?"
+miftWild = T.label "Wildcard" $ keyword "_"
+miftVoid = T.label "Wildcard" $ keyword "!"
+miftSep = T.label "Seperator" $ keyword "-"

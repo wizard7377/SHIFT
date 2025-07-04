@@ -23,3 +23,7 @@ getNumber (Generator n) = (n, Generator (n + 1))
 
 -- | The typeclass synonym for which all "concrete" types should satisfy (ie, all things that are not magic, like `->` or `IO`)
 type Concrete a = (Show a, Eq a, Ord a, Data a, Typeable a, Generic a)
+
+type Reify :: (k -> Constraint) -> Type
+data Reify (c :: k -> Constraint) where
+  Reify :: (c a) => a -> Reify c

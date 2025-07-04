@@ -21,6 +21,7 @@ import Data.Bitraversable
 import Data.Default qualified as D
 import Data.List (intercalate)
 import Extra.Basics
+import Extra.Color (addColor)
 import Extra.Exports
 import Extra.Lens
 
@@ -96,13 +97,13 @@ instance HasMapValue (TMap t a b) where
 instance HasMapTag (TMap t a b) where
   type MapTag (TMap t a b) = t
 instance {-# OVERLAPS #-} (Show a, Show b) => Show (Image a b) where
-  show (TImage t x y) = show t ++ " : " ++ show x ++ " |-> " ++ show y
+  show (TImage t x y) = show t ++ " : " ++ show x ++ addColor 1 " |-> " ++ show y
 
 instance {-# OVERLAPS #-} (Show a, Show b) => Show (Map a b) where
   show (TMap xs) = "{\n\t" ++ intercalate ",\n\t " (map show xs) ++ "\n}"
 
 instance {-# OVERLAPPABLE #-} (Show t, Show a, Show b) => Show (TImage t a b) where
-  show (TImage t x y) = show x ++ " =" ++ show t ++ "= " ++ show y
+  show (TImage t x y) = show x ++ (addColor 1 $ " =" ++ show t ++ "= ") ++ show y
 
 instance (Show a, Show b, Show t) => Show (TMap t a b) where
   show (TMap xs) = "{\n\t" ++ intercalate ",\n\t " (map show xs) ++ "\n}"

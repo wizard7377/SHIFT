@@ -21,16 +21,20 @@ class (Rift.Term (TermOf t), Rift.Inner (TermOf t) ~ (TermOf t)) => Theory t whe
   type TermOf t
   type LabelOf t
   type LabelOf t = ()
-  defines :: Lens' t (TMap (LabelOf t) (TermOf t) (TermOf t))
+  defines :: Lens' t (Map (LabelOf t) (TermOf t))
   defines = Lens.lens getDefines addDefines
   proofs :: Lens' t (TMap (LabelOf t) (TermOf t) (TermOf t))
   proofs = Lens.lens getProofs addProofs
-  addDefines :: t -> (TMap (LabelOf t) (TermOf t) (TermOf t)) -> t
+
+  addDefines :: t -> (Map (LabelOf t) (TermOf t)) -> t
   addDefines t img = t & defines <>~ (img)
   getDefines t = Lens.view defines t
-  getDefines :: t -> TMap (LabelOf t) (TermOf t) (TermOf t)
+  getDefines :: t -> Map (LabelOf t) (TermOf t)
   addProofs :: t -> (TMap (LabelOf t) (TermOf t) (TermOf t)) -> t
   addProofs t img = t & proofs <>~ (img)
   getProofs :: t -> TMap (LabelOf t) (TermOf t) (TermOf t)
   getProofs t = Lens.view proofs t
   {-# MINIMAL (defines, proofs) | (addDefines, getDefines, addProofs, getProofs) #-}
+
+data ATheory where
+  ATheory :: (forall t. (Theory t) => t) -> ATheory

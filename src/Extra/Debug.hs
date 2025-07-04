@@ -2,33 +2,17 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TemplateHaskellQuotes #-}
 
-module Extra.Debug (traceWith, (<?>), (<?@>), (?@>), (?@>>), (>?>), (>?@>), showColor, showColor', getColor, makeColor, resetCode, (?>>), (?>), traceWithStr) where
+module Extra.Debug (traceWith, (<?>), (<?@>), (?@>), (?@>>), (>?>), (>?@>), (?>>), (?>), traceWithStr) where
 
 import Data.Text qualified as T
 import Debug.Trace (trace, traceEvent, traceEventWith, traceM, traceMarker, traceShow, traceShowId)
 import Extra.Basics as Extra
+import Extra.Color (colorCode, makeColor, resetCode, showColor, showColor')
 import GHC.IO (unsafePerformIO)
 import GHC.Stack (HasCallStack)
 import GHC.Stack qualified as Stack
 import Language.Haskell.TH qualified as TH
 import System.Console.ANSI qualified as ANSI
-
-colorList = ANSI.Red : ANSI.Blue : ANSI.Green : []
-getColor :: Int -> ANSI.Color
-getColor v = colorList !! mod v 3
-colorCode :: ANSI.Color -> String
-#ifndef noColor 
-colorCode x = ANSI.setSGRCode [ANSI.SetColor ANSI.Foreground ANSI.Vivid x]
-resetCode = ANSI.setSGRCode []
-#else
-colorCode x = ""
-resetCode = ""
-#endif
-makeColor color str = colorCode color ++ str ++ resetCode
-showColor :: (Show a) => Int -> a -> String
-showColor i a = colorCode (getColor i) ++ show a ++ resetCode
-showColor' :: Int -> String -> String
-showColor' i a = colorCode (getColor i) ++ a ++ resetCode
 
 {-# INLINE traceF #-}
 traceF :: String -> a -> a

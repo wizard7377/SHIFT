@@ -10,7 +10,7 @@ Module      : Lift.Common.Module
 License     : BSD-2-Clause
 Maintainer  : Asher Frost
 -}
-module Lift.Common.Module (Module (..), Program (..), ParseState (..), currentFile, programState, currentModule, loadedModules, modules, moduleName, tokens, assertions, proofs, tokens) where
+module Lift.Common.Module (Module (..), Program (..), ParseState (..), buildModule, currentFile, programState, currentModule, loadedModules, modules, moduleName, tokens, assertions, proofs, tokens) where
 
 import Control.Lens ((^..))
 import Data.Text qualified as T
@@ -62,7 +62,7 @@ data Module t = Module
   -- ^ The name of this module
   , _tokens :: Map Name (TokenValue t)
   -- ^ Map of token names to their values
-  , _assertions :: TMap Name t t
+  , _assertions :: TMap () Name t
   -- ^ Map of assertion names to their definitions and types
   , _proofs :: TMap Name t t
   -- ^ Map of proof names to their implementations and types
