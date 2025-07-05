@@ -11,18 +11,18 @@ import Control.Monad.Trans (MonadTrans (..))
 import Data.Foldable (Foldable (..))
 import Extra
 import Rift qualified
+import Sift.Core.Types
 import Sift.Core.Unify
 import Sift.Ops.Common
 
-nullConvert :: Convert Bool
-nullConvert t0 t1 = do
-  pure (t0 == t1)
+nullConvert :: Convert e t
+nullConvert t0 t1 = cifte (cguard (t0 == t1)) (pure t0) empty
 alphaConvert :: _
 alphaConvert = _
-unifyConvert :: [Rift.TermOf thy] -> Unify' thy
-unifyConvert freeBothv t0 t1 = hoist lift (unify freeBothv t0 t1)
+unifyConvert :: Unify e t
+unifyConvert freeBothv t0 t1 = hoist lift (uniToRes <$> unify freeBothv t0 t1)
 
-deltaReduce :: Redux
+deltaReduce :: Redux e t
 deltaReduce t0 = do
   env <- M.ask
   let thy = env ^. opTheory

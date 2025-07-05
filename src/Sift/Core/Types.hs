@@ -24,13 +24,12 @@ data OpTypes
 data OpEnv e = OpEnv
   { _logicEnv :: Rift.LogicEnv
   , _opTheory :: e
-  , _opGoal :: Maybe (Rift.TermOf e)
   }
   deriving (Typeable)
 
 data OpState t = OpState
   { _curDepth :: Int
-  , _curGoal :: Maybe t
+  , _curTerm :: t
   }
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
@@ -52,11 +51,11 @@ instance Monoid (OpAccum) where
 instance Default (OpAccum) where
   def = OpAccum{_opHistory = []}
 instance (Default e) => Default (OpEnv e) where
-  def = OpEnv{_logicEnv = def, _opTheory = def, _opGoal = def}
+  def = OpEnv{_logicEnv = def, _opTheory = def}
 
-opEnvToState :: OpEnv e -> OpState (Rift.TermOf e)
-opEnvToState OpEnv{_logicEnv, _opGoal} =
+opEnvToState :: OpEnv e -> (Rift.TermOf e) -> OpState (Rift.TermOf e)
+opEnvToState OpEnv{_logicEnv} goal =
   OpState
     { _curDepth = Rift._logicEnvDepth _logicEnv
-    , _curGoal = _opGoal
+    , _curTerm = goal
     }

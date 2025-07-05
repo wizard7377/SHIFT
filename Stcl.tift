@@ -5,6 +5,8 @@
 @def λ (לx ⊥ x . לA ⊥ A . לx ⊥ x A) ;
 @def Λ (λx. λA. לx ⊥ Unit . A) ;
 @def Nat (@fix[nat] (ל_ (לn ⊥ (Succ n) ((@rec[nat]) n)) Zero T )) ;
+@def True (λx.λy.x) ;
+@def False (λx.λy.y) ;
 @def + @fix[plus] 
   (ל
     m 

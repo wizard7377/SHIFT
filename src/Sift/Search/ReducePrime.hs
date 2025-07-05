@@ -12,7 +12,8 @@ import Sift.Ops.Zeta
 import Sift.Search.Convert
 import Sift.Search.Reduce
 
-reduceCyclic :: (Rift.Term t, Eq t, Show t, Rift.RTerm t) => p -> t -> OpM t
+reduceCyclic :: (Rift.Term (Rift.TermOf e)) => (Rift.Inner (Rift.TermOf e) ~ (Rift.TermOf e)) => (Rift.TermOf e) -> LogicM e (Rift.TermOf e) (Rift.TermOf e)
 reduceCyclic t = reduce
-reduceRecCyclic :: (Rift.Term t, Eq t, Show t, Rift.RTerm t) => (Rift.Inner t ~ t) => t -> OpM t
+
+reduceRecCyclic :: (Rift.Term (Rift.TermOf e), Eq (Rift.TermOf e), Show (Rift.TermOf e), Rift.RTerm (Rift.TermOf e)) => (Rift.Inner (Rift.TermOf e) ~ (Rift.TermOf e)) => (Rift.TermOf e) -> LogicM e (Rift.TermOf t) (Rift.TermOf e)
 reduceRecCyclic = reduceRec

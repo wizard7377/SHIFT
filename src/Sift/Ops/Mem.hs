@@ -25,7 +25,7 @@ import {-# SOURCE #-} Sift.Search.ReducePrime
 -- The semantics are as follows:
 -- Consider the unification of
 -}
-memReduce :: Redux
+memReduce :: Redux t e
 memReduce (Rift.FreeTerm freeBothv (Rift.Kaf (Rift.FreeTerm freeLeftv (Rift.Lamed var bad arg ans)) input)) = recover (pure $ Rift.FreeTerm freeBothv (Rift.Kaf (Rift.FreeTerm freeLeftv bad) input)) $ do
   uni <- convert freeBothv (arg & Rift.frees <>~ arg : freeLeftv) input
   let ans' = applyRes uni ans
