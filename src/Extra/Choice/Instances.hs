@@ -124,12 +124,7 @@ instance (Monad m) => MonadChoice (ChoiceT m) where
       MNil -> pure $ pure Nothing
       MCons a xs -> pure $ pure $ Just (a, ChoiceT xs)
 
-instance (Functor m) => Functor (ChoiceAT m a) where
-  fmap f (ChoiceATT m) = ChoiceATT $ fmap (fmap f) m
-
-instance (Monad m) => Category (ChoiceAT m) where
-  id = ChoiceATT (pure . id)
-  (ChoiceATT f) . (ChoiceATT g) = ChoiceATT $ (f <=< g)
+instance Functor (ChoiceAT a m)
 
 instance (MonadReader e m) => MonadReader e (ChoiceT m) where
   ask = lift ask

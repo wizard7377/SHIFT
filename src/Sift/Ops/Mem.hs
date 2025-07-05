@@ -14,6 +14,8 @@ import Extra.Choice.Combinators (recover)
 import Rift qualified
 import Sift.Core.Unify
 import Sift.Ops.Common
+import Sift.Search.Convert
+import {-# SOURCE #-} Sift.Search.ReducePrime
 
 {- | The mem reduce function performs mem reduction
 -- That is, it takes a term of the form:
@@ -25,9 +27,7 @@ import Sift.Ops.Common
 -}
 memReduce :: Redux
 memReduce (Rift.FreeTerm freeBothv (Rift.Kaf (Rift.FreeTerm freeLeftv (Rift.Lamed var bad arg ans)) input)) = recover (pure $ Rift.FreeTerm freeBothv (Rift.Kaf (Rift.FreeTerm freeLeftv bad) input)) $ do
-  binds <- hoist lift $ unify freeBothv (Rift.addFrees arg (var : freeLeftv)) input
-  bindMap <- fromList $ toList $ normalMap (binds ^. unifyGraph)
-  let frees = (binds ^. freeLeft) <> (binds ^. freeRight) <> (binds ^. freeBoth)
-  let newTerm = foldr (\(_, k, v) -> Rift.replaceTerm k v) ans (bindMap ^. seeMapTup)
-  pure (Rift.addFrees newTerm frees)
+  uni <- convert freeBothv (arg & Rift.frees <>~ arg : freeLeftv) input
+  let ans' = applyRes uni ans
+  pure ans'
 memReduce _ = empty

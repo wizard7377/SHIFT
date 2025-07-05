@@ -7,8 +7,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_HADDOCK show-extensions, prune #-}
 
-module Lift (module Lift.Lift, module Lift.Mift) where
+module Lift (module Lift.Tift) where
 
 -- \^ Language for Intuitionistic Flat Type
-import Lift.Lift
-import Lift.Mift
+import Lift.Tift

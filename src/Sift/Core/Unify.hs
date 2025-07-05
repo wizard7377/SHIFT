@@ -6,7 +6,7 @@
  - The unification module
  -
 -}
-module Sift.Core.Unify (unify, prep, unify', UnifyState (..), unifyGraph, freeLeft, freeRight, freeBoth) where
+module Sift.Core.Unify (emptyUni, unify, uniToRes, applyRes, UnifyResult (..), prep, unify', UnifyState (..), unifyGraph, freeLeft, freeRight, freeBoth) where
 
 import Control.Applicative (Alternative (..))
 import Control.Lens (re)
@@ -29,7 +29,19 @@ data UnifyState t = UnifyState
   }
   deriving (Show, Eq, Ord, Data, Typeable, Generic)
 
+data UnifyResult t = UnifyResult
+  { _freeRes :: [t]
+  , _unifyGraphRes :: TMap Direction t t
+  }
 makeLenses ''UnifyState
+makeLenses ''UnifyResult
+
+emptyUni :: [t] -> UnifyResult t
+emptyUni freeBoth =
+  let
+    graph = mempty :: TMap Direction t t
+   in
+    UnifyResult freeBoth graph
 prep :: (Rift.FTerm t, Rift.KTerm (Rift.Inner t), Rift.KTerm t) => [Rift.Inner t] -> t -> t -> (Rift.Inner t, Rift.Inner t, UnifyState (Rift.Inner t))
 prep freeBoth t1 t2 =
   let
@@ -136,3 +148,22 @@ findRight term state =
     graph = state ^. unifyGraph
    in
     fromList $ filter (/= term) $ toList $ rmaprec graph term
+
+uniToRes :: UnifyState t -> UnifyResult t
+uniToRes state =
+  let
+    freeRes = state ^. freeLeft <> state ^. freeRight <> state ^. freeBoth
+    unifyGraphRes = state ^. unifyGraph
+   in
+    UnifyResult freeRes unifyGraphRes
+
+applyRes :: (Rift.FTerm t, Rift.KTerm t, t ~ Rift.Inner t, Rift.RTerm t) => UnifyResult t -> t -> t
+applyRes res term =
+  let
+    resGraph = res ^. unifyGraphRes
+    resFree = res ^. freeRes
+    termFree = term ^. Rift.frees <> resFree
+    term1 = term & Rift.frees .~ termFree
+    term2 = term1 & Rift.fterm %~ flip (foldr (\(_, k, v) -> Rift.replaceTerm k v)) (resGraph ^. seeMapTup)
+   in
+    term2

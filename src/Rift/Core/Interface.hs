@@ -16,6 +16,7 @@ Maintainer  : Asher Frost
 -}
 module Rift.Core.Interface (ETerm (..), addFree, addFrees, freeTerm, boundTerm, pattern FreeTerm, simplifyF, FullTermLike (..), Term (..), FTerm' (..)) where
 
+import Data.Text qualified as T
 import Data.Type.Equality ((:~:) (..))
 import Extra
 import Rift.Core.Base (KTerm, TestTerm, poccurs)
@@ -87,26 +88,17 @@ simplifyF t =
    in
     t & ffrees .~ frees1
 
-class
+type Idiom t = (t ~ Inner t)
+type FullTermLike tag term =
   ( KTerm term
   , FTerm term
   , UTerm tag term
+  , PTerm tag term
   , Inner term ~ term
   , Plated term
-  -- , RTerm term
-  ) =>
-  FullTermLike tag term
-instance
-  ( KTerm term
-  , FTerm term
-  , UTerm tag term
-  , Inner term ~ term
-  , Plated term
-  -- , RTerm term
-  ) =>
-  FullTermLike tag term
+  , RTerm term
+  )
 
-class (FullTermLike Idx term) => Term term
-instance (FullTermLike Idx term) => Term term
+type Term t = (Idiom t, FullTermLike Idx t, Eq t, Show t)
 termEq :: (Term term) => term :~: (Inner term)
 termEq = Refl

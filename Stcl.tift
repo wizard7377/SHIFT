@@ -1,0 +1,16 @@
+@def ⊥ @bad ;
+@def ל @lam ;
+@def T (לx ⊥ x . x) ;
+@def Id T ;
+@def λ (לx ⊥ x . לA ⊥ A . לx ⊥ x A) ;
+@def Λ (λx. λA. לx ⊥ Unit . A) ;
+@def Nat (@fix[nat] (ל_ (לn ⊥ (Succ n) ((@rec[nat]) n)) Zero T )) ;
+@def + @fix[plus] 
+  (ל
+    m 
+    (לn ⊥ Zero T)
+    (Succ m) .
+    (λn . Succ (@rec[plus] m n))
+  ) ;
+
+@thm[BasicAdd] (+ (Succ Zero) Zero) (Succ Zero) ;

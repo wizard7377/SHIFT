@@ -22,6 +22,7 @@ import Control.Monad.RWS.Class (MonadReader (..), MonadState (..), MonadWriter (
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Trans
+import Data.Coerce
 import Data.Foldable (Foldable (..))
 import Data.Functor.Identity (Identity (..))
 import Data.List (singleton)
@@ -54,8 +55,4 @@ class (Monad m) => MonadChoice (m :: Type -> Type) where
   cset :: m (Maybe (a, m a)) -> m a
   cget :: m a -> m (Maybe (a, m a))
 
-newtype ChoiceATT (arr :: k0 -> Type -> Type) (m :: Type -> Type) (a :: k0) (b :: Type) = ChoiceATT
-  {_runChoiceATT :: arr a (ChoiceT m b)}
-
-type ChoiceAT = ChoiceATT (->)
-type CBool m = ChoiceT m ()
+newtype ChoiceAT a m b = ChoiceAT (a -> ChoiceT m b)

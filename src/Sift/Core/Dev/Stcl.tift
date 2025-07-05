@@ -1,0 +1,6 @@
+@def ⊥ @bad ;
+@def ל @lam ;
+@def T (לx ⊥ x . x) ;
+@def λ (לx ⊥ x . לA ⊥ A . לx ⊥ x A) ;
+@def Λ (λx. λA. לx ⊥ Unit . A) ;
+@def Nat {ל_ (לn ⊥ (Succ n) (& n)) Zero T } ;

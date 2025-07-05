@@ -94,21 +94,12 @@ library
       Hift.Query
       Hift.Toplevel
       Hift.Types
-      Lift.Common
-      Lift.Common.Module
-      Lift.Common.Names
-      Lift.Common.Parsing
-      Lift.Common.Tokens
-      Lift.Dev
-      Lift.Dev.TestParse
-      Lift.Lift
-      Lift.Mift
-      Lift.Mift.Base
-      Lift.Mift.Expr
-      Lift.Mift.Parse.Instances
-      Lift.Mift.Parse.Lexer
-      Lift.Mift.Parse.Parser
-      Lift.Mift.Parse.State
+      Lift.Tift
+      Lift.Tift.Expr
+      Lift.Tift.Lexer
+      Lift.Tift.Parser
+      Lift.Tift.Theory
+      Lift.Tift.Types
       Rift.Core
       Rift.Core.Base
       Rift.Core.Classes
@@ -137,6 +128,7 @@ library
       Sift.Dev
       Sift.Ops
       Sift.Ops.Common
+      Sift.Ops.Fix
       Sift.Ops.Mem
       Sift.Ops.Nun
       Sift.Ops.Simple
@@ -144,6 +136,7 @@ library
       Sift.Search
       Sift.Search.Convert
       Sift.Search.Reduce
+      Sift.Search.ReducePrime
       Tests.Common
       Tests.Mem
       Tests.Unify

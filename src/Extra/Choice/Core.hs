@@ -44,10 +44,12 @@ import Extra.Ops
 -- | Monadic join for 'ChoiceT'. Flattens a 'ChoiceT' of 'ChoiceT's into a single 'ChoiceT'.
 joinListT :: (Functor m, Monad m) => ChoiceT m (ChoiceT m a) -> ChoiceT m a
 joinListT (ChoiceT xss) = ChoiceT . joinMList $ fmap (fmap _runChoiceT) xss
+{-# INLINE joinListT #-}
 
 -- | Monadic join for 'ListT'. Flattens a 'ListT' of 'ListT's into a single 'ListT'.
 joinMList :: (Functor m, Monad m) => ListT m (ListT m a) -> ListT m a
 joinMList = (=<<) joinMList'
+{-# INLINE joinMList #-}
 
 -- | Helper for 'joinMList'. Processes a single step of a 'ListT' of 'ListT's.
 joinMList' :: (Functor m, Monad m) => StepT m (ListT m a) -> ListT m a

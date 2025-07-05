@@ -13,7 +13,6 @@ module Extra.Choice.Exports (
   Choice,
   ChoiceT,
   StepT (..),
-  CBool,
 
   -- ** Associated functions
   runChoice,

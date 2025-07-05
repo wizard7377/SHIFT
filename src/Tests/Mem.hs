@@ -31,7 +31,7 @@ memTestGen ::
   Assertion
 memTestGen = memTestGen' (Sift.reduceRec)
 
-memTestGen' :: (Rift.Inner Rift.TestTerm ~ Rift.TestTerm) => (Rift.TestTerm -> Sift.OpM Rift.TestTerm) -> String -> String -> Assertion
+memTestGen' :: (Rift.Inner Rift.TestTerm ~ Rift.TestTerm, Rift.TermOf t ~ Rift.TestTerm) => (Rift.TestTerm -> Sift.OpM' t (Rift.TermOf t)) -> String -> String -> Assertion
 memTestGen' = memTestGen'' $ \expect res -> any (\x -> not . null $ Sift.runOpMDef (Sift.convert x expect)) res
 memTestGen'' ::
   (Plated Rift.TestTerm) =>

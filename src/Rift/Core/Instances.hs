@@ -128,3 +128,19 @@ instance (Eq atom) => RTerm (Term' atom) where
           _ -> Nothing
       )
   replaceTerm x y = (PrimRep x y)
+
+instance PTerm Idx (Term' atom) where
+  seePe =
+    Lens.prism'
+      (\(PrimPeCon a t) -> PrimPe a t)
+      ( \case
+          PrimPe a t -> Just (PrimPeCon a t)
+          _ -> Nothing
+      )
+  seeFe =
+    Lens.prism'
+      (\(a) -> PrimFe a)
+      ( \case
+          PrimFe a -> Just a
+          _ -> Nothing
+      )

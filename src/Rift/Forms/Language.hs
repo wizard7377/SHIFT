@@ -2,10 +2,10 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# HLINT ignore "Use newtype instead of data" #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# OPTIONS_HADDOCK show-extensions, prune #-}
-
-{-# HLINT ignore "Use newtype instead of data" #-}
 
 {- |
 Module      : Rift.Forms.Language
@@ -28,11 +28,13 @@ defaultParseEnv = ParseEnv "."
 -- | The class of all languages that can be parsed
 class (Monad m) => Language m l where
   type ResultOfL l :: Type
+  type ResultOfLT l :: Type
+  type ResultOfLT l = ResultOfL l
 
   -- | Given a file name, parse the file and return the result in a monad
   parseFile :: l -> ParseEnv -> T.Text -> m (ResultOfL l)
 
   -- | Given some scratch text, parse it and return the result in the monad
-  parseText :: l -> ParseEnv -> T.Text -> m (ResultOfL l)
+  parseText :: l -> ParseEnv -> T.Text -> m (ResultOfLT l)
 
 newtype ALanguage m = ALanguage (forall l. (Language m l) => l)

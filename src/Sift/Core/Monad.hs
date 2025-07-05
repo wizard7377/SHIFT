@@ -4,8 +4,9 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_HADDOCK show-extensions, prune #-}
 
-module Sift.Core.Monad (OpM, Redux', Redux, Convert, Convert', module Sift.Core.Types, OpM', runOpM, runOpM_, liftConvert, runOpMDef) where
+module Sift.Core.Monad (OpM, Redux', Redux, Convert, Convert', Unify', Unify, module Sift.Core.Types, OpM', runOpM, runOpM', runOpM_, liftConvert, runOpMDef) where
 
+import Control.Monad.Accum qualified as M
 import Control.Monad.Identity qualified as M
 import Control.Monad.Morph
 import Control.Monad.RWS qualified as M
@@ -13,45 +14,57 @@ import Control.Monad.Reader
 import Control.Monad.Reader qualified as M
 import Control.Monad.State qualified as M
 import Control.Monad.Writer qualified as M
+import Data.Text qualified as T
 import Extra
 import Rift qualified
 import Sift.Core.Types
+import Sift.Core.Unify
 
-type OpM' t r = ChoiceT (M.RWS (OpEnv t) (OpAccum t) (OpState t)) r
-type OpM t = OpM' t t
-type Redux' t = (Rift.Inner t ~ t, Rift.Term t, Eq t, Show t, Rift.RTerm t) => t -> OpM t
-type Convert' t = (Rift.Inner t ~ t, Rift.Term t, Eq t, Show t, Rift.RTerm t) => t -> t -> OpM' t Bool
-type Redux = forall t. Redux' t
-type Convert = forall t. Convert' t
-runOpM_ :: OpM' t r -> (OpEnv t) -> ([r], OpState t, OpAccum t)
+type OpM' thy r = (Rift.Term (Rift.TermOf thy), Rift.Theory thy) => ChoiceT (M.RWS (OpEnv thy) (OpAccum) (OpState (Rift.TermOf thy))) r
+type OpM thy = OpM' thy (Rift.TermOf thy)
+type Redux' thy = (Rift.Theory thy, Rift.Term (Rift.TermOf thy)) => (Rift.TermOf thy) -> OpM' (thy) (Rift.TermOf thy)
+type Convert' thy r = (Rift.Theory thy) => (Rift.TermOf thy) -> (Rift.TermOf thy) -> OpM' (thy) r
+type Redux = forall thy. Redux' thy
+type Convert r = forall thy. (Rift.Theory thy) => Convert' thy r
+type Unify' t = (Rift.Theory t) => Convert' t (UnifyState (Rift.TermOf t))
+type Unify = forall t. Unify' t
+
+tellOp :: (Show r) => OpTypes -> OpM' t r -> OpM' t r
+tellOp opType op = do
+  v <- op
+  lift $ M.tell $ OpAccum [(opType, T.pack $ show v)]
+  pure v
+runOpM_ :: (Rift.Theory thy) => OpM' thy r -> (OpEnv thy) -> ([r], OpState (Rift.TermOf thy), OpAccum)
 runOpM_ op env =
   let
     op' = (execChoiceT) op
    in
     M.runRWS op' env (opEnvToState env)
 
-runOpM :: OpM' t r -> (OpEnv t) -> [r]
+runOpM :: (Rift.Theory t) => OpM' t r -> (OpEnv t) -> [r]
 runOpM op env =
   let
     (result, _, _) = runOpM_ op env
    in
     result
 
-runOpMDef :: OpM' t r -> [r]
-runOpMDef f = runOpM f def
-liftConvert :: Convert' t -> Redux' t
+runOpM' :: (Rift.Theory t) => OpM' t r -> t -> Maybe (Rift.TermOf t) -> [r]
+runOpM' f x goal =
+  let
+    state = OpEnv def (x) goal
+   in
+    runOpM f state
+runOpMDef :: forall t r. (Rift.Theory t, Rift.Term (Rift.TermOf t), Default t) => OpM' t r -> [r]
+runOpMDef f = runOpM f (def :: OpEnv t)
+
+liftConvert :: (Rift.TheoryOf t thy, Rift.Term t) => Convert' thy r -> (t -> OpM' thy r)
 liftConvert f x = do
   state <- M.get
   let Just goal = state ^. curGoal
-  (cguardM (f x goal)) >> pure x
-
-testConvert :: (Rift.Inner t ~ t, Rift.KTerm t, Rift.FTerm t, Rift.UTerm Int t, Plated t, Eq t, Show t, Rift.RTerm t) => Convert' t -> t -> t -> Bool
-testConvert f x goal =
+  f x goal
+testConvert :: forall thy r. (Rift.Theory thy) => ((Rift.TermOf thy) -> OpM' thy r) -> (Rift.TermOf thy) -> (Rift.TermOf thy) -> thy -> [r]
+testConvert f x goal' thy =
   let
-    (result, _, _) = runOpM_ (f x goal) def
+    result = runOpM (f x) (OpEnv def thy (Just goal'))
    in
-    or result
-
-instance Rift.Search M.Identity (OpM t) t where
-  type ResultOfS (OpM t) = [t]
-  search s env t = return $ runOpM s (OpEnv env $ Just t)
+    result

@@ -9,6 +9,7 @@ Maintainer  : Asher Frost
 -}
 module Sift.Core.Types where
 
+import Data.Text qualified as T
 import Extra
 import Rift.Forms qualified as Rift
 
@@ -17,12 +18,15 @@ data OpTypes
   | Simple
   | MemRedux
   | ZetaRedux
-  deriving (Eq, Ord, Data, Typeable, Generic, Bounded, Enum, Show)
-data OpEnv t = OpEnv
+  | FixRedux
+  deriving (Eq, Ord, Data, Typeable, Generic, Show)
+
+data OpEnv e = OpEnv
   { _logicEnv :: Rift.LogicEnv
-  , _opGoal :: Maybe t
+  , _opTheory :: e
+  , _opGoal :: Maybe (Rift.TermOf e)
   }
-  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+  deriving (Typeable)
 
 data OpState t = OpState
   { _curDepth :: Int
@@ -30,25 +34,27 @@ data OpState t = OpState
   }
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
-data OpAccum t = OpAccum
-  { _opHistory :: [OpTypes]
+data LogArgs = LogArgs T.Text T.Text
+  deriving (Eq, Ord, Show, Data, Typeable, Generic)
+data OpAccum = OpAccum
+  { _opHistory :: [(OpTypes, T.Text)]
   }
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 makeLenses ''OpState
 makeLenses ''OpAccum
 makeLenses ''OpEnv
-instance Semigroup (OpAccum t) where
+instance Semigroup (OpAccum) where
   OpAccum h1 <> OpAccum h2 = OpAccum (h1 ++ h2)
 
-instance Monoid (OpAccum t) where
+instance Monoid (OpAccum) where
   mempty = OpAccum []
-instance Default (OpAccum t) where
+instance Default (OpAccum) where
   def = OpAccum{_opHistory = []}
-instance Default (OpEnv t) where
-  def = OpEnv{_logicEnv = def, _opGoal = Nothing}
+instance (Default e) => Default (OpEnv e) where
+  def = OpEnv{_logicEnv = def, _opTheory = def, _opGoal = def}
 
-opEnvToState :: OpEnv t -> OpState t
+opEnvToState :: OpEnv e -> OpState (Rift.TermOf e)
 opEnvToState OpEnv{_logicEnv, _opGoal} =
   OpState
     { _curDepth = Rift._logicEnvDepth _logicEnv

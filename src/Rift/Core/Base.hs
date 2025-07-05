@@ -68,8 +68,8 @@ data Term' atom where
   -- |`λfrom . λto . λterm . (term[from := to])`
   PrimRep :: Term' atom -> Term' atom -> Term' atom -> Term' atom
   PrimError :: Term' atom
-  PrimPe :: Term' atom -> Term' atom
-  PrimFe :: Term' atom
+  PrimPe :: Idx -> Term' atom -> Term' atom
+  PrimFe :: Idx -> Term' atom
   deriving (Data,Typeable,Generic)
 
 deriving instance Data atom => Plated (Term' atom)
@@ -85,9 +85,9 @@ instance (Eq atom, Plated (Term' atom)) => Eq (Term' atom) where
   --t == PrimRep a0 a1 a2 = if (occurs a0 a1) then False else (t == Lens.transform (change a0 a1) a2)
   PrimError == PrimError = True
   -- TODO:
-  PrimPe a == PrimPe b = a == b
+  PrimPe i a == PrimPe j b = i == j && a == b
   -- TODO:
-  PrimFe == PrimFe = False
+  PrimFe i == PrimFe j = i == j
   _ == _ = False
 instance (KTerm (Term' atom)) where
   isLamed PrimLamed = True
@@ -148,9 +148,10 @@ pattern Cons3 f a0 a1 <- Kaf f (Kaf a0 a1)
     Cons3 f a0 a1 = Kaf f (Kaf a0 a1)
 
 pattern Lamed :: KTerm term => term -> term -> term -> term -> term
-pattern Lamed v a b f <- Kaf BasicLamed (Kaf v (Kaf a (Kaf b f)))
+pattern Lamed v a b f <- Kaf (Kaf (Kaf (Kaf BasicLamed v) a) b) f
   where
-    Lamed v a b f = Kaf BasicLamed (Kaf v (Kaf a (Kaf b f)))
+    Lamed v a b f = Kaf (Kaf (Kaf (Kaf BasicLamed v) a) b) f
+
 {-# INLINE Lamed #-}
 termToList :: KTerm term => term -> [term]
 termToList (Kaf a0 a1) = (:) a0 $ termToList a1

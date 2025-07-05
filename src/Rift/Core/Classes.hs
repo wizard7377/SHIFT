@@ -1,4 +1,5 @@
 {-# LANGUAGE GHC2021 #-}
+{-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -11,9 +12,11 @@ Module      : Rift.Core.Classes
 License     : BSD-2-Clause
 Maintainer  : Asher Frost
 -}
-module Rift.Core.Classes (PrimDalet (..), PrimKaf (..), PrimAyin (..), FTerm (..), KTerm (..), AnyTerm, RTerm (..), UTerm (..), pattern Ayin) where
+module Rift.Core.Classes (PrimDalet (..), ITerm (..), PrimKaf (..), PrimAyin (..), FTerm (..), KTerm (..), AnyTerm, RTerm (..), UTerm (..), pattern Ayin, PTerm (..), PrimPe (..), pattern Pe, pattern Fe) where
 
+import Control.Arrow ((&&&))
 import Control.Lens qualified as Lens
+import Data.Text qualified as T
 import Extra
 
 -- | ד := λ free . λ term . (∀free . term)
@@ -21,6 +24,7 @@ data PrimDalet term = PrimDaletCon term term
 
 data PrimKaf term = PrimKafCon term term
 data PrimAyin term = PrimAyinCon term term term
+data PrimPe id term = PrimPeCon id term
 pattern Ayin :: (KTerm term, RTerm term) => term -> term -> term -> term
 pattern Ayin x y z <- (preview pAyin -> Just (PrimAyinCon x y z))
   where
@@ -42,9 +46,6 @@ class FTerm term where
   groundTerm :: Inner term -> term
 
 {-# DEPRECATED ffrees "Use frees instead" #-}
-class PTerm term where
-  -- | Remove one level of ף, that is, ףα ==> α[פ := ףα]
-  fixed :: term -> term
 class UTerm tag term | term -> tag where
   uniqueCreate :: term -> tag -> term
 
@@ -64,3 +65,22 @@ class KTerm term where
   mkLamed :: term
 
 type AnyTerm term = KTerm term
+class PTerm id term | term -> id where
+  -- | See a fixpoint decleration
+  seePe :: Prism' term (PrimPe id term)
+
+  -- | See a fixpoint usage
+  seeFe :: Prism' term id
+
+class ITerm term where
+  type Inspection term
+  type Inspection term = T.Text
+  inspect :: Prism' term (Inspection term)
+pattern Pe :: (PTerm id term) => id -> term -> term
+pattern Pe id term <- (preview seePe -> Just (PrimPeCon id term))
+  where
+    Pe id term = review seePe (PrimPeCon id term)
+pattern Fe :: (PTerm id term) => id -> term
+pattern Fe id <- (preview seeFe -> Just id)
+  where
+    Fe id = review seeFe id
