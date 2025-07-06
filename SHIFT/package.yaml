@@ -1,0 +1,176 @@
+name: SHIFT
+version: 0.1.0.0
+github: "wizard7377/SHIFT"
+license: BSD-2-Clause
+author: "Asher Frost"
+maintainer: "example@example.com"
+copyright: "2025 Asher Frost"
+
+flags:
+  dev:
+    default: false
+    manual: false
+  check:
+    default: false
+    manual: false
+  release:
+    default: false
+    manual: false
+  sanity:
+    default: false
+    manual: false
+
+extra-source-files:
+  - README.md
+  - CHANGELOG.md
+extra-doc-files:
+  - docs/*
+  - pl/*
+
+language: GHC2021
+other-extensions:
+  - AllowAmbiguousTypes
+  - FunctionalDependencies
+  - PatternGuards
+  - OverloadedStrings
+  - LambdaCase
+  - QuantifiedConstraints
+  - PartialTypeSignatures
+  - TemplateHaskell
+  - UndecidableInstances
+  - ConstraintKinds
+  - MonoLocalBinds
+  - Arrows
+description: Please see the README on GitHub at <https://github.com/githubuser/SHIFT#readme>
+
+dependencies:
+  - base >= 4.7 && < 5
+  - QuickCheck
+  - containers
+  - mtl
+  - text
+  - megaparsec
+  - lens > 5
+  - binary
+  - data-default
+  - HaTeX
+  - prettyprinter
+  - ansi-terminal
+  - template-haskell
+  - comonad
+  - array
+  - extra
+  - monad-loops
+  - List
+  - HUnit
+  - criterion
+  - tasty
+  - tasty-hunit
+  - deepseq
+  - optparse-applicative
+  - fgl
+  - quickcheck-instances
+  - tasty-quickcheck
+  - profunctors
+  - free
+  - mmorph
+  - witch
+  - haskeline
+  - Choice
+when:
+  - condition: flag(check)
+    ghc-options:
+      - -O0
+      - -fdefer-typed-holes
+      - -fdefer-type-errors
+      - -w
+      - -Wdefault
+  - condition: flag(sanity) && (!flag(dev))
+    ghc-options:
+      - -O0
+      - -fdefer-typed-holes
+      - -Wtyped-holes
+      - -W
+      - -Wno-duplicate-exports
+      - -Wno-unused-imports
+      - -Wno-unused-local-binds
+      - -Wno-unused-matches
+      - -Wno-dodgy-imports
+      - -Wno-dodgy-exports
+  - condition: flag(dev) && (!flag(release))
+    ghc-options:
+      - -fdefer-typed-holes
+      - -fdefer-type-errors
+      - -w
+      - -Wno-typed-holes
+      - -Wdeferred-type-errors
+      - -Wdeferred-out-of-scope-variables
+      - -fprof-late
+      - -g2
+  - condition: flag(dev) && flag(release)
+    ghc-options:
+      - -Wall
+      - -Wcompat
+      - -Widentities
+      - -Wincomplete-record-updates
+      - -Wincomplete-uni-patterns
+      - -Wmissing-export-lists
+      - -Wmissing-home-modules
+      - -Wpartial-fields
+      - -Wredundant-constraints
+      - -fdefer-typed-holes
+  - condition: flag(release)
+    ghc-options:
+      - -w
+      - -O2
+
+library:
+  source-dirs:
+    - src
+  exposed-modules:
+    - Rift
+    - Sift
+    - Lift
+    - Hift
+    - Extra
+    - Tests
+
+executables:
+  SHIFT-exe:
+    main: Main.hs
+    source-dirs:
+      - app
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - SHIFT
+
+tests:
+  spec:
+    main: Main.hs
+    source-dirs:
+      - test
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+      - -O0
+    cpp-options:
+      - -DnoColor
+    dependencies:
+      - SHIFT
+
+benchmarks:
+  timer:
+    main: Main.hs
+    source-dirs:
+      - perf
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+      - -O2
+    dependencies:
+      - SHIFT

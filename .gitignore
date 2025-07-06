@@ -11,3 +11,16 @@ paper/**
 tags
 src/Rift/Core/Unify/Unify.hs
 report
+SHIFT/.stack-work/
+*~
+SHIFT/paper/flat/**
+!SHIFT/paper/flat/**/
+!SHIFT/paper/flat/**/*.tex
+!SHIFT/paper/flat/**/*.bib
+SHIFT/paper/**
+!SHIFT/paper/**/
+!SHIFT/paper/**/*.tex
+!SHIFT/paper/**/*.bib
+SHIFT/tags
+SHIFT/src/Rift/Core/Unify/Unify.hs
+SHIFT/report

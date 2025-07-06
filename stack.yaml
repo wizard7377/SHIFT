@@ -1,7 +1,8 @@
 snapshot: lts-23.21
 
 packages:
-  - .
+  - SHIFT 
+  - Choice
 
 build:
   library-profiling: true

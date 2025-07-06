@@ -1,0 +1,411 @@
+cabal-version: 2.2
+
+-- This file has been generated from package.yaml by hpack version 0.37.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           SHIFT
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/SHIFT#readme>
+homepage:       https://github.com/wizard7377/SHIFT#readme
+bug-reports:    https://github.com/wizard7377/SHIFT/issues
+author:         Asher Frost
+maintainer:     example@example.com
+copyright:      2025 Asher Frost
+license:        BSD-2-Clause
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    CHANGELOG.md
+extra-doc-files:
+    docs/MetaLamed.md
+    docs/Rules.pro
+    docs/Structure.md
+    docs/Theory.md
+
+source-repository head
+  type: git
+  location: https://github.com/wizard7377/SHIFT
+
+flag check
+  manual: False
+  default: False
+
+flag dev
+  manual: False
+  default: False
+
+flag release
+  manual: False
+  default: False
+
+flag sanity
+  manual: False
+  default: False
+
+library
+  exposed-modules:
+      Rift
+      Sift
+      Lift
+      Hift
+      Extra
+      Tests
+  other-modules:
+      Extra.Basics
+      Extra.Boolean
+      Extra.Color
+      Extra.Debug
+      Extra.Decide
+      Extra.Error
+      Extra.Exports
+      Extra.Ghci
+      Extra.Graphic
+      Extra.Lens
+      Extra.List
+      Extra.Map
+      Extra.Map.Direct
+      Extra.Map.Lens
+      Extra.Map.Other
+      Extra.Map.Types
+      Extra.Monad
+      Extra.Ops
+      Extra.Parsers
+      Extra.TestHelp
+      Extra.TestHelp.MakeTest
+      Extra.Todo
+      Extra.Tree
+      Extra.Tuple
+      Extra.Types
+      Hift.Hift
+      Hift.Opts
+      Hift.Opts.Forms
+      Hift.Opts.Types
+      Hift.Query
+      Hift.Toplevel
+      Hift.Types
+      Lift.Common.Module
+      Lift.Common.Names
+      Lift.Common.Parsing
+      Lift.Common.Tokens
+      Lift.Tift
+      Lift.Tift.Expr
+      Lift.Tift.Lexer
+      Lift.Tift.Parser
+      Lift.Tift.Theory
+      Lift.Tift.Types
+      Rift.Core
+      Rift.Core.Base
+      Rift.Core.Classes
+      Rift.Core.Generate
+      Rift.Core.Instances
+      Rift.Core.Interface
+      Rift.Core.Kernel
+      Rift.Core.Utility
+      Rift.Forms
+      Rift.Forms.Language
+      Rift.Forms.Proof
+      Rift.Forms.Proof.Abstract
+      Rift.Forms.Proof.Types
+      Rift.Forms.Search
+      Rift.Forms.Theory
+      Sift.Base
+      Sift.Core
+      Sift.Core.Dev
+      Sift.Core.Dev.Forms
+      Sift.Core.Dev.Paeno
+      Sift.Core.Dev.Parser
+      Sift.Core.Dev.Util
+      Sift.Core.Monad
+      Sift.Core.Types
+      Sift.Core.Unify
+      Sift.Dev
+      Sift.Ops
+      Sift.Ops.Common
+      Sift.Ops.Fix
+      Sift.Ops.Mem
+      Sift.Ops.Nun
+      Sift.Ops.Simple
+      Sift.Ops.Zeta
+      Sift.Search
+      Sift.Search.Convert
+      Sift.Search.Reduce
+      Sift.Search.ReducePrime
+      Tests.Common
+      Tests.Mem
+      Tests.Unify
+      Paths_SHIFT
+  autogen-modules:
+      Paths_SHIFT
+  hs-source-dirs:
+      src
+  other-extensions:
+      AllowAmbiguousTypes
+      FunctionalDependencies
+      PatternGuards
+      OverloadedStrings
+      LambdaCase
+      QuantifiedConstraints
+      PartialTypeSignatures
+      TemplateHaskell
+      UndecidableInstances
+      ConstraintKinds
+      MonoLocalBinds
+      Arrows
+  build-depends:
+      Choice
+    , HUnit
+    , HaTeX
+    , List
+    , QuickCheck
+    , ansi-terminal
+    , array
+    , base >=4.7 && <5
+    , binary
+    , comonad
+    , containers
+    , criterion
+    , data-default
+    , deepseq
+    , extra
+    , fgl
+    , free
+    , haskeline
+    , lens >5
+    , megaparsec
+    , mmorph
+    , monad-loops
+    , mtl
+    , optparse-applicative
+    , prettyprinter
+    , profunctors
+    , quickcheck-instances
+    , tasty
+    , tasty-hunit
+    , tasty-quickcheck
+    , template-haskell
+    , text
+    , witch
+  default-language: GHC2021
+  if flag(check)
+    ghc-options: -O0 -fdefer-typed-holes -fdefer-type-errors -w -Wdefault
+  if flag(sanity) && (!flag(dev))
+    ghc-options: -O0 -fdefer-typed-holes -Wtyped-holes -W -Wno-duplicate-exports -Wno-unused-imports -Wno-unused-local-binds -Wno-unused-matches -Wno-dodgy-imports -Wno-dodgy-exports
+  if flag(dev) && (!flag(release))
+    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wno-typed-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -fprof-late -g2
+  if flag(dev) && flag(release)
+    ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -fdefer-typed-holes
+  if flag(release)
+    ghc-options: -w -O2
+
+executable SHIFT-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_SHIFT
+  autogen-modules:
+      Paths_SHIFT
+  hs-source-dirs:
+      app
+  other-extensions:
+      AllowAmbiguousTypes
+      FunctionalDependencies
+      PatternGuards
+      OverloadedStrings
+      LambdaCase
+      QuantifiedConstraints
+      PartialTypeSignatures
+      TemplateHaskell
+      UndecidableInstances
+      ConstraintKinds
+      MonoLocalBinds
+      Arrows
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      Choice
+    , HUnit
+    , HaTeX
+    , List
+    , QuickCheck
+    , SHIFT
+    , ansi-terminal
+    , array
+    , base >=4.7 && <5
+    , binary
+    , comonad
+    , containers
+    , criterion
+    , data-default
+    , deepseq
+    , extra
+    , fgl
+    , free
+    , haskeline
+    , lens >5
+    , megaparsec
+    , mmorph
+    , monad-loops
+    , mtl
+    , optparse-applicative
+    , prettyprinter
+    , profunctors
+    , quickcheck-instances
+    , tasty
+    , tasty-hunit
+    , tasty-quickcheck
+    , template-haskell
+    , text
+    , witch
+  default-language: GHC2021
+  if flag(check)
+    ghc-options: -O0 -fdefer-typed-holes -fdefer-type-errors -w -Wdefault
+  if flag(sanity) && (!flag(dev))
+    ghc-options: -O0 -fdefer-typed-holes -Wtyped-holes -W -Wno-duplicate-exports -Wno-unused-imports -Wno-unused-local-binds -Wno-unused-matches -Wno-dodgy-imports -Wno-dodgy-exports
+  if flag(dev) && (!flag(release))
+    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wno-typed-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -fprof-late -g2
+  if flag(dev) && flag(release)
+    ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -fdefer-typed-holes
+  if flag(release)
+    ghc-options: -w -O2
+
+test-suite spec
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  other-modules:
+      GenSearch
+      Paths_SHIFT
+  autogen-modules:
+      Paths_SHIFT
+  hs-source-dirs:
+      test
+  other-extensions:
+      AllowAmbiguousTypes
+      FunctionalDependencies
+      PatternGuards
+      OverloadedStrings
+      LambdaCase
+      QuantifiedConstraints
+      PartialTypeSignatures
+      TemplateHaskell
+      UndecidableInstances
+      ConstraintKinds
+      MonoLocalBinds
+      Arrows
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -O0
+  cpp-options: -DnoColor
+  build-depends:
+      Choice
+    , HUnit
+    , HaTeX
+    , List
+    , QuickCheck
+    , SHIFT
+    , ansi-terminal
+    , array
+    , base >=4.7 && <5
+    , binary
+    , comonad
+    , containers
+    , criterion
+    , data-default
+    , deepseq
+    , extra
+    , fgl
+    , free
+    , haskeline
+    , lens >5
+    , megaparsec
+    , mmorph
+    , monad-loops
+    , mtl
+    , optparse-applicative
+    , prettyprinter
+    , profunctors
+    , quickcheck-instances
+    , tasty
+    , tasty-hunit
+    , tasty-quickcheck
+    , template-haskell
+    , text
+    , witch
+  default-language: GHC2021
+  if flag(check)
+    ghc-options: -O0 -fdefer-typed-holes -fdefer-type-errors -w -Wdefault
+  if flag(sanity) && (!flag(dev))
+    ghc-options: -O0 -fdefer-typed-holes -Wtyped-holes -W -Wno-duplicate-exports -Wno-unused-imports -Wno-unused-local-binds -Wno-unused-matches -Wno-dodgy-imports -Wno-dodgy-exports
+  if flag(dev) && (!flag(release))
+    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wno-typed-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -fprof-late -g2
+  if flag(dev) && flag(release)
+    ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -fdefer-typed-holes
+  if flag(release)
+    ghc-options: -w -O2
+
+benchmark timer
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  other-modules:
+      Paths_SHIFT
+  autogen-modules:
+      Paths_SHIFT
+  hs-source-dirs:
+      perf
+  other-extensions:
+      AllowAmbiguousTypes
+      FunctionalDependencies
+      PatternGuards
+      OverloadedStrings
+      LambdaCase
+      QuantifiedConstraints
+      PartialTypeSignatures
+      TemplateHaskell
+      UndecidableInstances
+      ConstraintKinds
+      MonoLocalBinds
+      Arrows
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -O2
+  build-depends:
+      Choice
+    , HUnit
+    , HaTeX
+    , List
+    , QuickCheck
+    , SHIFT
+    , ansi-terminal
+    , array
+    , base >=4.7 && <5
+    , binary
+    , comonad
+    , containers
+    , criterion
+    , data-default
+    , deepseq
+    , extra
+    , fgl
+    , free
+    , haskeline
+    , lens >5
+    , megaparsec
+    , mmorph
+    , monad-loops
+    , mtl
+    , optparse-applicative
+    , prettyprinter
+    , profunctors
+    , quickcheck-instances
+    , tasty
+    , tasty-hunit
+    , tasty-quickcheck
+    , template-haskell
+    , text
+    , witch
+  default-language: GHC2021
+  if flag(check)
+    ghc-options: -O0 -fdefer-typed-holes -fdefer-type-errors -w -Wdefault
+  if flag(sanity) && (!flag(dev))
+    ghc-options: -O0 -fdefer-typed-holes -Wtyped-holes -W -Wno-duplicate-exports -Wno-unused-imports -Wno-unused-local-binds -Wno-unused-matches -Wno-dodgy-imports -Wno-dodgy-exports
+  if flag(dev) && (!flag(release))
+    ghc-options: -fdefer-typed-holes -fdefer-type-errors -w -Wno-typed-holes -Wdeferred-type-errors -Wdeferred-out-of-scope-variables -fprof-late -g2
+  if flag(dev) && flag(release)
+    ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -fdefer-typed-holes
+  if flag(release)
+    ghc-options: -w -O2

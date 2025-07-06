@@ -1,0 +1,13 @@
+.stack-work/
+*~
+paper/flat/**
+!paper/flat/**/
+!paper/flat/**/*.tex
+!paper/flat/**/*.bib
+paper/**
+!paper/**/
+!paper/**/*.tex
+!paper/**/*.bib
+tags
+src/Rift/Core/Unify/Unify.hs
+report
