@@ -21,9 +21,9 @@ data LogicEnv = LogicEnv
   }
   deriving (Eq, Ord, Show, Data, Typeable, Generic)
 defaultDepth :: Int
-defaultDepth = 16
+defaultDepth = 4
 defaultUnfold :: Int
-defaultUnfold = 8
+defaultUnfold = 4
 
 instance Default (LogicEnv) where
   def = LogicEnv defaultDepth defaultUnfold

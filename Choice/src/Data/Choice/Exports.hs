@@ -1,5 +1,4 @@
 {-# LANGUAGE GHC2021 #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_HADDOCK show-extensions, prune #-}
 
 {- |
@@ -8,21 +7,25 @@ License     : BSD-2-Clause
 Maintainer  : Asher Frost
 -}
 module Data.Choice.Exports (
-  -- * The core monads
+  -- ** The core monads
   -- $monads
   Choice,
   ChoiceT,
   StepT (..),
+  ChoiceA (..),
+  MonadChoice (..),
+  Yield,
 
-  -- ** Associated functions
+  -- *** Associated functions
   runChoice,
+  runChoiceT,
   execChoiceT,
   liftStep,
   -- HACK: The following code should be replaced by a method in `MonadChoice`
   fromList,
   ctoList,
 
-  -- * Combinators
+  -- ** Combinators
   coptional,
   cguard,
   cnot,
@@ -32,6 +35,12 @@ module Data.Choice.Exports (
   cifte,
   recover,
   cguardM,
+  csplit,
+  cfilter,
+  (|.|),
+
+  -- *** Re-exports
+  Alternative (..),
 ) where
 
 -- \$monads
@@ -40,9 +49,10 @@ module Data.Choice.Exports (
 -- There are two broad approaches to encoding "list monad transformers", but first, the two bad ways:
 -- 1. @type ListT m a = m [a]@. Technically, this /is/ a monad transformer, just not a very interesting one
 
+import Control.Applicative (Alternative (some))
 import Data.Choice.Combinators
 import Data.Choice.Core
-import Data.Choice.Instances
+import Data.Choice.Instances ()
 import Data.Choice.Interface
 import Data.Choice.Pretty
 import Data.Choice.Types

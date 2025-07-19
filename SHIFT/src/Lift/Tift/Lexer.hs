@@ -19,7 +19,7 @@ module Lift.Tift.Lexer where
 import Control.Lens.Operators ((+=))
 import Control.Monad.RWS (get)
 import Data.Text qualified as T
-import Extra
+import Extra hiding (some)
 import Lift.Tift.Expr
 import Lift.Tift.Types
 import Text.Megaparsec

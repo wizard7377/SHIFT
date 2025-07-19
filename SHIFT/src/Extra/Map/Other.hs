@@ -1,3 +1,12 @@
+{-# LANGUAGE GHC2021 #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_HADDOCK show-extensions, prune #-}
+
+{- |
+Module      : Extra.Map.Other
+License     : BSD-2-Clause
+Maintainer  : Asher Frost
+-}
 module Extra.Map.Other where
 
 import Control.Category qualified as Category

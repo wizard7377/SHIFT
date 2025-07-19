@@ -1,6 +1,14 @@
+{-# LANGUAGE GHC2021 #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_HADDOCK show-extensions, prune #-}
 
+{- |
+Module      : Extra.Map.Lens
+License     : BSD-2-Clause
+Maintainer  : Asher Frost
+-}
 module Extra.Map.Lens (
   mAt,
   mAtV,

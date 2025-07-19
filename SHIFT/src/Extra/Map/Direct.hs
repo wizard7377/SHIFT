@@ -1,6 +1,13 @@
 {-# LANGUAGE GHC2021 #-}
 {-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_HADDOCK show-extensions, prune #-}
 
+{- |
+Module      : Extra.Map.Direct
+License     : BSD-2-Clause
+Maintainer  : Asher Frost
+-}
 module Extra.Map.Direct (Direction (..), Directional (..), DirectMap (..), ltmap, rtmap, lmaprec, rmaprec, normalMap, (->>), (<<-), (<->)) where
 
 import Control.Lens qualified as Lens

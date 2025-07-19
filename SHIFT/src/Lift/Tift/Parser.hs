@@ -35,7 +35,7 @@ import Control.Monad.Trans (MonadTrans (..))
 import Data.List.Extra
 import Data.Text qualified as T
 import Data.Void (Void)
-import Extra
+import Extra hiding (some)
 import Lift.Tift.Expr
 import Lift.Tift.Lexer
 import Lift.Tift.Types

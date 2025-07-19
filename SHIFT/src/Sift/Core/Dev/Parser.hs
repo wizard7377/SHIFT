@@ -33,7 +33,8 @@ import Control.Monad.Trans (MonadTrans (..))
 import Data.List.Extra
 import Data.Text qualified as T
 import Data.Void (Void)
-import Extra
+import Extra hiding (some)
+import Lift.Tift.Expr (termIn)
 import Rift qualified
 import Text.Megaparsec (MonadParsec (notFollowedBy, try), Parsec, ParsecT, anySingle, choice, eof, many, noneOf, oneOf, parseTest, single, some, try, (<|>))
 import Text.Megaparsec hiding (EndOfInput, State)
@@ -53,7 +54,7 @@ lexeme = L.lexeme sc
 
 atomicP :: Parser (Rift.TestTerm)
 atomicP = lexeme $ do
-  tok <- some (noneOf (" \n\t()[]{}?" :: String))
+  tok <- some (noneOf (" \n\t()[]{}?@_" :: String))
   pure $ Rift.PrimAtom $ TestToken $ Left $ T.pack tok
 
 lamedP :: Parser (Rift.TestTerm)
@@ -86,14 +87,26 @@ freeP = do
   term <- termP
   pure $ PrimFree term frees
 
+{-
 repP = do
   _ <- symbol "{"
   termFrom <- termP
   termTo <- termP
   _ <- symbol "}"
   pure $ PrimRep termFrom termTo
+-}
+peP = do
+  _ <- symbol "{"
+  name <- lexeme L.decimal
+  _ <- symbol "}"
+  termIn <- termP
+  pure $ PrimPe name termIn
+feP = do
+  _ <- symbol "@"
+  name <- lexeme L.decimal
+  pure $ PrimFe name
 termP :: Parser (Rift.TestTerm)
-termP = choice [freeP, kafP, lamedP, wildP, atomicP]
+termP = choice [freeP, kafP, lamedP, wildP, atomicP, peP, feP]
 
 parseTerm :: T.Text -> IO (Rift.TestTerm)
 parseTerm input = do

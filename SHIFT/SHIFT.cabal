@@ -103,6 +103,7 @@ library
       Rift.Core.Interface
       Rift.Core.Kernel
       Rift.Core.Utility
+      Rift.Dev.Random
       Rift.Forms
       Rift.Forms.Language
       Rift.Forms.Proof
@@ -110,6 +111,7 @@ library
       Rift.Forms.Proof.Types
       Rift.Forms.Search
       Rift.Forms.Theory
+      Short
       Sift.Base
       Sift.Core
       Sift.Core.Dev
@@ -127,12 +129,14 @@ library
       Sift.Ops.Mem
       Sift.Ops.Nun
       Sift.Ops.Simple
+      Sift.Ops.Unify
       Sift.Ops.Zeta
       Sift.Search
-      Sift.Search.Convert
       Sift.Search.Reduce
-      Sift.Search.ReducePrime
+      Sift.Search.State
+      Tests.Cases
       Tests.Common
+      Tests.Convert
       Tests.Mem
       Tests.Unify
       Paths_SHIFT
@@ -178,6 +182,7 @@ library
     , monad-loops
     , mtl
     , optparse-applicative
+    , parser-combinators
     , prettyprinter
     , profunctors
     , quickcheck-instances
@@ -247,6 +252,7 @@ executable SHIFT-exe
     , monad-loops
     , mtl
     , optparse-applicative
+    , parser-combinators
     , prettyprinter
     , profunctors
     , quickcheck-instances
@@ -319,6 +325,7 @@ test-suite spec
     , monad-loops
     , mtl
     , optparse-applicative
+    , parser-combinators
     , prettyprinter
     , profunctors
     , quickcheck-instances
@@ -389,6 +396,7 @@ benchmark timer
     , monad-loops
     , mtl
     , optparse-applicative
+    , parser-combinators
     , prettyprinter
     , profunctors
     , quickcheck-instances

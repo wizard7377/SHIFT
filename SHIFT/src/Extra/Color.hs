@@ -9,8 +9,10 @@ getColor :: Int -> ANSI.Color
 getColor v = colorList !! mod v 3
 colorCode :: ANSI.Color -> String
 #ifndef noColor 
-colorCode x = ANSI.setSGRCode [ANSI.SetColor ANSI.Foreground ANSI.Vivid x]
-resetCode = ANSI.setSGRCode []
+colorCode x = ""
+--colorCode x = ANSI.setSGRCode [ANSI.SetColor ANSI.Foreground ANSI.Vivid x]
+--resetCode = ANSI.setSGRCode []
+resetCode = ""
 #else
 colorCode x = ""
 resetCode = ""

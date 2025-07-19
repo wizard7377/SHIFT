@@ -10,7 +10,28 @@ Maintainer  : Asher Frost
 module Data.Choice.Combinators where
 
 import Control.Applicative (Alternative (..))
+
+import Control.Monad.Combinators qualified as M
 import Data.Choice.Types (MonadChoice (..))
+
+(|.|) :: (MonadChoice m, Alternative m) => a -> m a -> m a
+head |.| tail = pure head <|> tail
+
+-- | Takes choice of lists, and from each choice, split (or flatten), it by taking each sublist as a new choice
+csplit :: (Alternative m, Monad m) => m [a] -> m a
+csplit m = do
+  x <- m
+  case x of
+    [] -> empty
+    (y : ys) -> pure y <|> csplit (pure ys)
+
+-- | Go from a choice of values to a single choice of all the values
+ccollect :: (MonadChoice m) => m a -> m [a]
+ccollect m = do
+  x <- cget m
+  case x of
+    Nothing -> pure []
+    Just (y, ys) -> (y :) <$> ccollect ys
 
 cguard :: (Alternative m) => Bool -> m ()
 cguard True = pure ()
@@ -78,3 +99,10 @@ cifte cond ifTrue ifFalse = do
   case choices of
     Just (_, _) -> ifTrue
     Nothing -> ifFalse
+
+cfilter :: (MonadChoice m, Alternative m) => (a -> Bool) -> m a -> m a
+cfilter f m = do
+  choices <- cget m
+  case choices of
+    Just (x, xs) -> if (f x) then (x |.| cfilter f xs) else cfilter f xs
+    Nothing -> cset $ pure Nothing

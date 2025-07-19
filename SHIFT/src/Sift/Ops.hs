@@ -7,7 +7,7 @@ module Sift.Ops (module Sift.Ops.Mem, module Sift.Ops.Common) where
 import Control.Applicative (Alternative (..))
 import Control.Monad.Reader
 import Extra
-import Data.Choice.Combinators
+import Data.Choice
 import Rift qualified
 import Sift.Ops.Common
 import Sift.Ops.Mem

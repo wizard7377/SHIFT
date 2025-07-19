@@ -3,13 +3,15 @@
 {-# OPTIONS_HADDOCK show-extensions, prune #-}
 
 module Sift.Ops.Nun (
-  nunReduce,
+
 )
 where
 
+import Control.Applicative (Alternative (..))
 import Extra
 import Rift qualified
 import Sift.Core.Monad
 
-nunConvert :: Convert t e
-nunConvert = _
+-- TODO:
+nunConvert :: Convert e
+nunConvert _ _ = empty

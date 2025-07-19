@@ -1,10 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE QuantifiedConstraints #-}
-{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE StarIsType #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -13,7 +10,7 @@
 module Data.Choice.Types where
 
 import Control.Applicative
-import Control.Comonad
+import Control.Arrow qualified as A
 import Control.Monad
 import Control.Monad.Cont
 import Control.Monad.Error.Class (MonadError (..))
@@ -25,11 +22,9 @@ import Control.Monad.Trans
 import Data.Coerce
 import Data.Foldable (Foldable (..))
 import Data.Functor.Identity (Identity (..))
-import Data.List (singleton)
-import Data.List.Extra (nubBy)
-import Data.Maybe
-import Data.Maybe (catMaybes, isJust, mapMaybe)
 import Data.Kind (Type)
+import Data.List (singleton)
+import Data.Maybe
 
 -- The monadic list type
 data StepT m a where
@@ -53,4 +48,4 @@ class (Monad m) => MonadChoice (m :: Type -> Type) where
   cset :: m (Maybe (a, m a)) -> m a
   cget :: m a -> m (Maybe (a, m a))
 
-newtype ChoiceA a m b = ChoiceA ((->) a (ChoiceT m b))
+type ChoiceA m = A.Kleisli (ChoiceT m)

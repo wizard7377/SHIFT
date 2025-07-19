@@ -1,7 +1,15 @@
+{-# LANGUAGE GHC2021 #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# HLINT ignore "Use newtype instead of data" #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# OPTIONS_HADDOCK show-extensions, prune #-}
 
+{- |
+Module      : Extra.Map.Types
+License     : BSD-2-Clause
+Maintainer  : Asher Frost
+-}
 module Extra.Map.Types (
   --
   -- $imageTypes

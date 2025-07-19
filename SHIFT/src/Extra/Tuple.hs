@@ -1,5 +1,7 @@
 module Extra.Tuple where
 
+import Control.Lens qualified as Lens
+
 type TwoWay a = (a, a)
 
 -- | FF FT TF TT
@@ -35,3 +37,5 @@ split4' f0 f1 val =
     (True, True) -> ([], [], [], [val])
 both :: (Monoid m) => (a -> m) -> (a, a) -> m
 both f (x, y) = f x <> f y
+
+

@@ -10,9 +10,13 @@
 {-# OPTIONS_HADDOCK show-extensions, prune #-}
 
 module Sift (
+  -- | The core forms of the SIFT library, for instance terms
   module Sift.Core,
+  -- | The base
   module Sift.Base,
+  -- | Ops
   module Sift.Ops,
+  -- | Search
   module Sift.Search,
 ) where
 

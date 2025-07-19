@@ -1,7 +1,8 @@
 module Main where
 
-import Test.Tasty (defaultMain, testGroup)
+import Test.Tasty (DependencyType (..), defaultMain, sequentialTestGroup, testGroup)
+import Test.Tasty.HUnit
 import Tests
 
 main :: IO ()
-main = defaultMain $ testGroup "SHIFT tests" [unifyTests, memTests]
+main = defaultMain $ sequentialTestGroup "SHIFT tests" AllFinish [unifyTests, convertCases]

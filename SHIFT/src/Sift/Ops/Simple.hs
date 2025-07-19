@@ -9,23 +9,27 @@ import Control.Monad.Morph (MFunctor (..))
 import Control.Monad.RWS qualified as M
 import Control.Monad.Trans (MonadTrans (..))
 import Data.Foldable (Foldable (..))
+import Data.List (permutations)
 import Extra
 import Rift qualified
+import Short
 import Sift.Core.Types
 import Sift.Core.Unify
 import Sift.Ops.Common
 
-nullConvert :: Convert e t
-nullConvert t0 t1 = cifte (cguard (t0 == t1)) (pure t0) empty
-alphaConvert :: _
-alphaConvert = _
-unifyConvert :: Unify e t
-unifyConvert freeBothv t0 t1 = hoist lift (uniToRes <$> unify freeBothv t0 t1)
+-- TODO:
+alphaConvert :: Convert e
+alphaConvert t0 t1 = empty
 
-deltaReduce :: Redux e t
+-- orderReduce :: Redux e
+orderReduce (Rift.FreeTerm vars term) = do
+  vars' <- csplit $ pure $ permutations vars
+  pure $ Rift.FreeTerm vars' term
+
+deltaReduce :: (Rift.Theory e) => (TOC e) => Reduce e
 deltaReduce t0 = do
-  env <- M.ask
-  let thy = env ^. opTheory
+  state <- lift $ lift M.get
+  let thy = state ^. opTheory
   let mapping = mapSimple (unTagMap $ thy ^. Rift.defines)
   let t1 = transform mapping t0
-  pure t1
+  if t0 == t1 then empty else pure t1

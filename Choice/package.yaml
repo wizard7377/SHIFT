@@ -39,20 +39,7 @@ description: Please see the README on GitHub at <https://github.com/githubuser/S
 dependencies:
   - base >= 4.7 && < 5
   - QuickCheck
-  - containers
-  - mtl
-  - text
-  - megaparsec
-  - lens > 5
-  - binary
   - data-default
-  - HaTeX
-  - prettyprinter
-  - ansi-terminal
-  - template-haskell
-  - comonad
-  - array
-  - extra
   - monad-loops
   - List
   - HUnit
@@ -60,15 +47,16 @@ dependencies:
   - tasty
   - tasty-hunit
   - deepseq
+  - parallel
   - optparse-applicative
-  - fgl
   - quickcheck-instances
   - tasty-quickcheck
   - profunctors
   - free
   - mmorph
-  - witch
-  - haskeline
+  - mtl
+  - parser-combinators
+  - comonad
 when:
   - condition: flag(check)
     ghc-options:
@@ -121,3 +109,31 @@ library:
     - src
   exposed-modules:
     - Data.Choice
+
+tests:
+  spec:
+    main: Main.hs
+    source-dirs:
+      - test
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+      - -O0
+    cpp-options:
+      - -DnoColor
+    dependencies:
+      - Choice
+
+benchmarks:
+  timer:
+    main: Main.hs
+    source-dirs:
+      - test
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+      - -O2
+    dependencies:
+      - Choice

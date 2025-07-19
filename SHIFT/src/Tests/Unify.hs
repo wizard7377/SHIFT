@@ -5,16 +5,17 @@ module Tests.Unify where
 import Control.Lens qualified as Lens
 import Control.Lens.Operators ((^.))
 import Control.Monad.State
+import Data.Choice (Choice)
 import Data.Foldable (Foldable (..))
 import Data.List (nubBy)
 import Data.List.Extra (splitOn)
-import Data.Choice (Choice)
 import Extra.Map.Other (equivalent)
 import Extra.Parsers
 import Rift hiding (Assertion)
 import Rift.Core.Generate ()
 import Sift (unify, unifyGraph)
 import Sift.Core (UnifyState)
+import Sift.Core.Dev.Util
 import Test.QuickCheck qualified as QC
 import Test.Tasty
 import Test.Tasty.HUnit
@@ -43,9 +44,9 @@ unifyTestGen ::
   String ->
   Assertion
 unifyTestGen num vars' termA' termB' = do
-  vars <- if vars' == "" then pure [] else traverse termRead (splitOn ";;" vars')
-  termA <- termRead termA'
-  termB <- termRead termB'
+  vars <- if vars' == "" then pure [] else traverse tRead (splitOn ";;" vars')
+  termA <- tRead termA'
+  termB <- tRead termB'
   let res0 = unify vars termA termB
   assertBool (unifyTestMsg res0 num vars termA termB) ((length $ toList res0) == num)
 

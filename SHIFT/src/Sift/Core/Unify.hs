@@ -6,7 +6,7 @@
  - The unification module
  -
 -}
-module Sift.Core.Unify (emptyUni, unify, uniToRes, applyRes, UnifyResult (..), prep, unify', UnifyState (..), unifyGraph, freeLeft, freeRight, freeBoth) where
+module Sift.Core.Unify (emptyUni, unify, uniToRes, applyRes, UnifyResult (..), prep, unify', UnifyState (..), unifyGraph, freeLeft, freeRight, freeBoth, uniToHypo) where
 
 import Control.Applicative (Alternative (..))
 import Control.Lens (re)
@@ -19,6 +19,8 @@ import Data.List.Extra (notNull)
 import Extra
 import Extra.Map.Direct
 import Rift qualified
+import Short
+import Sift.Core.Types
 
 data UnifyState t = UnifyState
   { _freeLeft :: [t]
@@ -80,8 +82,8 @@ unifyStep t1 t2 state =
         pure state2
       _ -> empty
  where
-  boundT1 = "Value1" <?> findLeft t1 ("State" <?> state)
-  boundT2 = "Value2" <?> findRight t2 state
+  boundT1 = "Value1" <?@> findLeft t1 ("State" <?@> state)
+  boundT2 = "Value2" <?@> findRight t2 state
   freeLeftN = length (filter (== t1) (state ^. freeLeft))
   freeRightN = length (filter (== t2) (state ^. freeRight))
   freeBothLN = length (filter (== t1) (state ^. freeBoth))
@@ -166,3 +168,16 @@ applyRes res term =
     term2 = term1 & Rift.fterm %~ flip (foldr (\(_, k, v) -> Rift.replaceTerm k v)) (resGraph ^. seeMapTup)
    in
     term2
+
+uniToHypo :: UnifyResult (TO e) -> [Hypothesis (e)]
+uniToHypo res =
+  let
+    frees = res ^. freeRes
+    graph = res ^. unifyGraphRes
+    mappings = getTail <$> graph ^. seeMapTup
+    hypofree = Bound <$> frees
+    hypomap = (\(x, y) -> Equal x y) <$> mappings
+   in
+    hypofree <> hypomap
+ where
+  getTail (_, x, y) = (x, y)

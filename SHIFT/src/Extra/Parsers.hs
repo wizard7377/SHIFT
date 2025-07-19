@@ -1,4 +1,6 @@
+{-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module Extra.Parsers where
@@ -23,9 +25,9 @@ class Parsable (a :: Type) where
 instance Comonad (M.State Int) where
   extract s = M.evalState s 0
   duplicate = pure
-preadWithIO :: (MonadOf a ~ w, Monad w, Comonad w, MonadIO m, Parsable a) => String -> m a
+preadWithIO :: forall a. (Parsable a, Monad (MonadOf a)) => String -> (MonadOf a) a
 preadWithIO input = do
-  let result = extract $ runParserT pread (fromString "") (T.pack input)
+  (result :: (Either _ a)) <- runParserT pread (fromString "") (T.pack input)
   case result of
     Left err -> throw (userError $ errorBundlePretty err)
     Right val -> return val

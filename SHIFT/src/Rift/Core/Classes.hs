@@ -56,8 +56,9 @@ class RTerm term where
   {-# MINIMAL pAyin #-}
 
 {- | The basic class of terms
- - Fundementally, each term is something that has a way to plate to and from a nullary ל constructor, a unary ת constructor, and binary כ constructor
- -
+Fundementally, each term is something that has a way to plate to and from a nullary ל constructor, a unary ת constructor, and binary כ constructor
+
+prop> (isLamed mkLamed) == True
 -}
 class KTerm term where
   pKaf :: Prism' term (PrimKaf term)

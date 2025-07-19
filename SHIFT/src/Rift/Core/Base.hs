@@ -103,6 +103,8 @@ type TermLike term = (Eq term, Ord term, Show term)
 data TestToken = TestToken (Either Text Int) | TestLogicToken Int
   deriving (Eq, Ord, Data, Generic, Typeable)
 
+instance Default TestToken where
+  def = TestToken (Left $ T.pack "<DEF>")
 type TestTerm = Term' TestToken
 {- | The attomic class constraint
 Represents a collection of "packaged requirements" that all atoms must have
@@ -139,6 +141,7 @@ lamed frees a0 a1 = Kaf BasicLamed (Kaf frees (Kaf a0 a1))
 manyLamed :: KTerm term => [term] -> term -> term -> term -> term
 manyLamed [t] a0 a1 a2 = Lamed t a0 a1 a2
 manyLamed (t : ts) a0 a1 a2 = Lamed t (manyLamed ts a0 a1 a2) a1 a2
+manyLamed [] _ _ _ = _ -- HACK:
 --drule = mkCons' ARule
 
 
@@ -170,6 +173,7 @@ recurseSome f v = let v' = f v in
       Kaf a0 a1 -> Kaf (recurseSome f a0) (recurseSome f a1)
       Atom _ -> v'
       BasicLamed -> BasicLamed
+      _ -> v'
   )
     else v'
 -- |For some mapping, recursivly apply it, and only stop if we reach the bottom or the mapping changes the value
@@ -199,6 +203,6 @@ poccurs term value =
   (value == term) || (case term of
     Kaf a0 a1 -> (poccurs term a0) || (poccurs term a1)
     Atom _ -> False
-    BasicLamed -> False)
+    _ -> False)
 
 

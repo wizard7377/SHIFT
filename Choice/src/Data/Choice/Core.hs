@@ -1,12 +1,8 @@
 {-# LANGUAGE GHC2021 #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE QuantifiedConstraints #-}
-{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE StarIsType #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_HADDOCK show-extensions, prune #-}
@@ -30,13 +26,12 @@ import Control.Monad.RWS.Class (MonadReader (..), MonadState (..), MonadWriter (
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Trans
+import Control.Parallel
+import Data.Choice.Types
 import Data.Foldable (Foldable (..))
 import Data.Functor.Identity (Identity (..))
 import Data.List (singleton)
-import Data.List.Extra (nubBy)
-import Data.Maybe
 import Data.Maybe (catMaybes, isJust, mapMaybe)
-import Data.Choice.Types
 
 -- | Monadic join for 'ChoiceT'. Flattens a 'ChoiceT' of 'ChoiceT's into a single 'ChoiceT'.
 joinListT :: (Functor m, Monad m) => ChoiceT m (ChoiceT m a) -> ChoiceT m a
@@ -52,18 +47,26 @@ joinMList = (=<<) joinMList'
 joinMList' :: (Functor m, Monad m) => StepT m (ListT m a) -> ListT m a
 joinMList' MNil = return MNil
 joinMList' (MCons x xs) = x `mAppend` joinMList xs
+{-# INLINE joinMList' #-}
 
 -- | Monadic append for 'ListT'. Concatenates two 'ListT' computations.
 mAppend :: (Functor m, Monad m) => ListT m a -> ListT m a -> ListT m a
 mAppend xs ys = (`mAppend'` ys) =<< xs
+{-# INLINE mAppend #-}
 
 mAppendListT :: (Functor m, Monad m) => ListT m a -> ListT m a -> ListT m a
 mAppendListT = mAppend
+{-# INLINE mAppendListT #-}
 
 -- | Helper for 'mAppend'. Appends a single step to a 'ListT'.
 mAppend' :: (Functor m, Monad m) => StepT m a -> ListT m a -> ListT m a
 mAppend' MNil ys = ys
-mAppend' (MCons x xs) ys = return $ MCons x (mAppend xs ys)
+mAppend' (MCons x xs) ys =
+  let
+    r0 = x `par` mAppend xs ys
+   in
+    return $ MCons x r0
+{-# INLINE mAppend' #-}
 
 -- | Runs a 'ListT' computation and collects the results in a list.
 execListT :: (Monad m) => ListT m a -> m [a]
@@ -71,7 +74,7 @@ execListT m = do
   xs <- m
   case xs of
     MNil -> return []
-    MCons x xs' -> (x :) <$> execListT (xs')
+    MCons x xs' -> (x :) <$> execListT xs'
 
 -- | Lazily runs a 'ChoiceT' computation, returning the first solution and the remaining computation, if any.
 runListT' :: (Functor m) => ChoiceT m a -> m (Maybe (a, ChoiceT m a))
@@ -102,18 +105,28 @@ ctoList (ChoiceT m) = do
     MNil -> return []
     MCons x xs' -> (x :) <$> ctoList (ChoiceT xs')
 
+mapStep :: (Functor m) => (a -> b) -> StepT m a -> StepT m b
+mapStep _ MNil = MNil
+mapStep f (MCons x xs) =
+  let
+    r0 = f x
+    r1 = r0 `par` (fmap (mapStep f) xs)
+   in
+    MCons r0 r1
+{-# INLINE mapStep #-}
 instance (Functor m) => Functor (StepT m) where
-  fmap _ MNil = MNil
-  fmap f (MCons x xs) = MCons (f x) (fmap (fmap f) xs)
+  fmap = mapStep
 
 -- | Applicative-style bind for 'MStep'.
 bindStep :: (Monad m) => StepT m (a -> b) -> StepT m a -> StepT m b
+bindStep MNil _ = MNil
+bindStep _ MNil = MNil
 bindStep (MCons f fs) (MCons x xs) = MCons (f x) $ do
   (fs' :: StepT m (a -> b)) <- fs
-  (xs' :: StepT m (a)) <- xs
+  (xs' :: StepT m a) <- xs
   let r1 = f <$> xs'
-  let r2 = fs' <*> pure x
-  let r3 = fs' <*> xs'
+  let r2 = r1 `par` fs' <*> pure x
+  let r3 = r2 `par` fs' <*> xs'
   let rt = mAppend' r1 $ mAppend' r2 $ pure r3
   rt
 {-# INLINE bindStep #-}
@@ -121,6 +134,4 @@ bindStep (MCons f fs) (MCons x xs) = MCons (f x) $ do
 instance (Monad m) => Applicative (StepT m) where
   pure x = MCons x (pure MNil)
   (<*>) :: forall a b. StepT m (a -> b) -> StepT m a -> StepT m b
-  MNil <*> _ = MNil
-  _ <*> MNil = MNil
-  x <*> y = bindStep x y
+  (<*>) = bindStep

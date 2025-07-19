@@ -44,19 +44,27 @@ showRainbow :: (Show a, Show (Term' a)) => Int -> Term' a -> [Char]
 showRainbow i (PrimTag t tag) = showColor' i (showRainbow n t ++ "@" ++ show tag)
  where
   n = i + 1
+showRainbow i (PrimCons a0 a1) = showColor' i "(" ++ intercalate (showColor' i " ") (showRainbow n <$> parseCons a0) ++ " . " ++ (showRainbow n a1) ++ showColor' i ")"
+ where
+  n = i + 1
 showRainbow i (Kaf a0 a1) = showColor' i "(" ++ intercalate (showColor' i " ") (showRainbow n <$> parseCons a0) ++ " . " ++ (showRainbow n a1) ++ showColor' i ")"
  where
   n = i + 1
 showRainbow i (PrimAtom atom) = resetCode ++ show atom
  where
   n = i + 1
-showRainbow i BasicLamed = resetCode ++ "ל"
+showRainbow i PrimLamed = resetCode ++ "ל"
 showRainbow i (PrimRep from to within) = showColor' i "{" ++ (showRainbow n from) ++ " := " ++ (showRainbow n to) ++ showColor' i "}" ++ " " ++ showRainbow n within
  where
   n = i + 1
 showRainbow i (PrimFree t v) = showColor' i "[" ++ intercalate (showColor' i ", ") (showRainbow n <$> v) ++ showColor' i "]" ++ " " ++ showRainbow n t
  where
   n = i + 1
+showRainbow i (PrimPe a t) = showColor' i "פ⦃" ++ show a ++ "⦄" ++ " " ++ showRainbow n t
+ where
+  n = i + 1
+showRainbow i (PrimFe a) = showColor i "ף" <> showColor' i (show a)
+showRainbow i (PrimError) = showColor' i "⊥"
 showListT :: (Show a, Show (Term' a)) => [Term' a] -> String
 showListT v = if null v then "{}" else "\n[\n\t" ++ intercalate "\n\t" (showRainbow 1 <$> v) ++ "\n]"
 
